@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclaimng - Terms of Service</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root {
+            --canvas-bg: #F8FAF9;
+            --panel-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-muted: #6B7280;
+            --primary-accent: #2C5E43;
+            --border-color: #E2E8F0;
+            --radius-normal: 10px;
+            --radius-large: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--canvas-bg); color: var(--text-primary); }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen antialiased selection:bg-[var(--primary-accent)] selection:text-white">
+
+    <main class="flex-1 p-8 sm:p-12 max-w-4xl mx-auto w-full">
+        
+        <!-- Breadcrumbs -->
+        <div class="flex items-center space-x-2 text-sm text-[var(--text-muted)] mb-8">
+            <a href="auth" class="hover:text-[var(--text-primary)] transition-colors">Gateway</a>
+            <span>/</span>
+            <span class="text-[var(--text-primary)]">Terms of Service</span>
+        </div>
+
+        <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-8 sm:p-12 shadow-none">
+            
+            <h1 class="text-3xl font-semibold tracking-tight text-[var(--text-primary)] mb-2">Terms of Service</h1>
+            <p class="text-sm text-[var(--text-muted)] mb-10">Last Updated: May 19, 2026</p>
+
+            <div class="space-y-8 text-sm text-[var(--text-muted)] leading-relaxed">
+                <section>
+                    <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-3 tracking-tight">1. Contractual Relations & Acceptance of Terms</h2>
+                    <p>
+                        These Terms of Service govern the access and use of the digital web interfaces, applications, and routing engines provided by Reclaimng. By creating an account or initializing a claim workflow on our platform, you explicitly declare that you possess the full legal capacity and authorization required under Nigerian probate laws to manage the estate assets of the deceased person whose parameters you enter.
+                    </p>
+                </section>
+
+                <section>
+                    <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-3 tracking-tight">2. Description of Service & Verification Prerequisites</h2>
+                    <p class="mb-2">
+                        Reclaimng provides a technical routing utility linking consumer requests to identity verification APIs (QoreID) and automated interbank ledger querying switches (NIBSS e-DMMS).
+                    </p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>The Verification Gate:</strong> You acknowledge and agree that access to asset discovery ledgers is strictly contingent upon QoreID successfully verifying your legal documentation.</li>
+                        <li><strong>Administrative Access Overrides:</strong> The company retains absolute administrative oversight. All discovery claims successfully compiled through the system are queued for final validation review by institutional compliance officers.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-3 tracking-tight">3. Standard Pricing, Fee Structure, & Financial Mandate</h2>
+                    <p class="mb-2">
+                        By interacting with the final settlement validation layout, you enter into a binding financial mandate agreement with Reclaimng:
+                    </p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>Service Assessment Rate:</strong> Reclaimng levies a fixed platform service fee equivalent to exactly 10% of the gross cumulative worth of all monetary assets, bank balances, and unclaimed dividend payouts discovered and recovered through the platform pipeline.</li>
+                        <li><strong>Processing Execution Method:</strong> This 10% platform fee is systematically and automatically deducted directly from the gross asset pool at the point of clearing and settlement, prior to routing the net remaining balances to your finalized container.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 class="text-lg font-semibold text-[var(--text-primary)] mb-3 tracking-tight">4. Prohibited System Exploitation & Indemnity</h2>
+                    <p>
+                        Any attempt to input counterfeit Letters of Administration, fake Death Certificates, or unauthorized third-party BVN strings constitutes criminal fraud under the Cybercrimes Act of Nigeria. You agree to fully indemnify and hold harmless Reclaimng, its technical partners, and directors against any legal claims, liabilities, or regulatory penalties arising from fraudulent documents or false declarations uploaded to your profile.
+                    </p>
+                </section>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Universal WhatsApp Float Node -->
+    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white border border-[var(--border-color)] shadow-none hover:scale-105 transition-transform animate-bounce hover:animate-none">
+        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
+    </a>
+</body>
+</html>

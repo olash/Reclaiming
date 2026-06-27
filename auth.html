@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclaimng - Authentication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root {
+            --canvas-bg: #F8FAF9;
+            --panel-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-muted: #6B7280;
+            --primary-accent: #2C5E43;
+            --border-color: #E2E8F0;
+            --radius-normal: 10px;
+            --radius-large: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-[var(--canvas-bg)] text-[var(--text-primary)] min-h-screen flex antialiased">
+    
+    <div class="w-full flex">
+        <!-- Left Greeting -->
+        <div class="hidden lg:flex flex-col justify-center w-1/2 p-12 lg:p-24 border-r border-[var(--border-color)]">
+            <div class="text-2xl font-semibold tracking-tighter mb-12">RECLAIMNG</div>
+            <h1 class="text-4xl font-semibold tracking-tight leading-tight mb-6 max-w-md">
+                Securely transition your family's financial legacy.
+            </h1>
+            <p class="text-base text-[var(--text-muted)] max-w-sm leading-relaxed">
+                A structured, legally compliant protocol to identify, verify, and unify inherited assets across the central registry.
+            </p>
+        </div>
+
+        <!-- Right Card Module -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6">
+            <div class="bg-[var(--panel-bg)] w-full max-w-md p-8 border border-[var(--border-color)] rounded-[var(--radius-large)]">
+                
+                <div class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-color)]">
+                    <button class="text-sm font-semibold text-[var(--text-primary)] border-b-2 border-[var(--text-primary)] pb-2 transition-colors">Sign In</button>
+                    <button class="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] pb-2 transition-colors">Create Account</button>
+                </div>
+
+                <form id="authForm" class="flex flex-col gap-5">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Email Address</label>
+                        <input type="email" id="emailInput" required class="w-full px-4 py-3 text-sm bg-transparent border border-[var(--border-color)] rounded-[var(--radius-normal)] focus:border-[var(--primary-accent)] outline-none transition-colors placeholder-[var(--text-muted)] text-[var(--text-primary)]" placeholder="name@domain.com">
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Password</label>
+                            <a href="auth" class="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]">Reset?</a>
+                        </div>
+                        <input type="password" required class="w-full px-4 py-3 text-sm bg-transparent border border-[var(--border-color)] rounded-[var(--radius-normal)] focus:border-[var(--primary-accent)] outline-none transition-colors text-[var(--text-primary)]" placeholder="••••••••">
+                    </div>
+                    <button type="submit" id="submitBtn" class="w-full mt-2 bg-[var(--primary-accent)] text-white text-sm font-medium py-3 rounded-[var(--radius-normal)] hover:opacity-90 transition-opacity flex justify-center items-center h-[46px]">
+                        Authenticate Protocol
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Universal WhatsApp Float Node -->
+    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white shadow-none border border-[var(--border-color)] hover:scale-105 transition-transform animate-bounce hover:animate-none">
+        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
+    </a>
+
+    <script>
+        document.getElementById('authForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const emailInput = document.getElementById('emailInput');
+            const email = emailInput.value.trim().toLowerCase();
+            const isAdmin = email.includes('admin') || email.includes('compliance');
+            
+            submitBtn.innerHTML = `<span class="animate-pulse flex items-center justify-center gap-2">
+                <iconify-icon icon="solar:shield-keyhole-bold-duotone" class="animate-spin" style="font-size: 1.2em;"></iconify-icon> Authenticating...
+            </span>`;
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                if (isAdmin) {
+                    window.location.href = 'admin-queue';
+                } else {
+                    window.location.href = 'dashboard';
+                }
+            }, 800);
+        });
+    </script>
+</body>
+</html>

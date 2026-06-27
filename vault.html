@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclaimng - Unified Vault</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root {
+            --canvas-bg: #F8FAF9;
+            --panel-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-muted: #6B7280;
+            --primary-accent: #2C5E43;
+            --border-color: #E2E8F0;
+            --radius-normal: 10px;
+            --radius-large: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--canvas-bg); color: var(--text-primary); }
+    </style>
+</head>
+<body class="flex min-h-screen antialiased selection:bg-[var(--primary-accent)] selection:text-white">
+
+    <!-- Navigation Shell -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 bg-[var(--panel-bg)] border-r border-[var(--border-color)] w-[72px] sm:w-[260px] transition-all duration-300 z-50 flex flex-col overflow-hidden">
+        <div class="h-16 flex items-center px-5 border-b border-[var(--border-color)] justify-between">
+            <a href="dashboard" class="flex items-center gap-2 overflow-hidden">
+                <iconify-icon icon="solar:safe-square-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-base font-semibold tracking-tighter sidebar-text hidden sm:block whitespace-nowrap">RECLAIMNG</span>
+            </a>
+        </div>
+        <nav class="flex-1 py-6 px-3 flex flex-col gap-1">
+            <a href="dashboard" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:home-smile-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Home</span>
+            </a>
+            <a href="dashboard" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:folder-with-files-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">My Recoveries</span>
+            </a>
+            <a href="vault" class="flex items-center gap-3 px-3 py-2 bg-[var(--canvas-bg)] text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:safe-2-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Unified Vault</span>
+            </a>
+            <a href="auth" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors mt-auto">
+                <iconify-icon icon="solar:logout-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Sign Out</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 ml-[72px] sm:ml-[260px] p-8 sm:p-12 max-w-4xl mx-auto min-h-screen">
+        
+        <!-- Breadcrumbs -->
+        <div class="flex items-center space-x-2 text-sm text-[var(--text-muted)] mb-6">
+            <a href="dashboard" class="hover:text-[var(--text-primary)] transition-colors">Home</a>
+            <span>/</span>
+            <span class="text-[var(--text-primary)]">Unified Vault</span>
+        </div>
+
+        <div class="mb-12">
+            <h1 class="text-2xl font-semibold tracking-tight text-[var(--text-primary)] mb-2">My Settled Assets</h1>
+            <p class="text-sm text-[var(--text-muted)]">Your securely cleared financial transitions.</p>
+        </div>
+
+        <!-- Settled Holdings List -->
+        <div class="flex flex-col gap-6">
+            
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-6 shadow-none flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center text-[var(--primary-accent)]">
+                        <iconify-icon icon="solar:safe-circle-linear" style="font-size: 1.5rem;"></iconify-icon>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-0.5">REQ-4091</div>
+                        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Estate of Late Alice Bello</h3>
+                        <p class="text-xs text-[var(--text-muted)]">Settled on Mar 15, 2026 via NIBSS</p>
+                    </div>
+                </div>
+                <div class="flex flex-col md:items-end gap-3 w-full md:w-auto">
+                    <div class="text-xl font-bold text-[var(--text-primary)]">₦4,500,000.00 <span class="text-sm font-medium text-[var(--text-muted)] ml-1">NET</span></div>
+                    <button class="w-full md:w-auto bg-[var(--canvas-bg)] text-[var(--text-primary)] border border-[var(--border-color)] px-4 py-2 text-sm font-medium rounded-[var(--radius-normal)] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                        <iconify-icon icon="solar:document-text-linear"></iconify-icon> Download Clearance PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-6 shadow-none flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center text-[var(--primary-accent)]">
+                        <iconify-icon icon="solar:safe-circle-linear" style="font-size: 1.5rem;"></iconify-icon>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-0.5">REQ-8992</div>
+                        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Estate of Late Samuel Bello</h3>
+                        <p class="text-xs text-[var(--text-muted)]">Settled on May 20, 2026 via NIBSS</p>
+                    </div>
+                </div>
+                <div class="flex flex-col md:items-end gap-3 w-full md:w-auto">
+                    <div class="text-xl font-bold text-[var(--text-primary)]">₦11,205,000.00 <span class="text-sm font-medium text-[var(--text-muted)] ml-1">NET</span></div>
+                    <button class="w-full md:w-auto bg-[var(--canvas-bg)] text-[var(--text-primary)] border border-[var(--border-color)] px-4 py-2 text-sm font-medium rounded-[var(--radius-normal)] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                        <iconify-icon icon="solar:document-text-linear"></iconify-icon> Download Clearance PDF
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Universal WhatsApp Float Node -->
+    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white border border-[var(--border-color)] shadow-none hover:scale-105 transition-transform animate-bounce hover:animate-none">
+        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
+    </a>
+</body>
+</html>

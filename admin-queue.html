@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclaimng - Compliance Queue</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root {
+            --canvas-bg: #F8FAF9;
+            --panel-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-muted: #6B7280;
+            --primary-accent: #2C5E43;
+            --border-color: #E2E8F0;
+            --radius-normal: 10px;
+            --radius-large: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--canvas-bg); color: var(--text-primary); }
+    </style>
+</head>
+<body class="flex min-h-screen antialiased selection:bg-[var(--primary-accent)] selection:text-white">
+
+    <!-- Navigation Shell -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 bg-[var(--panel-bg)] border-r border-[var(--border-color)] w-[72px] sm:w-[260px] transition-all duration-300 z-50 flex flex-col overflow-hidden">
+        <div class="h-16 flex items-center px-5 border-b border-[var(--border-color)] justify-between">
+            <a href="admin-queue" class="flex items-center gap-2 overflow-hidden">
+                <iconify-icon icon="solar:safe-square-bold-duotone" class="text-[var(--primary-accent)]" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-base font-semibold tracking-tighter sidebar-text hidden sm:block whitespace-nowrap text-[var(--primary-accent)]">ADMIN</span>
+            </a>
+        </div>
+        <nav class="flex-1 py-6 px-3 flex flex-col gap-1">
+            <a href="admin-queue" class="flex items-center gap-3 px-3 py-2 bg-[var(--canvas-bg)] text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:clipboard-list-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Compliance Queue</span>
+            </a>
+            <a href="admin-cms" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:settings-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Integration CMS</span>
+            </a>
+            <a href="dispute" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:danger-triangle-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Dispute Center</span>
+            </a>
+            <a href="auth" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors mt-auto">
+                <iconify-icon icon="solar:logout-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Sign Out</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 ml-[72px] sm:ml-[260px] p-8 max-w-[1600px] mx-auto min-h-screen">
+        
+        <!-- Breadcrumbs -->
+        <div class="flex items-center space-x-2 text-sm text-[var(--text-muted)] mb-6">
+            <a href="admin-queue" class="hover:text-[var(--text-primary)] transition-colors">Home</a>
+            <span>/</span>
+            <span class="text-[var(--text-primary)]">Compliance Queue</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+            <h1 class="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">Pending Clearances</h1>
+            <div class="text-sm text-[var(--text-muted)]">3 requests await validation</div>
+        </div>
+
+        <!-- 3-Column CSS Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+            <!-- Grid Item 1 -->
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-6 flex flex-col shadow-none hover:border-[var(--text-muted)] transition-colors relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-[#F59E0B]"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">REQ-8992</span>
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold text-[#B45309] bg-[#FFFBEB] border border-[#FDE68A] uppercase tracking-wide">
+                        In Review
+                    </span>
+                </div>
+                <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">Estate of Late Samuel Bello</h3>
+                <p class="text-xs text-[var(--text-muted)] mb-6 flex-1">Submitted: May 19, 2026</p>
+                
+                <div class="bg-[var(--canvas-bg)] p-4 border border-[var(--border-color)] rounded-[var(--radius-normal)] mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs text-[var(--text-muted)]">QoreID Status</span>
+                        <span class="text-xs font-medium text-emerald-600 flex items-center gap-1"><iconify-icon icon="solar:check-circle-bold"></iconify-icon> Verified</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs text-[var(--text-muted)]">Gross Value</span>
+                        <span class="text-sm font-semibold text-[var(--text-primary)]">₦12,450,000.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-[var(--text-muted)]">Fee (10%)</span>
+                        <span class="text-sm font-semibold text-[var(--primary-accent)]">₦1,245,000.00</span>
+                    </div>
+                </div>
+                
+                <button onclick="triggerSuccessModal()" class="w-full bg-[var(--text-primary)] text-white py-2.5 rounded-[var(--radius-normal)] text-sm font-medium hover:opacity-90 transition-opacity">
+                    Approve & Sweep Assets
+                </button>
+            </div>
+
+            <!-- Grid Item 2 -->
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-6 flex flex-col shadow-none hover:border-[var(--text-muted)] transition-colors relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">REQ-8941</span>
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 uppercase tracking-wide">
+                        Flagged
+                    </span>
+                </div>
+                <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">Estate of Late Amina Yusuf</h3>
+                <p class="text-xs text-[var(--text-muted)] mb-6 flex-1">Submitted: May 17, 2026</p>
+                
+                <div class="bg-[var(--canvas-bg)] p-4 border border-[var(--border-color)] rounded-[var(--radius-normal)] mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs text-[var(--text-muted)]">QoreID Status</span>
+                        <span class="text-xs font-medium text-red-600 flex items-center gap-1"><iconify-icon icon="solar:danger-triangle-bold"></iconify-icon> Mismatch</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs text-[var(--text-muted)]">Gross Value</span>
+                        <span class="text-sm font-semibold text-[var(--text-primary)]">₦3,100,000.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-[var(--text-muted)]">Fee (10%)</span>
+                        <span class="text-sm font-semibold text-[var(--primary-accent)]">₦310,000.00</span>
+                    </div>
+                </div>
+                
+                <button onclick="window.location.href = 'dispute'" class="w-full bg-red-50 text-red-700 border border-red-200 py-2.5 rounded-[var(--radius-normal)] text-sm font-medium hover:bg-red-100 transition-colors">
+                    Move to Dispute
+                </button>
+            </div>
+
+            <!-- Grid Item 3 -->
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-6 flex flex-col shadow-none hover:border-[var(--text-muted)] transition-colors relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-[#F59E0B]"></div>
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">REQ-8977</span>
+                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold text-[#B45309] bg-[#FFFBEB] border border-[#FDE68A] uppercase tracking-wide">
+                        In Review
+                    </span>
+                </div>
+                <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-1">Estate of Late Chukwudi Okafor</h3>
+                <p class="text-xs text-[var(--text-muted)] mb-6 flex-1">Submitted: May 18, 2026</p>
+                
+                <div class="bg-[var(--canvas-bg)] p-4 border border-[var(--border-color)] rounded-[var(--radius-normal)] mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs text-[var(--text-muted)]">QoreID Status</span>
+                        <span class="text-xs font-medium text-emerald-600 flex items-center gap-1"><iconify-icon icon="solar:check-circle-bold"></iconify-icon> Verified</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs text-[var(--text-muted)]">Gross Value</span>
+                        <span class="text-sm font-semibold text-[var(--text-primary)]">₦800,000.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-[var(--text-muted)]">Fee (10%)</span>
+                        <span class="text-sm font-semibold text-[var(--primary-accent)]">₦80,000.00</span>
+                    </div>
+                </div>
+                
+                <button onclick="triggerSuccessModal()" class="w-full bg-[var(--text-primary)] text-white py-2.5 rounded-[var(--radius-normal)] text-sm font-medium hover:opacity-90 transition-opacity">
+                    Approve & Sweep Assets
+                </button>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Universal WhatsApp Float Node -->
+    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white border border-[var(--border-color)] shadow-none hover:scale-105 transition-transform animate-bounce hover:animate-none">
+        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
+    </a>
+
+    <!-- Global Modular Success Overlay -->
+    <script>
+        function triggerSuccessModal() {
+            // Set session storage item so dashboard can show approval banner
+            sessionStorage.setItem('assetSweepCleared', 'true');
+            
+            const successModalHTML = `
+                <div id="global-success-modal" class="fixed inset-0 z-[300] flex items-center justify-center" style="background: rgba(31, 41, 55, 0.45); backdrop-filter: blur(16px);">
+                    <div class="bg-[var(--panel-bg)] p-8 border border-[var(--border-color)] rounded-[var(--radius-large)] shadow-none max-w-md w-full text-center mx-4 flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-full bg-[#ECFDF5] flex items-center justify-center text-[var(--primary-accent)] mb-6 border border-[#A7F3D0]">
+                            <iconify-icon icon="solar:check-circle-linear" style="font-size: 2rem;"></iconify-icon>
+                        </div>
+                        <h3 class="text-lg font-semibold tracking-tight mb-6 text-[var(--text-primary)]">Asset Transition Successful</h3>
+                        
+                        <!-- Ingested Ledger Box -->
+                        <div class="w-full bg-[var(--text-primary)] rounded-[var(--radius-large)] p-6 mb-6 text-left border border-[var(--border-color)]">
+                            <div class="flex flex-col gap-3">
+                                <div>
+                                    <span class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">System Transaction ID</span>
+                                    <div class="text-sm text-white font-mono mt-0.5">#REC-MAPPING-2026-NIBSS</div>
+                                </div>
+                                <div class="border-t border-gray-700/50 pt-3">
+                                    <span class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Estate Beneficiary</span>
+                                    <div class="text-sm text-white mt-0.5">Estate of Late Samuel Bello</div>
+                                </div>
+                                <div class="border-t border-gray-700/50 pt-3">
+                                    <span class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Channels Resolved</span>
+                                    <div class="text-sm text-white mt-0.5">3 Bank Accounts / 7 Dividend Mandates</div>
+                                </div>
+                                <div class="border-t border-gray-700/50 pt-3">
+                                    <span class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Total Reclaimed Amount</span>
+                                    <div class="text-lg font-semibold text-[var(--primary-accent)] mt-0.5">₦12,450,000.00</div>
+                                </div>
+                                <div class="border-t border-gray-700/50 pt-4 flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span class="text-xs text-gray-300 font-medium">NIBSS Network Settlement: Complete</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="w-full flex flex-col gap-3">
+                            <button onclick="window.location.href = 'vault'" class="w-full bg-[var(--primary-accent)] text-white py-3 text-sm font-medium rounded-[var(--radius-normal)] hover:opacity-90 transition-opacity">Go to Unified Vault</button>
+                            <button onclick="document.getElementById('global-success-modal').remove()" class="w-full bg-[var(--canvas-bg)] text-[var(--text-primary)] border border-[var(--border-color)] py-2.5 text-sm font-medium rounded-[var(--radius-normal)] hover:bg-gray-50 transition-colors">Close</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', successModalHTML);
+        }
+    </script>
+</body>
+</html>

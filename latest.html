@@ -1,0 +1,737 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclaimng - Authentication</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root {
+            --canvas-bg: #F8FAF9;
+            --panel-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-muted: #6B7280;
+            --primary-accent: #2C5E43;
+            --border-color: #E2E8F0;
+            --radius-normal: 10px;
+            --radius-large: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-[var(--canvas-bg)] text-[var(--text-primary)] min-h-screen flex antialiased">
+    
+    <div class="w-full flex">
+        <!-- Left Greeting -->
+        <div class="hidden lg:flex flex-col justify-center w-1/2 p-12 lg:p-24">
+            <div class="text-2xl font-semibold tracking-tighter mb-12">RECLAIMNG</div>
+            <h1 class="text-4xl font-semibold tracking-tight leading-tight mb-6 max-w-md">
+                Securely transition your family's financial legacy.
+            </h1>
+            <p class="text-base text-[var(--text-muted)] max-w-sm leading-relaxed">
+                A structured, legally compliant protocol to identify, verify, and unify inherited assets across the central registry.
+            </p>
+        </div>
+
+        <!-- Right Card Module -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6">
+            <div class="bg-[var(--panel-bg)] w-full max-w-md p-8 border border-[var(--border-color)] shadow-sm" style="border-radius: var(--radius-large);">
+                
+                <div class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-color)]">
+                    <button class="text-sm font-semibold text-[var(--text-primary)] border-b-2 border-[var(--text-primary)] pb-2 transition-colors">Sign In</button>
+                    <button class="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] pb-2 transition-colors">Create Account</button>
+                </div>
+
+                <form id="authForm" class="flex flex-col gap-5">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Email Address</label>
+                        <input type="email" required="" class="w-full px-4 py-3 text-sm bg-transparent border border-[var(--border-color)] focus:border-[var(--primary-accent)] outline-none transition-colors placeholder-[var(--text-muted)]" style="border-radius: var(--radius-normal);" placeholder="name@domain.com">
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Password</label>
+                            <a href="#" class="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]">Reset?</a>
+                        </div>
+                        <input type="password" required="" class="w-full px-4 py-3 text-sm bg-transparent border border-[var(--border-color)] focus:border-[var(--primary-accent)] outline-none transition-colors" style="border-radius: var(--radius-normal);">
+                    </div>
+                    <button type="submit" class="w-full mt-2 bg-[var(--primary-accent)] text-white text-sm font-medium py-3 hover:opacity-90 transition-opacity" style="border-radius: var(--radius-normal);">
+                        Authenticate Protocol
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Universal WhatsApp Float Node -->
+    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[100] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform group">
+        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
+    </a>
+
+    <script>
+        document.getElementById('authForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            window.location.href = 'dashboard.html';
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclaimng - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root {
+            --canvas-bg: #F8FAF9;
+            --panel-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-muted: #6B7280;
+            --primary-accent: #2C5E43;
+            --border-color: #E2E8F0;
+            --radius-normal: 10px;
+            --radius-large: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+
+
+    
+    <!-- Navigation Shell -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 bg-[var(--panel-bg)] border-r border-[var(--border-color)] w-[260px] transition-all duration-300 z-50 flex flex-col">
+        <div class="h-16 flex items-center px-5 border-b border-[var(--border-color)] justify-between">
+            <a href="dashboard.html" class="flex items-center gap-2 overflow-hidden">
+                <iconify-icon icon="solar:safe-square-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-base font-semibold tracking-tighter sidebar-text whitespace-nowrap">RECLAIMNG</span>
+            </a>
+            <button id="toggleSidebar" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] flex-shrink-0">
+                <iconify-icon icon="solar:hamburger-menu-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+            </button>
+        </div>
+        <nav class="flex-1 py-6 px-3 flex flex-col gap-1">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 bg-[var(--canvas-bg)] text-[var(--text-primary)] rounded-[var(--radius-normal)]">
+                <iconify-icon icon="solar:home-smile-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text whitespace-nowrap">Home</span>
+            </a>
+            <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:folder-with-files-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text whitespace-nowrap">My Recoveries</span>
+            </a>
+            <a href="vault.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:safe-2-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text whitespace-nowrap">Unified Vault</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:document-text-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text whitespace-nowrap">Legal Records</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:headphones-round-sound-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text whitespace-nowrap">Support</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors mt-auto">
+                <iconify-icon icon="solar:shield-warning-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text whitespace-nowrap">Policies</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main id="main-content" class="flex-1 ml-[260px] transition-all duration-300 min-h-screen">
+        
+        <!-- Persistent Notification Banner -->
+        <div id="approvalBanner" class="w-full bg-[var(--primary-accent)] text-white px-6 py-3 flex items-center justify-between text-sm shadow-sm hidden">
+            <span class="font-medium flex items-center gap-2">
+                <iconify-icon icon="solar:bell-bing-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                System Notice: Your asset sweep has cleared. Access your Unified Estate Vault.
+            </span>
+            <a href="vault.html" class="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-md transition-colors text-xs font-semibold tracking-wide">View Vault</a>
+        </div>
+
+        <div class="p-8 max-w-6xl mx-auto">
+            
+            <div class="flex items-center justify-between mb-8">
+                <h1 class="text-2xl font-semibold tracking-tight">Overview Dashboard</h1>
+                <a href="wizard.html" class="bg-[var(--primary-accent)] text-white px-4 py-2 text-sm font-medium flex items-center gap-2 hover:opacity-90 transition-opacity" style="border-radius: var(--radius-normal);">
+                    <iconify-icon icon="solar:add-square-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                    Add Asset Recovery
+                </a>
+            </div>
+
+            <!-- Context Headers -->
+            <div class="flex items-center gap-6 border-b border-[var(--border-color)] mb-6 pb-2">
+                <button class="text-sm font-medium text-[var(--text-primary)] border-b-2 border-[var(--text-primary)] pb-2 -mb-[9px]">All Recoveries</button>
+                <button class="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] pb-2 -mb-[9px]">Active Audits</button>
+                <button class="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] pb-2 -mb-[9px]">Settled Closures</button>
+            </div>
+
+            <!-- Overview Panels -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-[var(--panel-bg)] p-6 border border-[var(--border-color)] flex flex-col gap-1 shadow-sm" style="border-radius: var(--radius-large);">
+                    <span class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Discovered Balance</span>
+                    <span class="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">₦12,450,000.00</span>
+                </div>
+                <div class="bg-[var(--panel-bg)] p-6 border border-[var(--border-color)] flex flex-col gap-1 shadow-sm" style="border-radius: var(--radius-large);">
+                    <span class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Expected Settlement</span>
+                    <span class="text-3xl font-semibold tracking-tight text-[var(--text-primary)]">₦12,450,000.00</span>
+                </div>
+            </div>
+
+            <!-- High-Density Data Matrix -->
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden shadow-sm" style="border-radius: var(--radius-large);">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-[var(--border-color)] bg-[var(--canvas-bg)]">
+                            <th class="py-3 px-5 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Estate Name</th>
+                            <th class="py-3 px-5 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Progress Steps</th>
+                            <th class="py-3 px-5 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Document Verification</th>
+                            <th class="py-3 px-5 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Value Registry</th>
+                            <th class="py-3 px-5 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm divide-y divide-[var(--border-color)]">
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="py-4 px-5 font-medium text-[var(--text-primary)]">Estate of Late Alice Bello</td>
+                            <td class="py-4 px-5 text-[var(--text-muted)]">Completed</td>
+                            <td class="py-4 px-5">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Verified
+                                </span>
+                            </td>
+                            <td class="py-4 px-5 font-medium">₦5,000,000.00</td>
+                            <td class="py-4 px-5 text-right">
+                                <a href="recovery-detail.html" class="text-xs font-medium text-[var(--text-primary)] bg-[var(--canvas-bg)] border border-[var(--border-color)] px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors">View Assets</a>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50/50 transition-colors">
+                            <td class="py-4 px-5 font-medium text-[var(--text-primary)]">Estate of Late Samuel Bello</td>
+                            <td class="py-4 px-5 text-[var(--text-muted)]">Step 2/4</td>
+                            <td class="py-4 px-5">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
+                                </span>
+                            </td>
+                            <td class="py-4 px-5 font-medium">₦12,450,000.00</td>
+                            <td class="py-4 px-5 text-right">
+                                <a href="recovery-detail.html" class="text-xs font-medium text-[var(--text-primary)] bg-[var(--canvas-bg)] border border-[var(--border-color)] px-3 py-1.5 rounded-md hover:bg-gray-100 transition-colors">View Assets</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Universal WhatsApp Float Node -->
+    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[100] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform group">
+        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
+    </a>
+
+    <script>
+        // Mock Administrative Token Logic
+        const hasApprovalToken = true;
+        if(hasApprovalToken) {
+            document.getElementById('approvalBanner').classList.remove('hidden');
+        }
+
+        // Sidebar Toggle Logic
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const sidebarTexts = document.querySelectorAll('.sidebar-text');
+
+        toggleBtn.addEventListener('click', () => {
+            const isCollapsed = sidebar.classList.contains('w-[72px]');
+            if (isCollapsed) {
+                sidebar.classList.remove('w-[72px]');
+                sidebar.classList.add('w-[260px]');
+                mainContent.classList.remove('ml-[72px]');
+                mainContent.classList.add('ml-[260px]');
+                sidebarTexts.forEach(el => el.classList.remove('hidden'));
+            } else {
+                sidebar.classList.remove('w-[260px]');
+                sidebar.classList.add('w-[72px]');
+                mainContent.classList.remove('ml-[260px]');
+                mainContent.classList.add('ml-[72px]');
+                sidebarTexts.forEach(el => el.classList.add('hidden'));
+            }
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclaimng - Intake Wizard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root {
+            --canvas-bg: #F8FAF9;
+            --panel-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-muted: #6B7280;
+            --primary-accent: #2C5E43;
+            --border-color: #E2E8F0;
+            --radius-normal: 10px;
+            --radius-large: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+
+
+    
+    <!-- Include Navigation Shell visually same as dashboard. Hidden for brevity in code snippet limits, assuming layout wrapper -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 bg-[var(--panel-bg)] border-r border-[var(--border-color)] w-[72px] sm:w-[260px] transition-all duration-300 z-50 flex flex-col overflow-hidden">
+        <div class="h-16 flex items-center px-5 border-b border-[var(--border-color)] justify-between">
+            <a href="dashboard.html" class="flex items-center gap-2">
+                <iconify-icon icon="solar:safe-square-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-base font-semibold tracking-tighter sidebar-text hidden sm:block">RECLAIMNG</span>
+            </a>
+        </div>
+        <nav class="flex-1 py-6 px-3 flex flex-col gap-1">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] rounded-[var(--radius-normal)] hover:bg-gray-50">
+                <iconify-icon icon="solar:arrow-left-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block">Back to Dashboard</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 ml-[72px] sm:ml-[260px] p-8 max-w-4xl mx-auto min-h-screen relative">
+        
+        <!-- Breadcrumbs & Nav -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-2 text-xs font-medium text-[var(--text-muted)]">
+                <a href="dashboard.html" class="hover:text-[var(--text-primary)]">Home</a>
+                <span>/</span>
+                <a href="dashboard.html" class="hover:text-[var(--text-primary)]">My Recoveries</a>
+                <span>/</span>
+                <span class="text-[var(--text-primary)]">New Intake</span>
+            </div>
+            <a href="dashboard.html" class="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] flex items-center gap-1.5">
+                <iconify-icon icon="solar:arrow-left-linear"></iconify-icon> Back
+            </a>
+        </div>
+
+        <h1 class="text-2xl font-semibold tracking-tight mb-8">Initiate Asset Sweep Protocol</h1>
+
+        <!-- Progressive Accordion Matrix -->
+        <div class="flex flex-col gap-4">
+            
+            <!-- Step 1 -->
+            <div id="step1-card" class="bg-[var(--panel-bg)] border border-[var(--border-color)] p-6 transition-all duration-300" style="border-radius: var(--radius-large);">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-base font-semibold flex items-center gap-2">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--canvas-bg)] border border-[var(--border-color)] text-xs">1</span>
+                        Deceased Identity Intake
+                    </h2>
+                </div>
+                <form id="step1-form" class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Legal Name of Deceased</label>
+                        <input type="text" required="" class="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-md outline-none focus:border-[var(--primary-accent)]">
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Date of Death</label>
+                        <input type="date" required="" class="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-md outline-none focus:border-[var(--primary-accent)]">
+                    </div>
+                    <div class="flex flex-col gap-1.5 sm:col-span-2">
+                        <label class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">11-Digit BVN</label>
+                        <input type="text" pattern="\d{11}" maxlength="11" required="" class="w-full px-3 py-2 text-sm border border-[var(--border-color)] rounded-md outline-none focus:border-[var(--primary-accent)]" placeholder="00000000000">
+                    </div>
+                    <div class="sm:col-span-2 flex justify-end mt-2">
+                        <button type="submit" class="bg-[var(--text-primary)] text-white px-5 py-2 text-sm font-medium rounded-md hover:opacity-90">Verify Identity</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 2 -->
+            <div id="step2-card" class="bg-[var(--panel-bg)] border border-[var(--border-color)] p-6 opacity-50 pointer-events-none transition-all duration-300" style="border-radius: var(--radius-large);">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-base font-semibold flex items-center gap-2">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--canvas-bg)] border border-[var(--border-color)] text-xs">2</span>
+                        Probate Document Gate
+                    </h2>
+                </div>
+                <form id="step2-form" class="flex flex-col gap-5">
+                    <div class="border-2 border-dashed border-[var(--border-color)] rounded-lg p-10 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
+                        <iconify-icon icon="solar:document-add-linear" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;"></iconify-icon>
+                        <span class="text-sm font-medium text-[var(--text-primary)]">Drag &amp; drop Death Certificate and Letters of Administration</span>
+                        <span class="text-xs text-[var(--text-muted)] mt-1">PDF or JPG up to 10MB</span>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-[var(--primary-accent)] text-white px-5 py-2 text-sm font-medium rounded-md hover:opacity-90">Submit Documents</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 3 -->
+            <div id="step3-card" class="bg-[var(--panel-bg)] border border-[var(--border-color)] p-6 opacity-50 pointer-events-none transition-all duration-300" style="border-radius: var(--radius-large);">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-base font-semibold flex items-center gap-2">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--canvas-bg)] border border-[var(--border-color)] text-xs">3</span>
+                        Discovered Assets Matrix
+                    </h2>
+                </div>
+                <div class="border border-[var(--border-color)] rounded-lg overflow-hidden mb-4">
+                    <div class="flex items-center justify-between p-4 bg-[var(--canvas-bg)] border-b border-[var(--border-color)]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded bg-white border border-[var(--border-color)] flex items-center justify-center text-[var(--text-primary)]">
+                                <iconify-icon icon="solar:banknotes-linear"></iconify-icon>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--text-primary)]">First Bank PLC</div>
+                                <div class="text-xs text-[var(--text-muted)]">Account: ****4920 (NIBSS Endpoint)</div>
+                            </div>
+                        </div>
+                        <div class="text-sm font-semibold">₦5,450,000.00</div>
+                    </div>
+                    <div class="flex items-center justify-between p-4 bg-[var(--canvas-bg)]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded bg-white border border-[var(--border-color)] flex items-center justify-center text-[var(--text-primary)]">
+                                <iconify-icon icon="solar:banknotes-linear"></iconify-icon>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-[var(--text-primary)]">Guaranty Trust Bank</div>
+                                <div class="text-xs text-[var(--text-muted)]">Account: ****1102 (NIBSS Endpoint)</div>
+                            </div>
+                        </div>
+                        <div class="text-sm font-semibold">₦7,000,000.00</div>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button id="step3-btn" class="bg-[var(--text-primary)] text-white px-5 py-2 text-sm font-medium rounded-md hover:opacity-90">Confirm Discovered Assets</button>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div id="step4-card" class="bg-[var(--panel-bg)] border border-[var(--border-color)] p-6 opacity-50 pointer-events-none transition-all duration-300" style="border-radius: var(--radius-large);">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-base font-semibold flex items-center gap-2">
+                        <span class="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--canvas-bg)] border border-[var(--border-color)] text-xs">4</span>
+                        Settlement Mandate
+                    </h2>
+                </div>
+                <div class="bg-[var(--canvas-bg)] p-5 border border-[var(--border-color)] rounded-lg mb-6 flex items-center justify-between">
+                    <span class="text-sm font-medium text-[var(--text-muted)]">Gross Discovered Worth</span>
+                    <span class="text-xl font-semibold tracking-tight text-[var(--text-primary)]">₦12,450,000.00</span>
+                </div>
+                
+                <label class="flex items-start gap-3 cursor-pointer group mb-6">
+                    <div class="relative flex items-center justify-center w-5 h-5 mt-0.5 flex-shrink-0">
+                        <input type="checkbox" id="mandate-check" class="peer sr-only">
+                        <div class="w-5 h-5 border border-[var(--border-color)] rounded-[4px] peer-checked:bg-[var(--primary-accent)] peer-checked:border-[var(--primary-accent)] transition-colors bg-white"></div>
+                        <iconify-icon icon="solar:check-read-linear" class="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity" style="font-size: 14px;"></iconify-icon>
+                    </div>
+                    <span class="text-sm text-[var(--text-muted)] leading-relaxed group-hover:text-[var(--text-primary)] transition-colors">
+                        I explicitly authorize Reclaimng to act as our digital transition proxy and agree to the standardized 10% platform service fee (₦1,245,000.00) to be deducted exclusively from the gross worth of recovered assets upon successful clearing and settlement.
+                    </span>
+                </label>
+                
+                <div class="flex justify-end">
+                    <button id="final-submit" class="bg-[var(--primary-accent)] text-white px-6 py-2.5 text-sm font-medium rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity" disabled="">Execute Settlement Mandate</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- QoreID Processing Modal -->
+    <div id="qore-modal" class="fixed inset-0 z-[200] bg-white/80 backdrop-blur-sm hidden flex items-center justify-center">
+        <div class="bg-[var(--panel-bg)] p-8 border border-[var(--border-color)] shadow-xl flex flex-col items-center text-center max-w-sm" style="border-radius: var(--radius-large);">
+            <div class="w-12 h-12 border-4 border-gray-100 border-t-[var(--primary-accent)] rounded-full animate-spin mb-6"></div>
+            <h3 class="text-base font-semibold mb-2">QoreID Verification Processing</h3>
+            <p class="text-sm text-[var(--text-muted)]">Securely routing file sets to public judicial archives...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 z-[200] bg-white/80 backdrop-blur-sm hidden flex items-center justify-center">
+        <div class="bg-[var(--panel-bg)] p-8 border border-[var(--border-color)] shadow-xl flex flex-col items-center text-center max-w-sm" style="border-radius: var(--radius-large);">
+            <div class="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center text-green-600 mb-6">
+                <iconify-icon icon="solar:check-circle-linear" style="font-size: 2rem;"></iconify-icon>
+            </div>
+            <h3 class="text-lg font-semibold tracking-tight mb-2">Mandate Executed</h3>
+            <p class="text-sm text-[var(--text-muted)] mb-6">Assets are queued for central mapping and transition.</p>
+            <a href="dashboard.html" class="w-full bg-[var(--text-primary)] text-white py-2.5 text-sm font-medium rounded-md">Return to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Universal WhatsApp Float Node -->
+    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[100] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform group">
+        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
+    </a>
+
+    <script>
+        const s1Form = document.getElementById('step1-form');
+        const s2Form = document.getElementById('step2-form');
+        const s3Btn = document.getElementById('step3-btn');
+        const s4Check = document.getElementById('mandate-check');
+        const finalBtn = document.getElementById('final-submit');
+        
+        const qoreModal = document.getElementById('qore-modal');
+        const successModal = document.getElementById('success-modal');
+
+        const s1Card = document.getElementById('step1-card');
+        const s2Card = document.getElementById('step2-card');
+        const s3Card = document.getElementById('step3-card');
+        const s4Card = document.getElementById('step4-card');
+
+        s1Form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            s1Card.classList.add('opacity-50');
+            s2Card.classList.remove('opacity-50', 'pointer-events-none');
+        });
+
+        s2Form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            qoreModal.classList.remove('hidden');
+            setTimeout(() => {
+                qoreModal.classList.add('hidden');
+                s2Card.classList.add('opacity-50');
+                s3Card.classList.remove('opacity-50', 'pointer-events-none');
+            }, 2000);
+        });
+
+        s3Btn.addEventListener('click', () => {
+            s3Card.classList.add('opacity-50');
+            s4Card.classList.remove('opacity-50', 'pointer-events-none');
+        });
+
+        s4Check.addEventListener('change', (e) => {
+            finalBtn.disabled = !e.target.checked;
+        });
+
+        finalBtn.addEventListener('click', () => {
+            successModal.classList.remove('hidden');
+        });
+    </script>
+
+
+
+
+
+
+
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclaimng - Detail View</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root {
+            --canvas-bg: #F8FAF9;
+            --panel-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-muted: #6B7280;
+            --primary-accent: #2C5E43;
+            --border-color: #E2E8F0;
+            --radius-normal: 10px;
+            --radius-large: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+
+
+    
+    <!-- Sidebar included conceptually, hidden for snippet focus -->
+    <main class="flex-1 p-8 sm:p-12 max-w-3xl mx-auto min-h-screen">
+        
+        <div class="mb-12">
+            <a href="dashboard.html" class="inline-flex items-center gap-2 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-8">
+                <iconify-icon icon="solar:arrow-left-linear" style="font-size: 1.25rem;"></iconify-icon> Back to My Recoveries
+            </a>
+            
+            <div class="flex flex-col gap-2">
+                <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Gross Estate Valuation</span>
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-[var(--primary-accent)] flex items-center justify-center text-white">
+                        <iconify-icon icon="solar:wallet-money-linear" style="font-size: 1.5rem;"></iconify-icon>
+                    </div>
+                    <h1 class="text-4xl sm:text-5xl font-semibold tracking-tight">12,450,000.00 <span class="text-xl text-[var(--text-muted)] font-medium">NGN</span></h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+            
+            <!-- Cash Account Records -->
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden" style="border-radius: var(--radius-large);">
+                <div class="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--canvas-bg)]">
+                    <h3 class="text-sm font-semibold tracking-tight">Cash Account Records</h3>
+                </div>
+                <div class="divide-y divide-[var(--border-color)]">
+                    <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <div>
+                            <div class="text-sm font-medium text-[var(--text-primary)] mb-0.5">Guaranty Trust Bank (Savings)</div>
+                            <div class="text-xs text-[var(--text-muted)]">Verified via NIBSS • Acct: ****1102</div>
+                            <a href="#" class="text-xs text-[var(--primary-accent)] hover:underline mt-1 inline-block">Learn more</a>
+                        </div>
+                        <div class="text-sm font-semibold">7,000,000.00 NGN</div>
+                    </div>
+                    <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <div>
+                            <div class="text-sm font-medium text-[var(--text-primary)] mb-0.5">First Bank PLC (Current)</div>
+                            <div class="text-xs text-[var(--text-muted)]">Verified via NIBSS • Acct: ****4920</div>
+                        </div>
+                        <div class="text-sm font-semibold">5,450,000.00 NGN</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock/Equity Value Registries -->
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden" style="border-radius: var(--radius-large);">
+                <div class="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--canvas-bg)] flex justify-between items-center">
+                    <h3 class="text-sm font-semibold tracking-tight">Stock/Equity Registries</h3>
+                    <span class="text-xs bg-gray-100 text-[var(--text-muted)] px-2 py-1 rounded font-medium">No Active Records</span>
+                </div>
+                <div class="px-6 py-8 text-center text-sm text-[var(--text-muted)]">
+                    CSCS registry scan returned zero equities linked to provided BVN.
+                </div>
+            </div>
+
+            <!-- Unclaimed Dividend Registries -->
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden" style="border-radius: var(--radius-large);">
+                <div class="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--canvas-bg)] flex justify-between items-center">
+                    <h3 class="text-sm font-semibold tracking-tight">Unclaimed Dividends</h3>
+                    <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100 font-medium">Scanned</span>
+                </div>
+                <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div>
+                        <div class="text-sm font-medium text-[var(--text-primary)] mb-0.5">Zenith Bank Plc Dividends</div>
+                        <div class="text-xs text-[var(--text-muted)]">Warrant #8892 • Year 2018</div>
+                    </div>
+                    <div class="text-sm font-semibold text-[var(--text-muted)]">Included in GTB balance</div>
+                </div>
+            </div>
+
+            <!-- Billing Summary Box -->
+            <div class="mt-6 bg-[var(--canvas-bg)] border border-[var(--border-color)] p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" style="border-radius: var(--radius-large);">
+                <div class="flex flex-col gap-1">
+                    <span class="text-sm font-medium">Platform Service Fee: 10%</span>
+                    <span class="text-xs text-[var(--text-muted)]">Automatically deducted upon final settlement sweep.</span>
+                </div>
+                <div class="text-right">
+                    <span class="block text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide mb-0.5">Net Beneficiary Allocation</span>
+                    <span class="text-lg font-semibold text-[var(--primary-accent)]">11,205,000.00 NGN</span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    
+    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[100] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform group">
+        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
+    </a>
+
+
+
+
+
+
+
+
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclaimng - Admin Queue</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root {
+            --canvas-bg: #F8FAF9;
+            --panel-bg: #FFFFFF;
+            --text-primary: #1F2937;
+            --text-muted: #6B7280;
+            --primary-accent: #2C5E43;
+            --border-color: #E2E8F0;
+            --radius-normal: 10px;
+            --radius-large: 12px;
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+
+
+    
+    <!-- Admin Navigation Shell -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 bg-[var(--panel-bg)] border-r border-[var(--border-color)] w-[260px] flex flex-col z-50">
+        <div class="h-14 flex items-center px-5 border-b border-[var(--border-color)] justify-between bg-[var(--canvas-bg)]">
+            <span class="text-xs font-semibold tracking-wide uppercase text-[var(--text-muted)]">Compliance OPS</span>
+        </div>
+        <nav class="flex-1 py-4 px-3 flex flex-col gap-1">
+            <a href="admin-queue.html" class="flex items-center gap-3 px-3 py-2 bg-gray-100 text-[var(--text-primary)] rounded-md">
+                <span class="text-sm font-medium">Active Queue</span>
+                <span class="ml-auto bg-[var(--text-primary)] text-white text-[10px] px-1.5 py-0.5 rounded font-semibold">12</span>
+            </a>
+            <a href="dispute.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:bg-gray-50 rounded-md">
+                <span class="text-sm font-medium">Dispute Center</span>
+            </a>
+            <a href="admin-cms.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:bg-gray-50 rounded-md">
+                <span class="text-sm font-medium">Core Integration (CMS)</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 ml-[260px] h-screen flex flex-col">
+        
+        <header class="h-14 border-b border-[var(--border-color)] bg-[var(--panel-bg)] flex items-center px-6 shrink-0">
+            <div class="text-xs font-medium text-[var(--text-muted)]">
+                Compliance Terminal <span class="mx-1">/</span> <span class="text-[var(--text-primary)]">Pending Queue</span>
+            </div>
+        </header>
+
+        <!-- 3-Column Engine -->
+        <div class="flex-1 flex overflow-hidden">
+            
+            <!-- Col 1: Queue Grid -->
+            <div class="w-1/3 border-r border-[var(--border-color)] bg-[var(--canvas-bg)] overflow-y-auto flex flex-col">
+                <div class="p-4 border-b border-[var(--border-color)]">
+                    <input type="text" placeholder="Search hash or BVN..." class="w-full text-sm px-3 py-2 border border-[var(--border-color)] rounded bg-white outline-none focus:border-[var(--primary-accent)]">
+                </div>
+                <div class="flex flex-col">
+                    <div class="p-4 border-b border-[var(--border-color)] bg-white cursor-pointer border-l-2 border-l-[var(--primary-accent)]">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-sm font-semibold">Samuel Bello</span>
+                            <span class="text-[10px] text-[var(--text-muted)]">10m ago</span>
+                        </div>
+                        <div class="text-xs text-[var(--text-muted)] mb-2">Hash: #REC-MAPPING-2026</div>
+                        <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Review Pending</span>
+                    </div>
+                    <div class="p-4 border-b border-[var(--border-color)] cursor-pointer hover:bg-white transition-colors border-l-2 border-l-transparent">
+                        <div class="flex justify-between items-start mb-1">
+                            <span class="text-sm font-semibold">Amaka Nweke</span>
+                            <span class="text-[10px] text-[var(--text-muted)]">1h ago</span>
+                        </div>
+                        <div class="text-xs text-[var(--text-muted)] mb-2">Hash: #REC-MAPPING-2021</div>
+                        <span class="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">Review Pending</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Col 2: Document Frame -->
+            <div class="w-1/3 border-r border-[var(--border-color)] bg-gray-100 p-4 flex flex-col overflow-y-auto">
+                <div class="bg-[var(--panel-bg)] rounded border border-[var(--border-color)] h-full flex flex-col items-center justify-center p-4 shadow-sm relative group cursor-pointer">
+                    <div class="absolute inset-0 bg-black/5 hidden group-hover:flex items-center justify-center transition-all"></div></div></div></div></main></body></html>
