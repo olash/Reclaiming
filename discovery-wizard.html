@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estate Discovery Wizard | Reclaimng</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0F172A',
+                        accent: '#3B82F6',
+                        glass: 'rgba(255, 255, 255, 0.7)',
+                        glassDark: 'rgba(255, 255, 255, 0.9)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Paystack V2: Script is NOT loaded here at page load. -->
+    <!-- It is lazily injected by loadPaystackScript() only when Step 2 is
+         successfully completed, saving bandwidth for mobile users. -->
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .accordion-content {
+            transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, padding 0.4s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding: 0 1.5rem;
+        }
+
+        .accordion-content.active {
+            max-height: 2000px; /* arbitrary large height to accommodate content */
+            opacity: 1;
+            padding: 1.5rem;
+        }
+
+        /* Toast Animation */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .toast-enter { animation: slideInRight 0.3s forwards; }
+        .toast-exit { animation: slideOutRight 0.3s forwards; }
+
+        /* Loader */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid #3B82F6;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased font-sans relative pb-20">
+
+    <!-- Navbar -->
+    <nav class="glass-panel sticky top-0 z-40 px-6 py-4 flex justify-between items-center mb-10">
+        <div class="text-xl font-extrabold text-primary tracking-tight">Reclaim<span class="text-accent">ng</span></div>
+        <div class="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Estate Discovery Portal</div>
+    </nav>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- Processing Modal -->
+    <div id="processing-modal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center">
+        <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center text-center max-w-sm mx-4 shadow-2xl bg-white/90">
+            <div class="spinner mb-6"></div>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">Verifying Records</h3>
+            <p class="text-sm text-gray-600">Verifying National Population Commission (NPC) Records via QoreID...</p>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 w-full space-y-6">
+
+        <!-- Step 1: Death Certificate Firewall -->
+        <div class="glass-panel rounded-2xl overflow-hidden" id="step-1-container">
+            <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40 cursor-default">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold shadow-md">1</div>
+                    <h2 class="text-lg font-bold text-gray-800">Pre-Probate: Death Certificate Firewall</h2>
+                </div>
+                <span id="step-1-status" class="px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700">In Progress</span>
+            </div>
+            <div id="step-1-content" class="accordion-content active">
+                <p class="text-sm text-gray-600 mb-6">In compliance with Nigerian Data Protection laws, we must verify the individual's deceased status before accessing financial endpoints.</p>
+                
+                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:bg-gray-50/50 hover:border-accent transition-colors cursor-pointer relative">
+                    <input type="file" id="death-cert-file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".pdf,.jpg,.jpeg,.png">
+                    <i class="fa-solid fa-file-contract text-4xl text-gray-400 mb-3"></i>
+                    <h4 class="text-base font-semibold text-gray-800">Upload Official Death Certificate</h4>
+                    <p class="text-sm text-gray-500 mt-1">Drag and drop or click to browse (PDF, JPG, PNG)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Administrator & Surety Intake -->
+        <div class="glass-panel rounded-2xl overflow-hidden opacity-60" id="step-2-container">
+            <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40">
+                <div class="flex items-center gap-3">
+                    <div id="step-2-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">2</div>
+                    <h2 class="text-lg font-bold text-gray-800">Administrator & Surety Intake</h2>
+                </div>
+                <span id="step-2-status" class="px-3 py-1 text-xs font-bold rounded-full bg-gray-200 text-gray-600 hidden">Locked</span>
+            </div>
+            <div id="step-2-content" class="accordion-content">
+                <form id="intake-form" class="space-y-8">
+                    <!-- Section A -->
+                    <div class="space-y-4">
+                        <h3 class="text-md font-bold text-gray-800 border-b border-gray-200 pb-2">Section A: Primary Administrator</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Legal Full Name</label>
+                                <input type="text" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">BVN or NIN</label>
+                                <input type="text" required pattern="[0-9]{11}" class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm" placeholder="11 digits">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
+                                <input type="tel" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm" placeholder="080...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section B -->
+                    <div class="space-y-4">
+                        <h3 class="text-md font-bold text-gray-800 border-b border-gray-200 pb-2">Section B: Sureties / Guarantors</h3>
+                        <p class="text-xs text-gray-500">Nigerian Probate Law requires an Administration Bond backed by two verified sureties.</p>
+                        
+                        <!-- Surety 1 -->
+                        <div class="p-4 bg-gray-50/50 rounded-xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-3 text-sm font-semibold text-gray-700">First Surety</div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Full Name</label>
+                                <input type="text" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">NIN</label>
+                                <input type="text" required pattern="[0-9]{11}" class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
+                                <input type="tel" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Surety 2 -->
+                        <div class="p-4 bg-gray-50/50 rounded-xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-3 text-sm font-semibold text-gray-700">Second Surety</div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Full Name</label>
+                                <input type="text" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">NIN</label>
+                                <input type="text" required pattern="[0-9]{11}" class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
+                                <input type="tel" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-4">
+                        <button type="submit" id="btn-validate-identities" class="px-6 py-3 bg-primary hover:bg-gray-800 text-white font-semibold rounded-xl shadow-lg transition-all flex items-center gap-2">
+                            <span>Validate Identities</span>
+                            <i class="fa-solid fa-shield-check"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Step 3: Paystack Discovery Gate -->
+        <div class="glass-panel rounded-2xl overflow-hidden opacity-60" id="step-3-container">
+            <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40">
+                <div class="flex items-center gap-3">
+                    <div id="step-3-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">3</div>
+                    <h2 class="text-lg font-bold text-gray-800">Estate Discovery Gate</h2>
+                </div>
+                <span id="step-3-status" class="px-3 py-1 text-xs font-bold rounded-full bg-gray-200 text-gray-600 hidden">Locked</span>
+            </div>
+            <div id="step-3-content" class="accordion-content">
+                <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-6 text-center">
+                    <i class="fa-solid fa-lock text-3xl text-accent mb-4"></i>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Estate Discovery & Legal Formatting Fee</h3>
+                    <p class="text-sm text-gray-600 mb-6 max-w-md mx-auto">To initiate the comprehensive asset sweep across NIBSS, CSCS, and e-DMMS registrars, a one-time processing fee is required.</p>
+                    
+                    <div class="text-3xl font-extrabold text-primary mb-6">₦5,000<span class="text-sm font-medium text-gray-500">.00</span></div>
+                    
+                    <button id="btn-paystack" class="px-8 py-3 bg-[#0ba4db] hover:bg-[#0a8cb8] text-white font-bold rounded-xl shadow-lg transition-all">
+                        Pay Securely with Paystack
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Omni-Asset Matrix -->
+        <div class="glass-panel rounded-2xl overflow-hidden opacity-60" id="step-4-container">
+            <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40">
+                <div class="flex items-center gap-3">
+                    <div id="step-4-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">4</div>
+                    <h2 class="text-lg font-bold text-gray-800">Omni-Asset Matrix & e-DMMS</h2>
+                </div>
+                <span id="step-4-status" class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 hidden">Unlocked</span>
+            </div>
+            <div id="step-4-content" class="accordion-content">
+                
+                <!-- Tabs -->
+                <div class="flex border-b border-gray-200 mb-6">
+                    <button class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-accent text-accent" data-target="tab-nibss">Bank Balances (NIBSS)</button>
+                    <button class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-target="tab-cscs">Equities (CSCS)</button>
+                    <button class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-target="tab-edmms">Unclaimed Dividends</button>
+                </div>
+
+                <!-- Tab Contents -->
+                <div id="tab-nibss" class="tab-content block">
+                    <div class="bg-white/60 rounded-xl border border-gray-100 p-4 flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600"><i class="fa-solid fa-building-columns"></i></div>
+                            <div>
+                                <div class="font-bold text-gray-800">Guaranty Trust Bank (GTBank)</div>
+                                <div class="text-xs text-gray-500">Acct: 0123****89</div>
+                            </div>
+                        </div>
+                        <div class="text-lg font-bold text-gray-900">₦4,500,000.00</div>
+                    </div>
+                    <div class="bg-white/60 rounded-xl border border-gray-100 p-4 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center text-red-600"><i class="fa-solid fa-building-columns"></i></div>
+                            <div>
+                                <div class="font-bold text-gray-800">Zenith Bank Plc</div>
+                                <div class="text-xs text-gray-500">Acct: 2003****11</div>
+                            </div>
+                        </div>
+                        <div class="text-lg font-bold text-gray-900">₦1,250,300.50</div>
+                    </div>
+                </div>
+
+                <div id="tab-cscs" class="tab-content hidden">
+                    <div class="bg-white/60 rounded-xl border border-gray-100 p-4 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600"><i class="fa-solid fa-chart-line"></i></div>
+                            <div>
+                                <div class="font-bold text-gray-800">Zenith Bank Shares</div>
+                                <div class="text-xs text-gray-500">CSCS CHN: C1234567AB</div>
+                            </div>
+                        </div>
+                        <div class="text-lg font-bold text-gray-900">15,000 Units</div>
+                    </div>
+                </div>
+
+                <div id="tab-edmms" class="tab-content hidden">
+                    <div class="bg-white/60 rounded-xl border border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600"><i class="fa-solid fa-money-bill-wave"></i></div>
+                            <div>
+                                <div class="font-bold text-gray-800">MTN Nigeria Dividends - ₦340,000</div>
+                                <div class="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded mt-1 inline-block"><span class="font-semibold">Registrar:</span> Africa Prudential</div>
+                            </div>
+                        </div>
+                        <button class="px-4 py-2 bg-white border border-gray-200 shadow-sm text-sm font-semibold rounded-lg hover:bg-gray-50 text-accent whitespace-nowrap transition-colors">
+                            <i class="fa-regular fa-file-pdf mr-1"></i> Generate e-Mandate Form
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-10 border-t border-gray-200 pt-6">
+                    <button id="btn-generate-report" class="w-full py-4 bg-primary hover:bg-gray-800 text-white font-bold rounded-xl shadow-xl transition-all flex items-center justify-center gap-2">
+                        <span id="btn-report-text">Generate High Court Inventory Report</span>
+                        <i id="btn-report-icon" class="fa-solid fa-file-invoice"></i>
+                        <div id="btn-report-spinner" class="spinner hidden" style="width:20px; height:20px; border-width:2px;"></div>
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Floating WhatsApp Node -->
+    <a href="#" class="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full shadow-2xl flex items-center justify-center text-white text-3xl hover:bg-green-600 hover:scale-105 transition-all z-40">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <!-- Application Logic -->
+    <script>
+        // Utilities
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const isError = type === 'error';
+            const bgColor = isError ? 'bg-red-50/90 border-red-200' : 'bg-green-50/90 border-green-200';
+            const iconColor = isError ? 'text-red-500' : 'text-green-500';
+            const iconClass = isError ? 'fa-circle-exclamation' : 'fa-circle-check';
+
+            toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-xl border backdrop-blur-md shadow-lg toast-enter ${bgColor}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${iconClass} ${iconColor} mt-0.5 text-lg"></i>
+                <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-800">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.replace('toast-enter', 'toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        function unlockStep(stepNum) {
+            // Mark previous step as completed
+            const prevStepNum = stepNum - 1;
+            if(prevStepNum > 0) {
+                document.getElementById(`step-${prevStepNum}-icon`)?.classList.replace('bg-accent', 'bg-green-500');
+                const statusBadge = document.getElementById(`step-${prevStepNum}-status`);
+                if(statusBadge) {
+                    statusBadge.textContent = 'Completed';
+                    statusBadge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 block';
+                }
+                document.getElementById(`step-${prevStepNum}-content`).classList.remove('active');
+            }
+
+            // Activate new step
+            const container = document.getElementById(`step-${stepNum}-container`);
+            container.classList.remove('opacity-60');
+            
+            const icon = document.getElementById(`step-${stepNum}-icon`);
+            if(icon) {
+                icon.classList.remove('bg-gray-300', 'text-gray-600');
+                icon.classList.add('bg-accent', 'text-white');
+            }
+
+            const status = document.getElementById(`step-${stepNum}-status`);
+            if(status) {
+                status.classList.remove('hidden');
+                status.textContent = 'In Progress';
+                status.className = 'px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700 block';
+            }
+
+            document.getElementById(`step-${stepNum}-content`).classList.add('active');
+        }
+
+        // --- Step 1 Logic ---
+        document.getElementById('death-cert-file').addEventListener('change', function(e) {
+            if(this.files && this.files.length > 0) {
+                const modal = document.getElementById('processing-modal');
+                modal.classList.remove('hidden');
+                
+                // Simulate QoreID/NPC Verification
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    showToast('Death Certificate verified successfully against NPC records.', 'success');
+                    unlockStep(2);
+                }, 3000);
+            }
+        });
+
+        // --- Objective 4: Lazy-Load Paystack Script ---
+        // The Paystack SDK is NOT included in <head>. It is dynamically injected into
+        // the DOM only when Step 2 is validated, reducing initial page weight and
+        // saving bandwidth for users on slow 2G/3G mobile networks in Nigeria.
+        let paystackLoaded = false;
+
+        function loadPaystackScript() {
+            return new Promise((resolve, reject) => {
+                if (paystackLoaded) { resolve(); return; }
+                const script = document.createElement('script');
+                script.src = 'https://js.paystack.co/v2/inline.js';
+                script.async = true;
+                script.onload = () => { paystackLoaded = true; resolve(); };
+                script.onerror = () => reject(new Error('Failed to load Paystack script.'));
+                document.body.appendChild(script);
+            });
+        }
+
+        // --- Step 2 Logic ---
+        document.getElementById('intake-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btn-validate-identities');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;border-top-color:white;"></div> <span class="ml-2">Validating...</span>';
+            btn.disabled = true;
+
+            // Simulate API ping to app/api/verify-nin
+            setTimeout(async () => {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                showToast('Identities validated via NIMC database.', 'success');
+                
+                // Lazy-inject Paystack exactly at the moment it is needed
+                try {
+                    showToast('Loading payment module...', 'success');
+                    await loadPaystackScript();
+                    unlockStep(3);
+                } catch (err) {
+                    showToast('Could not load payment module. Please check your connection.', 'error');
+                }
+            }, 2500);
+        });
+
+        // --- Step 3 Logic ---
+        document.getElementById('btn-paystack').addEventListener('click', function() {
+            // PaystackPop is guaranteed to be available here since loadPaystackScript() resolved before Step 3 unlocked.
+            try {
+                let handler = PaystackPop.setup({
+                    key: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxx', // Replace with your real Paystack public key
+                    email: 'user@reclaimng.com',
+                    amount: 500000, // ₦5,000 in kobo
+                    currency: 'NGN',
+                    ref: 'RC_' + Math.floor((Math.random() * 1000000000) + 1),
+                    callback: function(response) {
+                        showToast('Payment successful. Initiating asset discovery...', 'success');
+                        unlockStep(4);
+                    },
+                    onClose: function() {
+                        showToast('Payment window closed. Please try again to proceed.', 'error');
+                    }
+                });
+                // Uncomment with a real key: handler.openIframe();
+
+                // Mock simulation for environments without a live key
+                showToast('Mock payment successful. Initiating asset discovery...', 'success');
+                unlockStep(4);
+
+            } catch (error) {
+                console.error('[Paystack] Error initialising payment:', error);
+                showToast('Payment initialisation failed. Please refresh and try again.', 'error');
+            }
+        });
+
+        // --- Step 4 Logic ---
+        // Tab switching
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Reset buttons
+                tabBtns.forEach(b => {
+                    b.classList.remove('border-accent', 'text-accent');
+                    b.classList.add('border-transparent', 'text-gray-500');
+                });
+                // Activate clicked button
+                btn.classList.remove('border-transparent', 'text-gray-500');
+                btn.classList.add('border-accent', 'text-accent');
+
+                // Hide all contents
+                tabContents.forEach(c => c.classList.add('hidden'));
+                
+                // Show target content
+                document.getElementById(btn.getAttribute('data-target')).classList.remove('hidden');
+            });
+        });
+
+        // Report Generation Simulation
+        document.getElementById('btn-generate-report').addEventListener('click', function() {
+            const btnText = document.getElementById('btn-report-text');
+            const btnIcon = document.getElementById('btn-report-icon');
+            const spinner = document.getElementById('btn-report-spinner');
+
+            btnText.textContent = 'Generating PDF...';
+            btnIcon.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            this.disabled = true;
+
+            setTimeout(() => {
+                btnText.textContent = 'High Court Inventory Report Generated';
+                spinner.classList.add('hidden');
+                btnIcon.classList.remove('hidden');
+                btnIcon.className = 'fa-solid fa-check ml-2';
+                this.classList.replace('bg-primary', 'bg-green-600');
+                this.classList.replace('hover:bg-gray-800', 'hover:bg-green-700');
+                
+                showToast('Inventory Report successfully generated and downloaded.', 'success');
+                
+                // Simulate download
+                const a = document.createElement('a');
+                a.href = 'data:application/pdf;base64,JVBERi0xLjcNCiW1tbW1DQoxIDAgb2JqDQo8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+Pg0KZW5kb2JqDQo='; // Dummy valid tiny PDF Base64
+                a.download = 'Estate_Inventory_Report.pdf';
+                a.click();
+
+            }, 3000);
+        });
+
+    </script>
+</body>
+</html>
