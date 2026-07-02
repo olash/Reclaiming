@@ -28,25 +28,25 @@
     <!-- Navigation Shell -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 bg-[var(--panel-bg)] border-r border-[var(--border-color)] w-[72px] sm:w-[260px] transition-all duration-300 z-50 flex flex-col overflow-hidden">
         <div class="h-16 flex items-center px-5 border-b border-[var(--border-color)] justify-between">
-            <a href="admin-queue" class="flex items-center gap-2 overflow-hidden">
+            <a href="admin-queue.html" class="flex items-center gap-2 overflow-hidden">
                 <iconify-icon icon="solar:safe-square-bold-duotone" class="text-[var(--primary-accent)]" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
                 <span class="text-base font-semibold tracking-tighter sidebar-text hidden sm:block whitespace-nowrap text-[var(--primary-accent)]">ADMIN</span>
             </a>
         </div>
         <nav class="flex-1 py-6 px-3 flex flex-col gap-1">
-            <a href="admin-queue" class="flex items-center gap-3 px-3 py-2 bg-[var(--canvas-bg)] text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+            <a href="admin-queue.html" class="flex items-center gap-3 px-3 py-2 bg-[var(--canvas-bg)] text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
                 <iconify-icon icon="solar:clipboard-list-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
                 <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Compliance Queue</span>
             </a>
-            <a href="admin-cms" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+            <a href="admin-cms.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
                 <iconify-icon icon="solar:settings-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
                 <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Integration CMS</span>
             </a>
-            <a href="dispute" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+            <a href="dispute.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
                 <iconify-icon icon="solar:danger-triangle-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
                 <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Dispute Center</span>
             </a>
-            <a href="auth" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors mt-auto">
+            <a href="auth.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors mt-auto">
                 <iconify-icon icon="solar:logout-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
                 <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Sign Out</span>
             </a>
@@ -57,7 +57,7 @@
         
         <!-- Breadcrumbs -->
         <div class="flex items-center space-x-2 text-sm text-[var(--text-muted)] mb-6">
-            <a href="admin-queue" class="hover:text-[var(--text-primary)] transition-colors">Home</a>
+            <a href="admin-queue.html" class="hover:text-[var(--text-primary)] transition-colors">Home</a>
             <span>/</span>
             <span class="text-[var(--text-primary)]">Compliance Queue</span>
         </div>
@@ -129,7 +129,7 @@
                     </div>
                 </div>
                 
-                <button onclick="window.location.href = 'dispute'" class="w-full bg-red-50 text-red-700 border border-red-200 py-2.5 rounded-[var(--radius-normal)] text-sm font-medium hover:bg-red-100 transition-colors">
+                <button onclick="window.location.href = 'dispute.html'" class="w-full bg-red-50 text-red-700 border border-red-200 py-2.5 rounded-[var(--radius-normal)] text-sm font-medium hover:bg-red-100 transition-colors">
                     Move to Dispute
                 </button>
             </div>
@@ -215,7 +215,7 @@
                         </div>
 
                         <div class="w-full flex flex-col gap-3">
-                            <button onclick="window.location.href = 'vault'" class="w-full bg-[var(--primary-accent)] text-white py-3 text-sm font-medium rounded-[var(--radius-normal)] hover:opacity-90 transition-opacity">Go to Unified Vault</button>
+                            <button onclick="window.location.href = 'vault.html'" class="w-full bg-[var(--primary-accent)] text-white py-3 text-sm font-medium rounded-[var(--radius-normal)] hover:opacity-90 transition-opacity">Go to Unified Vault</button>
                             <button onclick="document.getElementById('global-success-modal').remove()" class="w-full bg-[var(--canvas-bg)] text-[var(--text-primary)] border border-[var(--border-color)] py-2.5 text-sm font-medium rounded-[var(--radius-normal)] hover:bg-gray-50 transition-colors">Close</button>
                         </div>
                     </div>
