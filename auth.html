@@ -605,7 +605,11 @@
       if (labelEl) labelEl.textContent = originalLabel;
     }
 
-    /* ── Tab switching ────────────────────────────────────────────────────── */
+    /* ── Auto-switch tab from URL param (?tab=signup) ────────────────────── */
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'signup') switchTab('signup');
+    })();
     const tabLogin  = document.getElementById('tab-login');
     const tabSignup = document.getElementById('tab-signup');
     const secLogin  = document.getElementById('section-login');
