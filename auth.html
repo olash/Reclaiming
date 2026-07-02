@@ -1,97 +1,737 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reclaimng - Authentication</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    <style>
-        :root {
-            --canvas-bg: #F8FAF9;
-            --panel-bg: #FFFFFF;
-            --text-primary: #1F2937;
-            --text-muted: #6B7280;
-            --primary-accent: #2C5E43;
-            --border-color: #E2E8F0;
-            --radius-normal: 10px;
-            --radius-large: 12px;
-        }
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reclaimng — Secure Access</title>
+  <meta name="description" content="Sign in or create your Reclaimng account to begin your estate recovery journey.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── Design Tokens ──────────────────────────────────────────────────── */
+    :root {
+      --bg:            #F0F4F2;
+      --panel:         #FFFFFF;
+      --accent:        #2C5E43;
+      --accent-light:  #EAF2ED;
+      --accent-hover:  #244E38;
+      --text:          #111827;
+      --muted:         #6B7280;
+      --border:        #E2E8F0;
+      --danger:        #DC2626;
+      --danger-bg:     #FEF2F2;
+      --radius:        12px;
+      --radius-sm:     8px;
+      --shadow:        0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+      --transition:    200ms cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Background subtle pattern ─────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at 20% 20%, rgba(44,94,67,.06) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 80%, rgba(44,94,67,.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* ─── Layout ─────────────────────────────────────────────────────────── */
+    .auth-wrapper {
+      display: flex;
+      width: 100%;
+      max-width: 960px;
+      min-height: 560px;
+      background: var(--panel);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ─── Left panel (hero) ──────────────────────────────────────────────── */
+    .hero-panel {
+      display: none;
+      flex: 1;
+      padding: 3rem;
+      background: linear-gradient(145deg, #1a3d2b 0%, #2C5E43 60%, #3a7a59 100%);
+      color: white;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (min-width: 768px) { .hero-panel { display: flex; } }
+
+    .hero-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; right: -60px;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.05);
+    }
+
+    .hero-logo {
+      font-size: .85rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      opacity: .8;
+    }
+
+    .hero-content h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 1rem;
+    }
+
+    .hero-content p {
+      font-size: .9rem;
+      opacity: .75;
+      line-height: 1.7;
+      max-width: 280px;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+    }
+
+    .badge {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: .8rem;
+      opacity: .8;
+    }
+
+    .badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.6);
+      flex-shrink: 0;
+    }
+
+    /* ─── Right panel (form) ─────────────────────────────────────────────── */
+    .form-panel {
+      width: 100%;
+      max-width: 440px;
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    @media (min-width: 768px) { .form-panel { padding: 3rem; } }
+
+    /* ─── Top nav logo (mobile only) ────────────────────────────────────── */
+    .mobile-logo {
+      display: block;
+      font-size: .85rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      color: var(--accent);
+      margin-bottom: 2rem;
+    }
+
+    @media (min-width: 768px) { .mobile-logo { display: none; } }
+
+    /* ─── Tab toggle ─────────────────────────────────────────────────────── */
+    .tab-row {
+      display: flex;
+      gap: .25rem;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: .25rem;
+      margin-bottom: 2rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: .55rem 1rem;
+      border: none;
+      border-radius: calc(var(--radius-sm) - 2px);
+      font-family: inherit;
+      font-size: .8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .tab-btn.active {
+      background: var(--panel);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+
+    /* ─── Form typography ────────────────────────────────────────────────── */
+    .form-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: .35rem;
+    }
+
+    .form-subtitle {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-bottom: 1.75rem;
+    }
+
+    /* ─── Input field ────────────────────────────────────────────────────── */
+    .field { margin-bottom: 1.1rem; }
+
+    .field label {
+      display: block;
+      font-size: .72rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: .45rem;
+    }
+
+    .field-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: .45rem;
+    }
+
+    .forgot-link {
+      font-size: .72rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+    .forgot-link:hover { color: var(--accent); }
+
+    .input {
+      width: 100%;
+      padding: .7rem .9rem;
+      font-family: inherit;
+      font-size: .875rem;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .input::placeholder { color: #C4CBD6; }
+    .input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(44,94,67,.1);
+    }
+
+    /* ─── Primary button ─────────────────────────────────────────────────── */
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      width: 100%;
+      height: 46px;
+      margin-top: .25rem;
+      padding: 0 1rem;
+      font-family: inherit;
+      font-size: .875rem;
+      font-weight: 500;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition), opacity var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: .65; cursor: not-allowed; }
+
+    /* shimmer overlay */
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.18) 50%, transparent 100%);
+      transform: translateX(-100%);
+      transition: none;
+    }
+    .btn-primary.loading::after {
+      animation: shimmer .9s ease-in-out infinite;
+    }
+    @keyframes shimmer {
+      to { transform: translateX(100%); }
+    }
+
+    /* ─── Divider ─────────────────────────────────────────────────────────── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 1.25rem 0;
+      color: var(--muted);
+      font-size: .75rem;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ─── Google button ──────────────────────────────────────────────────── */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .6rem;
+      width: 100%;
+      height: 46px;
+      padding: 0 1rem;
+      font-family: inherit;
+      font-size: .875rem;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-google:hover:not(:disabled) { background: var(--bg); border-color: #C4CBD6; }
+    .btn-google:disabled { opacity: .65; cursor: not-allowed; }
+    .btn-google::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.04) 50%, transparent 100%);
+      transform: translateX(-100%);
+    }
+    .btn-google.loading::after {
+      animation: shimmer .9s ease-in-out infinite;
+    }
+
+    /* Google G SVG */
+    .google-icon { flex-shrink: 0; }
+
+    /* ─── Toast container ────────────────────────────────────────────────── */
+    #toast-container {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+      pointer-events: none;
+    }
+
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      min-width: 300px;
+      max-width: 380px;
+      padding: .9rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      /* glassmorphism */
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0,0,0,.12);
+      pointer-events: all;
+      animation: toastIn .3s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+    .toast.out { animation: toastOut .25s ease-in forwards; }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(24px) scale(.96); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateX(0) scale(1); }
+      to   { opacity: 0; transform: translateX(24px) scale(.96); }
+    }
+
+    .toast.success { border-color: #BBF7D0; background: rgba(240,253,244,.85); }
+    .toast.error   { border-color: #FECACA; background: rgba(254,242,242,.85); }
+    .toast.info    { border-color: #BFDBFE; background: rgba(239,246,255,.85); }
+
+    .toast-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .toast.success .toast-icon { color: #16A34A; }
+    .toast.error   .toast-icon { color: var(--danger); }
+    .toast.info    .toast-icon { color: #2563EB; }
+
+    .toast-body { flex: 1; }
+    .toast-title { font-size: .82rem; font-weight: 600; margin-bottom: .15rem; color: var(--text); }
+    .toast-msg   { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+
+    /* ─── Spinner ────────────────────────────────────────────────────────── */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    .spinner.dark {
+      border-color: rgba(0,0,0,.12);
+      border-top-color: var(--muted);
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Section switch animation ───────────────────────────────────────── */
+    .auth-section {
+      transition: opacity var(--transition), transform var(--transition);
+    }
+    .auth-section.hidden-section {
+      display: none;
+    }
+  </style>
 </head>
-<body class="bg-[var(--canvas-bg)] text-[var(--text-primary)] min-h-screen flex antialiased">
-    
-    <div class="w-full flex">
-        <!-- Left Greeting -->
-        <div class="hidden lg:flex flex-col justify-center w-1/2 p-12 lg:p-24 border-r border-[var(--border-color)]">
-            <div class="text-2xl font-semibold tracking-tighter mb-12">RECLAIMNG</div>
-            <h1 class="text-4xl font-semibold tracking-tight leading-tight mb-6 max-w-md">
-                Securely transition your family's financial legacy.
-            </h1>
-            <p class="text-base text-[var(--text-muted)] max-w-sm leading-relaxed">
-                A structured, legally compliant protocol to identify, verify, and unify inherited assets across the central registry.
-            </p>
-        </div>
+<body>
 
-        <!-- Right Card Module -->
-        <div class="w-full lg:w-1/2 flex items-center justify-center p-6">
-            <div class="bg-[var(--panel-bg)] w-full max-w-md p-8 border border-[var(--border-color)] rounded-[var(--radius-large)]">
-                
-                <div class="flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-color)]">
-                    <button class="text-sm font-semibold text-[var(--text-primary)] border-b-2 border-[var(--text-primary)] pb-2 transition-colors">Sign In</button>
-                    <button class="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] pb-2 transition-colors">Create Account</button>
-                </div>
+  <!-- ── Toast Container ────────────────────────────────────────────────── -->
+  <div id="toast-container" role="status" aria-live="polite"></div>
 
-                <form id="authForm" class="flex flex-col gap-5">
-                    <div class="flex flex-col gap-1.5">
-                        <label class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Email Address</label>
-                        <input type="email" id="emailInput" required class="w-full px-4 py-3 text-sm bg-transparent border border-[var(--border-color)] rounded-[var(--radius-normal)] focus:border-[var(--primary-accent)] outline-none transition-colors placeholder-[var(--text-muted)] text-[var(--text-primary)]" placeholder="name@domain.com">
-                    </div>
-                    <div class="flex flex-col gap-1.5">
-                        <div class="flex justify-between items-center">
-                            <label class="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">Password</label>
-                            <a href="auth" class="text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]">Reset?</a>
-                        </div>
-                        <input type="password" required class="w-full px-4 py-3 text-sm bg-transparent border border-[var(--border-color)] rounded-[var(--radius-normal)] focus:border-[var(--primary-accent)] outline-none transition-colors text-[var(--text-primary)]" placeholder="••••••••">
-                    </div>
-                    <button type="submit" id="submitBtn" class="w-full mt-2 bg-[var(--primary-accent)] text-white text-sm font-medium py-3 rounded-[var(--radius-normal)] hover:opacity-90 transition-opacity flex justify-center items-center h-[46px]">
-                        Authenticate Protocol
-                    </button>
-                </form>
-            </div>
-        </div>
+  <!-- ── Auth Card ──────────────────────────────────────────────────────── -->
+  <div class="auth-wrapper">
+
+    <!-- Left hero panel -->
+    <div class="hero-panel" aria-hidden="true">
+      <span class="hero-logo">RECLAIMNG</span>
+      <div class="hero-content">
+        <h1>Securely transition your family's financial legacy.</h1>
+        <p>A structured, legally compliant protocol to identify, verify, and recover inherited assets across Nigeria's central registry.</p>
+      </div>
+      <div class="hero-badges">
+        <div class="badge"><span class="badge-dot"></span>NIN-verified identity protocol</div>
+        <div class="badge"><span class="badge-dot"></span>Probate-compliant PDF generation</div>
+        <div class="badge"><span class="badge-dot"></span>Bank-grade estate NUBAN validation</div>
+      </div>
     </div>
 
-    <!-- Universal WhatsApp Float Node -->
-    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white shadow-none border border-[var(--border-color)] hover:scale-105 transition-transform animate-bounce hover:animate-none">
-        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
-    </a>
+    <!-- Right form panel -->
+    <div class="form-panel">
 
-    <script>
-        document.getElementById('authForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const submitBtn = document.getElementById('submitBtn');
-            const emailInput = document.getElementById('emailInput');
-            const email = emailInput.value.trim().toLowerCase();
-            const isAdmin = email.includes('admin') || email.includes('compliance');
-            
-            submitBtn.innerHTML = `<span class="animate-pulse flex items-center justify-center gap-2">
-                <iconify-icon icon="solar:shield-keyhole-bold-duotone" class="animate-spin" style="font-size: 1.2em;"></iconify-icon> Authenticating...
-            </span>`;
-            submitBtn.disabled = true;
+      <span class="mobile-logo">RECLAIMNG</span>
 
-            setTimeout(() => {
-                if (isAdmin) {
-                    window.location.href = 'admin-queue';
-                } else {
-                    window.location.href = 'dashboard';
-                }
-            }, 800);
-        });
-    </script>
+      <!-- Tab toggle -->
+      <div class="tab-row" role="tablist">
+        <button class="tab-btn active" id="tab-login" role="tab" aria-selected="true" aria-controls="section-login">Log In</button>
+        <button class="tab-btn"        id="tab-signup" role="tab" aria-selected="false" aria-controls="section-signup">Create Account</button>
+      </div>
+
+      <!-- ── LOG IN section ──────────────────────────────────────────────── -->
+      <section id="section-login" class="auth-section" role="tabpanel" aria-labelledby="tab-login">
+        <p class="form-title">Welcome back</p>
+        <p class="form-subtitle">Sign in to continue your estate recovery.</p>
+
+        <form id="login-form" novalidate>
+          <div class="field">
+            <label for="login-email">Email Address</label>
+            <input id="login-email" type="email" class="input" placeholder="name@domain.com" autocomplete="email" required>
+          </div>
+          <div class="field">
+            <div class="field-row">
+              <label for="login-password">Password</label>
+              <a href="#" class="forgot-link" id="forgot-link">Forgot password?</a>
+            </div>
+            <input id="login-password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required>
+          </div>
+          <button type="submit" class="btn-primary" id="login-btn">
+            <span class="btn-label">Authenticate Protocol</span>
+          </button>
+        </form>
+
+        <div class="divider">or continue with</div>
+
+        <button class="btn-google" id="google-btn-login" type="button">
+          <svg class="google-icon" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.72 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.3 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.2C12.43 13.03 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.2C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.53-13.46-8.93l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            <path fill="none" d="M0 0h48v48H0z"/>
+          </svg>
+          <span class="btn-label">Continue with Google</span>
+        </button>
+      </section>
+
+      <!-- ── SIGN UP section ─────────────────────────────────────────────── -->
+      <section id="section-signup" class="auth-section hidden-section" role="tabpanel" aria-labelledby="tab-signup">
+        <p class="form-title">Create your account</p>
+        <p class="form-subtitle">Start your estate recovery journey today.</p>
+
+        <form id="signup-form" novalidate>
+          <div class="field">
+            <label for="signup-email">Email Address</label>
+            <input id="signup-email" type="email" class="input" placeholder="name@domain.com" autocomplete="email" required>
+          </div>
+          <div class="field">
+            <label for="signup-password">Password</label>
+            <input id="signup-password" type="password" class="input" placeholder="Min. 8 characters" autocomplete="new-password" required minlength="8">
+          </div>
+          <button type="submit" class="btn-primary" id="signup-btn">
+            <span class="btn-label">Create Account</span>
+          </button>
+        </form>
+
+        <div class="divider">or continue with</div>
+
+        <button class="btn-google" id="google-btn-signup" type="button">
+          <svg class="google-icon" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.72 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.3 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.2C12.43 13.03 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.2C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.53-13.46-8.93l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            <path fill="none" d="M0 0h48v48H0z"/>
+          </svg>
+          <span class="btn-label">Continue with Google</span>
+        </button>
+      </section>
+
+    </div><!-- /form-panel -->
+  </div><!-- /auth-wrapper -->
+
+  <!-- ── Supabase CDN ────────────────────────────────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <script>
+    /* ── Supabase Init ────────────────────────────────────────────────────── */
+    const SUPABASE_URL  = 'https://rbdwzpecudksbsjwmira.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHd6cGVjdWRrc2JzandtaXJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NjE2NjgsImV4cCI6MjA5ODUzNzY2OH0.Wqer73d85wITxgoWnqHibeF2mYPlxZD69N-X3vTCKag';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+    /* ── If already logged in, skip the auth page entirely ───────────────── */
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) window.location.replace('dashboard.html');
+    })();
+
+    /* ── Handle Google OAuth redirect coming back to this page ───────────── */
+    supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        window.location.replace('dashboard.html');
+      }
+    });
+
+    /* ── Toast System ─────────────────────────────────────────────────────── */
+    const toastContainer = document.getElementById('toast-container');
+
+    function showToast(type, title, msg) {
+      const icons = { success: '✓', error: '✕', info: 'ℹ' };
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.innerHTML = `
+        <span class="toast-icon" aria-hidden="true">${icons[type] ?? 'ℹ'}</span>
+        <div class="toast-body">
+          <div class="toast-title">${title}</div>
+          ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
+        </div>`;
+      toastContainer.appendChild(el);
+
+      // Auto-dismiss after 4.5 s
+      const dismiss = () => {
+        el.classList.add('out');
+        el.addEventListener('animationend', () => el.remove(), { once: true });
+      };
+      const tid = setTimeout(dismiss, 4500);
+      el.addEventListener('click', () => { clearTimeout(tid); dismiss(); });
+    }
+
+    /* ── Map Supabase error codes to friendly messages ────────────────────── */
+    function friendlyError(err) {
+      if (!err) return 'An unexpected error occurred.';
+      const msg = (err.message || '').toLowerCase();
+      if (msg.includes('invalid login credentials'))  return 'Email or password is incorrect. Please try again.';
+      if (msg.includes('email not confirmed'))         return 'Please confirm your email address first.';
+      if (msg.includes('user already registered'))     return 'An account with this email already exists. Try logging in instead.';
+      if (msg.includes('password should be at least')) return 'Your password must be at least 8 characters long.';
+      if (msg.includes('rate limit'))                  return 'Too many attempts. Please wait a moment and try again.';
+      return err.message || 'An unexpected error occurred.';
+    }
+
+    /* ── Button loading helpers ───────────────────────────────────────────── */
+    function setLoading(btn, isLoading, label = 'Authorizing…') {
+      btn.disabled = isLoading;
+      btn.classList.toggle('loading', isLoading);
+      const labelEl = btn.querySelector('.btn-label');
+      const spinnerExisting = btn.querySelector('.spinner');
+
+      if (isLoading) {
+        if (labelEl) labelEl.textContent = label;
+        if (!spinnerExisting) {
+          const spinner = document.createElement('span');
+          spinner.className = btn.classList.contains('btn-google') ? 'spinner dark' : 'spinner';
+          btn.insertBefore(spinner, btn.firstChild);
+        }
+      } else {
+        if (spinnerExisting) spinnerExisting.remove();
+      }
+    }
+
+    function resetBtn(btn, originalLabel) {
+      setLoading(btn, false);
+      const labelEl = btn.querySelector('.btn-label');
+      if (labelEl) labelEl.textContent = originalLabel;
+    }
+
+    /* ── Tab switching ────────────────────────────────────────────────────── */
+    const tabLogin  = document.getElementById('tab-login');
+    const tabSignup = document.getElementById('tab-signup');
+    const secLogin  = document.getElementById('section-login');
+    const secSignup = document.getElementById('section-signup');
+
+    function switchTab(active) {
+      const isLogin = active === 'login';
+      tabLogin .classList.toggle('active', isLogin);
+      tabSignup.classList.toggle('active', !isLogin);
+      tabLogin .setAttribute('aria-selected', isLogin);
+      tabSignup.setAttribute('aria-selected', !isLogin);
+      secLogin .classList.toggle('hidden-section', !isLogin);
+      secSignup.classList.toggle('hidden-section', isLogin);
+    }
+
+    tabLogin .addEventListener('click', () => switchTab('login'));
+    tabSignup.addEventListener('click', () => switchTab('signup'));
+
+    /* ── Log In form ──────────────────────────────────────────────────────── */
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn    = document.getElementById('login-btn');
+      const email  = document.getElementById('login-email').value.trim();
+      const pass   = document.getElementById('login-password').value;
+
+      if (!email || !pass) {
+        showToast('error', 'Missing fields', 'Please enter your email and password.');
+        return;
+      }
+
+      setLoading(btn, true, 'Authorizing…');
+
+      // Minimum shimmer display: 800 ms as specified
+      const [{ error }] = await Promise.all([
+        supabase.auth.signInWithPassword({ email, password: pass }),
+        new Promise(r => setTimeout(r, 800))
+      ]);
+
+      if (error) {
+        resetBtn(btn, 'Authenticate Protocol');
+        showToast('error', 'Authentication Failed', friendlyError(error));
+        return;
+      }
+
+      showToast('success', 'Authenticated', 'Redirecting to your dashboard…');
+      setTimeout(() => window.location.replace('dashboard.html'), 600);
+    });
+
+    /* ── Sign Up form ─────────────────────────────────────────────────────── */
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn   = document.getElementById('signup-btn');
+      const email = document.getElementById('signup-email').value.trim();
+      const pass  = document.getElementById('signup-password').value;
+
+      if (!email || !pass) {
+        showToast('error', 'Missing fields', 'Please enter your email and a password.');
+        return;
+      }
+      if (pass.length < 8) {
+        showToast('error', 'Weak password', 'Password must be at least 8 characters.');
+        return;
+      }
+
+      setLoading(btn, true, 'Creating Account…');
+
+      const [{ data, error }] = await Promise.all([
+        supabase.auth.signUp({ email, password: pass }),
+        new Promise(r => setTimeout(r, 800))
+      ]);
+
+      if (error) {
+        resetBtn(btn, 'Create Account');
+        showToast('error', 'Registration Failed', friendlyError(error));
+        return;
+      }
+
+      // If Supabase requires email confirmation, the session will be null
+      if (data.session) {
+        showToast('success', 'Account Created', 'Redirecting to your dashboard…');
+        setTimeout(() => window.location.replace('dashboard.html'), 600);
+      } else {
+        resetBtn(btn, 'Create Account');
+        showToast('info', 'Confirm your email',
+          'We sent a confirmation link to <strong>' + email + '</strong>. Check your inbox to activate your account.');
+      }
+    });
+
+    /* ── Google OAuth ─────────────────────────────────────────────────────── */
+    async function handleGoogleAuth(btn) {
+      setLoading(btn, true, 'Redirecting…');
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard.html'
+        }
+      });
+
+      if (error) {
+        resetBtn(btn, 'Continue with Google');
+        showToast('error', 'Google Sign-In Failed', friendlyError(error));
+      }
+      // On success: Supabase handles the redirect automatically
+    }
+
+    document.getElementById('google-btn-login') .addEventListener('click', () => handleGoogleAuth(document.getElementById('google-btn-login')));
+    document.getElementById('google-btn-signup').addEventListener('click', () => handleGoogleAuth(document.getElementById('google-btn-signup')));
+
+    /* ── Forgot password ──────────────────────────────────────────────────── */
+    document.getElementById('forgot-link').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      if (!email) {
+        showToast('info', 'Enter your email first', 'Type your email address above, then click "Forgot password?" again.');
+        return;
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/auth.html'
+      });
+      if (error) {
+        showToast('error', 'Reset Failed', friendlyError(error));
+      } else {
+        showToast('success', 'Reset email sent', 'Check your inbox for a password reset link.');
+      }
+    });
+  </script>
 </body>
 </html>
