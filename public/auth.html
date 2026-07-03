@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,28 +8,36 @@
   <meta name="description" content="Sign in or create your Reclaimng account to begin your estate recovery journey.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;1,14..32,400&display=swap"
+    rel="stylesheet">
 
   <style>
     /* ─── Design Tokens ──────────────────────────────────────────────────── */
     :root {
-      --bg:            #F0F4F2;
-      --panel:         #FFFFFF;
-      --accent:        #2C5E43;
-      --accent-light:  #EAF2ED;
-      --accent-hover:  #244E38;
-      --text:          #111827;
-      --muted:         #6B7280;
-      --border:        #E2E8F0;
-      --danger:        #DC2626;
-      --danger-bg:     #FEF2F2;
-      --radius:        12px;
-      --radius-sm:     8px;
-      --shadow:        0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
-      --transition:    200ms cubic-bezier(.4,0,.2,1);
+      --bg: #F0F4F2;
+      --panel: #FFFFFF;
+      --accent: #2C5E43;
+      --accent-light: #EAF2ED;
+      --accent-hover: #244E38;
+      --text: #111827;
+      --muted: #6B7280;
+      --border: #E2E8F0;
+      --danger: #DC2626;
+      --danger-bg: #FEF2F2;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0, 0, 0, .06), 0 4px 16px rgba(0, 0, 0, .04);
+      --transition: 200ms cubic-bezier(.4, 0, .2, 1);
     }
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       font-family: 'Inter', system-ui, sans-serif;
@@ -47,8 +56,8 @@
       content: '';
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(circle at 20% 20%, rgba(44,94,67,.06) 0%, transparent 60%),
-                        radial-gradient(circle at 80% 80%, rgba(44,94,67,.04) 0%, transparent 60%);
+      background-image: radial-gradient(circle at 20% 20%, rgba(44, 94, 67, .06) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(44, 94, 67, .04) 0%, transparent 60%);
       pointer-events: none;
     }
 
@@ -79,15 +88,21 @@
       overflow: hidden;
     }
 
-    @media (min-width: 768px) { .hero-panel { display: flex; } }
+    @media (min-width: 768px) {
+      .hero-panel {
+        display: flex;
+      }
+    }
 
     .hero-panel::after {
       content: '';
       position: absolute;
-      bottom: -60px; right: -60px;
-      width: 260px; height: 260px;
+      bottom: -60px;
+      right: -60px;
+      width: 260px;
+      height: 260px;
       border-radius: 50%;
-      background: rgba(255,255,255,.05);
+      background: rgba(255, 255, 255, .05);
     }
 
     .hero-logo {
@@ -126,9 +141,10 @@
     }
 
     .badge-dot {
-      width: 6px; height: 6px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: rgba(255,255,255,.6);
+      background: rgba(255, 255, 255, .6);
       flex-shrink: 0;
     }
 
@@ -142,7 +158,11 @@
       justify-content: center;
     }
 
-    @media (min-width: 768px) { .form-panel { padding: 3rem; } }
+    @media (min-width: 768px) {
+      .form-panel {
+        padding: 3rem;
+      }
+    }
 
     /* ─── Top nav logo (mobile only) ────────────────────────────────────── */
     .mobile-logo {
@@ -154,7 +174,11 @@
       margin-bottom: 2rem;
     }
 
-    @media (min-width: 768px) { .mobile-logo { display: none; } }
+    @media (min-width: 768px) {
+      .mobile-logo {
+        display: none;
+      }
+    }
 
     /* ─── Tab toggle ─────────────────────────────────────────────────────── */
     .tab-row {
@@ -183,7 +207,7 @@
     .tab-btn.active {
       background: var(--panel);
       color: var(--text);
-      box-shadow: 0 1px 4px rgba(0,0,0,.08);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
     }
 
     /* ─── Form typography ────────────────────────────────────────────────── */
@@ -200,7 +224,9 @@
     }
 
     /* ─── Input field ────────────────────────────────────────────────────── */
-    .field { margin-bottom: 1.1rem; }
+    .field {
+      margin-bottom: 1.1rem;
+    }
 
     .field label {
       display: block;
@@ -225,7 +251,10 @@
       text-decoration: none;
       transition: color var(--transition);
     }
-    .forgot-link:hover { color: var(--accent); }
+
+    .forgot-link:hover {
+      color: var(--accent);
+    }
 
     .input {
       width: 100%;
@@ -239,10 +268,14 @@
       outline: none;
       transition: border-color var(--transition), box-shadow var(--transition);
     }
-    .input::placeholder { color: #C4CBD6; }
+
+    .input::placeholder {
+      color: #C4CBD6;
+    }
+
     .input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(44,94,67,.1);
+      box-shadow: 0 0 0 3px rgba(44, 94, 67, .1);
     }
 
     /* ─── Primary button ─────────────────────────────────────────────────── */
@@ -267,23 +300,34 @@
       position: relative;
       overflow: hidden;
     }
-    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
-    .btn-primary:disabled { opacity: .65; cursor: not-allowed; }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: .65;
+      cursor: not-allowed;
+    }
 
     /* shimmer overlay */
     .btn-primary::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.18) 50%, transparent 100%);
+      background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, .18) 50%, transparent 100%);
       transform: translateX(-100%);
       transition: none;
     }
+
     .btn-primary.loading::after {
       animation: shimmer .9s ease-in-out infinite;
     }
+
     @keyframes shimmer {
-      to { transform: translateX(100%); }
+      to {
+        transform: translateX(100%);
+      }
     }
 
     /* ─── Divider ─────────────────────────────────────────────────────────── */
@@ -295,7 +339,9 @@
       color: var(--muted);
       font-size: .75rem;
     }
-    .divider::before, .divider::after {
+
+    .divider::before,
+    .divider::after {
       content: '';
       flex: 1;
       height: 1px;
@@ -323,21 +369,33 @@
       position: relative;
       overflow: hidden;
     }
-    .btn-google:hover:not(:disabled) { background: var(--bg); border-color: #C4CBD6; }
-    .btn-google:disabled { opacity: .65; cursor: not-allowed; }
+
+    .btn-google:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: #C4CBD6;
+    }
+
+    .btn-google:disabled {
+      opacity: .65;
+      cursor: not-allowed;
+    }
+
     .btn-google::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.04) 50%, transparent 100%);
+      background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, .04) 50%, transparent 100%);
       transform: translateX(-100%);
     }
+
     .btn-google.loading::after {
       animation: shimmer .9s ease-in-out infinite;
     }
 
     /* Google G SVG */
-    .google-icon { flex-shrink: 0; }
+    .google-icon {
+      flex-shrink: 0;
+    }
 
     /* ─── Toast container ────────────────────────────────────────────────── */
     #toast-container {
@@ -361,62 +419,125 @@
       border-radius: var(--radius-sm);
       border: 1px solid transparent;
       /* glassmorphism */
-      background: rgba(255,255,255,.72);
+      background: rgba(255, 255, 255, .72);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      box-shadow: 0 8px 32px rgba(0,0,0,.12);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, .12);
       pointer-events: all;
-      animation: toastIn .3s cubic-bezier(.34,1.56,.64,1) forwards;
+      animation: toastIn .3s cubic-bezier(.34, 1.56, .64, 1) forwards;
     }
-    .toast.out { animation: toastOut .25s ease-in forwards; }
+
+    .toast.out {
+      animation: toastOut .25s ease-in forwards;
+    }
 
     @keyframes toastIn {
-      from { opacity: 0; transform: translateX(24px) scale(.96); }
-      to   { opacity: 1; transform: translateX(0) scale(1); }
+      from {
+        opacity: 0;
+        transform: translateX(24px) scale(.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
     }
+
     @keyframes toastOut {
-      from { opacity: 1; transform: translateX(0) scale(1); }
-      to   { opacity: 0; transform: translateX(24px) scale(.96); }
+      from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(24px) scale(.96);
+      }
     }
 
-    .toast.success { border-color: #BBF7D0; background: rgba(240,253,244,.85); }
-    .toast.error   { border-color: #FECACA; background: rgba(254,242,242,.85); }
-    .toast.info    { border-color: #BFDBFE; background: rgba(239,246,255,.85); }
+    .toast.success {
+      border-color: #BBF7D0;
+      background: rgba(240, 253, 244, .85);
+    }
 
-    .toast-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
-    .toast.success .toast-icon { color: #16A34A; }
-    .toast.error   .toast-icon { color: var(--danger); }
-    .toast.info    .toast-icon { color: #2563EB; }
+    .toast.error {
+      border-color: #FECACA;
+      background: rgba(254, 242, 242, .85);
+    }
 
-    .toast-body { flex: 1; }
-    .toast-title { font-size: .82rem; font-weight: 600; margin-bottom: .15rem; color: var(--text); }
-    .toast-msg   { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+    .toast.info {
+      border-color: #BFDBFE;
+      background: rgba(239, 246, 255, .85);
+    }
+
+    .toast-icon {
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .toast.success .toast-icon {
+      color: #16A34A;
+    }
+
+    .toast.error .toast-icon {
+      color: var(--danger);
+    }
+
+    .toast.info .toast-icon {
+      color: #2563EB;
+    }
+
+    .toast-body {
+      flex: 1;
+    }
+
+    .toast-title {
+      font-size: .82rem;
+      font-weight: 600;
+      margin-bottom: .15rem;
+      color: var(--text);
+    }
+
+    .toast-msg {
+      font-size: .78rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
 
     /* ─── Spinner ────────────────────────────────────────────────────────── */
     .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,.3);
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, .3);
       border-top-color: #fff;
       border-radius: 50%;
       animation: spin .7s linear infinite;
       flex-shrink: 0;
     }
+
     .spinner.dark {
-      border-color: rgba(0,0,0,.12);
+      border-color: rgba(0, 0, 0, .12);
       border-top-color: var(--muted);
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* ─── Section switch animation ───────────────────────────────────────── */
     .auth-section {
       transition: opacity var(--transition), transform var(--transition);
     }
+
     .auth-section.hidden-section {
       display: none;
     }
   </style>
 </head>
+
 <body>
 
   <!-- ── Toast Container ────────────────────────────────────────────────── -->
@@ -430,7 +551,8 @@
       <span class="hero-logo">RECLAIMNG</span>
       <div class="hero-content">
         <h1>Securely transition your family's financial legacy.</h1>
-        <p>A structured, legally compliant protocol to identify, verify, and recover inherited assets across Nigeria's central registry.</p>
+        <p>A structured, legally compliant protocol to identify, verify, and recover inherited assets across Nigeria's
+          central registry.</p>
       </div>
       <div class="hero-badges">
         <div class="badge"><span class="badge-dot"></span>NIN-verified identity protocol</div>
@@ -446,8 +568,10 @@
 
       <!-- Tab toggle -->
       <div class="tab-row" role="tablist">
-        <button class="tab-btn active" id="tab-login" role="tab" aria-selected="true" aria-controls="section-login">Log In</button>
-        <button class="tab-btn"        id="tab-signup" role="tab" aria-selected="false" aria-controls="section-signup">Create Account</button>
+        <button class="tab-btn active" id="tab-login" role="tab" aria-selected="true" aria-controls="section-login">Log
+          In</button>
+        <button class="tab-btn" id="tab-signup" role="tab" aria-selected="false" aria-controls="section-signup">Create
+          Account</button>
       </div>
 
       <!-- ── LOG IN section ──────────────────────────────────────────────── -->
@@ -458,14 +582,16 @@
         <form id="login-form" novalidate>
           <div class="field">
             <label for="login-email">Email Address</label>
-            <input id="login-email" type="email" class="input" placeholder="name@domain.com" autocomplete="email" required>
+            <input id="login-email" type="email" class="input" placeholder="name@domain.com" autocomplete="email"
+              required>
           </div>
           <div class="field">
             <div class="field-row">
               <label for="login-password">Password</label>
               <a href="#" class="forgot-link" id="forgot-link">Forgot password?</a>
             </div>
-            <input id="login-password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" required>
+            <input id="login-password" type="password" class="input" placeholder="••••••••"
+              autocomplete="current-password" required>
           </div>
           <button type="submit" class="btn-primary" id="login-btn">
             <span class="btn-label">Authenticate Protocol</span>
@@ -476,11 +602,15 @@
 
         <button class="btn-google" id="google-btn-login" type="button">
           <svg class="google-icon" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.72 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.3 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.2C12.43 13.03 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.2C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.53-13.46-8.93l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-            <path fill="none" d="M0 0h48v48H0z"/>
+            <path fill="#EA4335"
+              d="M24 9.5c3.54 0 6.72 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.3 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.2C12.43 13.03 17.74 9.5 24 9.5z" />
+            <path fill="#4285F4"
+              d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+            <path fill="#FBBC05"
+              d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.2C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+            <path fill="#34A853"
+              d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.53-13.46-8.93l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+            <path fill="none" d="M0 0h48v48H0z" />
           </svg>
           <span class="btn-label">Continue with Google</span>
         </button>
@@ -494,11 +624,13 @@
         <form id="signup-form" novalidate>
           <div class="field">
             <label for="signup-email">Email Address</label>
-            <input id="signup-email" type="email" class="input" placeholder="name@domain.com" autocomplete="email" required>
+            <input id="signup-email" type="email" class="input" placeholder="name@domain.com" autocomplete="email"
+              required>
           </div>
           <div class="field">
             <label for="signup-password">Password</label>
-            <input id="signup-password" type="password" class="input" placeholder="Min. 8 characters" autocomplete="new-password" required minlength="8">
+            <input id="signup-password" type="password" class="input" placeholder="Min. 8 characters"
+              autocomplete="new-password" required minlength="8">
           </div>
           <button type="submit" class="btn-primary" id="signup-btn">
             <span class="btn-label">Create Account</span>
@@ -509,11 +641,15 @@
 
         <button class="btn-google" id="google-btn-signup" type="button">
           <svg class="google-icon" width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-            <path fill="#EA4335" d="M24 9.5c3.54 0 6.72 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.3 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.2C12.43 13.03 17.74 9.5 24 9.5z"/>
-            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.2C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.53-13.46-8.93l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-            <path fill="none" d="M0 0h48v48H0z"/>
+            <path fill="#EA4335"
+              d="M24 9.5c3.54 0 6.72 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.3 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.2C12.43 13.03 17.74 9.5 24 9.5z" />
+            <path fill="#4285F4"
+              d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+            <path fill="#FBBC05"
+              d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.2C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+            <path fill="#34A853"
+              d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.53-13.46-8.93l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+            <path fill="none" d="M0 0h48v48H0z" />
           </svg>
           <span class="btn-label">Continue with Google</span>
         </button>
@@ -527,7 +663,7 @@
 
   <script>
     /* ── Supabase Init ────────────────────────────────────────────────────── */
-    const SUPABASE_URL  = 'https://rbdwzpecudksbsjwmira.supabase.co';
+    const SUPABASE_URL = 'https://rbdwzpecudksbsjwmira.supabase.co';
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHd6cGVjdWRrc2JzandtaXJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NjE2NjgsImV4cCI6MjA5ODUzNzY2OH0.Wqer73d85wITxgoWnqHibeF2mYPlxZD69N-X3vTCKag';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
@@ -572,11 +708,11 @@
     function friendlyError(err) {
       if (!err) return 'An unexpected error occurred.';
       const msg = (err.message || '').toLowerCase();
-      if (msg.includes('invalid login credentials'))  return 'Email or password is incorrect. Please try again.';
-      if (msg.includes('email not confirmed'))         return 'Please confirm your email address first.';
-      if (msg.includes('user already registered'))     return 'An account with this email already exists. Try logging in instead.';
+      if (msg.includes('invalid login credentials')) return 'Email or password is incorrect. Please try again.';
+      if (msg.includes('email not confirmed')) return 'Please confirm your email address first.';
+      if (msg.includes('user already registered')) return 'An account with this email already exists. Try logging in instead.';
       if (msg.includes('password should be at least')) return 'Your password must be at least 8 characters long.';
-      if (msg.includes('rate limit'))                  return 'Too many attempts. Please wait a moment and try again.';
+      if (msg.includes('rate limit')) return 'Too many attempts. Please wait a moment and try again.';
       return err.message || 'An unexpected error occurred.';
     }
 
@@ -589,7 +725,7 @@
         btn.removeAttribute('disabled');
         btn.classList.remove('loading', 'opacity-50', 'cursor-not-allowed');
       }
-      
+
       const labelEl = btn.querySelector('.btn-label');
       const spinnerExisting = btn.querySelector('.spinner');
 
@@ -616,30 +752,30 @@
       const params = new URLSearchParams(window.location.search);
       if (params.get('tab') === 'signup') switchTab('signup');
     })();
-    const tabLogin  = document.getElementById('tab-login');
+    const tabLogin = document.getElementById('tab-login');
     const tabSignup = document.getElementById('tab-signup');
-    const secLogin  = document.getElementById('section-login');
+    const secLogin = document.getElementById('section-login');
     const secSignup = document.getElementById('section-signup');
 
     function switchTab(active) {
       const isLogin = active === 'login';
-      tabLogin .classList.toggle('active', isLogin);
+      tabLogin.classList.toggle('active', isLogin);
       tabSignup.classList.toggle('active', !isLogin);
-      tabLogin .setAttribute('aria-selected', isLogin);
+      tabLogin.setAttribute('aria-selected', isLogin);
       tabSignup.setAttribute('aria-selected', !isLogin);
-      secLogin .classList.toggle('hidden-section', !isLogin);
+      secLogin.classList.toggle('hidden-section', !isLogin);
       secSignup.classList.toggle('hidden-section', isLogin);
     }
 
-    tabLogin .addEventListener('click', () => switchTab('login'));
+    tabLogin.addEventListener('click', () => switchTab('login'));
     tabSignup.addEventListener('click', () => switchTab('signup'));
 
     /* ── Log In form ──────────────────────────────────────────────────────── */
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn    = document.getElementById('login-btn');
-      const email  = document.getElementById('login-email').value.trim();
-      const pass   = document.getElementById('login-password').value;
+      const btn = document.getElementById('login-btn');
+      const email = document.getElementById('login-email').value.trim();
+      const pass = document.getElementById('login-password').value;
 
       if (!email || !pass) {
         showToast('error', 'Missing fields', 'Please enter your email and password.');
@@ -667,9 +803,9 @@
     /* ── Sign Up form ─────────────────────────────────────────────────────── */
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn   = document.getElementById('signup-btn');
+      const btn = document.getElementById('signup-btn');
       const email = document.getElementById('signup-email').value.trim();
-      const pass  = document.getElementById('signup-password').value;
+      const pass = document.getElementById('signup-password').value;
 
       if (!email || !pass) {
         showToast('error', 'Missing fields', 'Please enter your email and a password.');
@@ -722,7 +858,7 @@
       // On success: Supabase handles the redirect automatically
     }
 
-    document.getElementById('google-btn-login') .addEventListener('click', () => handleGoogleAuth(document.getElementById('google-btn-login')));
+    document.getElementById('google-btn-login').addEventListener('click', () => handleGoogleAuth(document.getElementById('google-btn-login')));
     document.getElementById('google-btn-signup').addEventListener('click', () => handleGoogleAuth(document.getElementById('google-btn-signup')));
 
     /* ── Forgot password ──────────────────────────────────────────────────── */
@@ -744,4 +880,5 @@
     });
   </script>
 </body>
+
 </html>
