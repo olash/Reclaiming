@@ -326,7 +326,7 @@
     </main>
 
     <!-- Floating WhatsApp Node -->
-    <a href="#" class="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full shadow-2xl flex items-center justify-center text-white text-3xl hover:bg-green-600 hover:scale-105 transition-all z-40">
+    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full shadow-2xl flex items-center justify-center text-white text-3xl hover:bg-green-600 hover:scale-105 transition-all z-40">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 
@@ -426,18 +426,22 @@
         }
 
         // --- Step 2 Logic ---
-        document.getElementById('intake-form').addEventListener('submit', function(e) {
+        document.getElementById('intake-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const btn = document.getElementById('btn-validate-identities');
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;border-top-color:white;"></div> <span class="ml-2">Validating...</span>';
             btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
 
-            // Simulate API ping to app/api/verify-nin
-            setTimeout(async () => {
+            try {
+                const response = await fetch('/api/verify-nin', { method: 'POST', body: JSON.stringify({}) });
+                if (!response.ok) throw new Error('API Error');
+                
                 btn.innerHTML = originalHTML;
                 btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
                 showToast('Identities validated via NIMC database.', 'success');
                 
                 // Lazy-inject Paystack exactly at the moment it is needed
@@ -448,7 +452,12 @@
                 } catch (err) {
                     showToast('Could not load payment module. Please check your connection.', 'error');
                 }
-            }, 2500);
+            } catch (error) {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                showToast('Verification failed. Please try again.', 'error');
+            }
         });
 
         // --- Step 3 Logic ---
@@ -456,7 +465,7 @@
             // PaystackPop is guaranteed to be available here since loadPaystackScript() resolved before Step 3 unlocked.
             try {
                 let handler = PaystackPop.setup({
-                    key: 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxx', // Replace with your real Paystack public key
+                    key: 'pk_live_bfcdd0b59354de929f5ed2d690603ae96a32224b',
                     email: 'user@reclaimng.com',
                     amount: 500000, // ₦5,000 in kobo
                     currency: 'NGN',
@@ -469,11 +478,7 @@
                         showToast('Payment window closed. Please try again to proceed.', 'error');
                     }
                 });
-                // Uncomment with a real key: handler.openIframe();
-
-                // Mock simulation for environments without a live key
-                showToast('Mock payment successful. Initiating asset discovery...', 'success');
-                unlockStep(4);
+                handler.openIframe();
 
             } catch (error) {
                 console.error('[Paystack] Error initialising payment:', error);
@@ -506,7 +511,7 @@
         });
 
         // Report Generation Simulation
-        document.getElementById('btn-generate-report').addEventListener('click', function() {
+        document.getElementById('btn-generate-report').addEventListener('click', async function() {
             const btnText = document.getElementById('btn-report-text');
             const btnIcon = document.getElementById('btn-report-icon');
             const spinner = document.getElementById('btn-report-spinner');
@@ -515,24 +520,39 @@
             btnIcon.classList.add('hidden');
             spinner.classList.remove('hidden');
             this.disabled = true;
+            this.classList.add('opacity-50', 'cursor-not-allowed');
 
-            setTimeout(() => {
+            try {
+                const response = await fetch('/api/generate-inventory');
+                if (!response.ok) throw new Error('API Error');
+                const blob = await response.blob();
+                
                 btnText.textContent = 'High Court Inventory Report Generated';
                 spinner.classList.add('hidden');
                 btnIcon.classList.remove('hidden');
                 btnIcon.className = 'fa-solid fa-check ml-2';
                 this.classList.replace('bg-primary', 'bg-green-600');
                 this.classList.replace('hover:bg-gray-800', 'hover:bg-green-700');
+                this.classList.remove('opacity-50', 'cursor-not-allowed');
                 
                 showToast('Inventory Report successfully generated and downloaded.', 'success');
                 
-                // Simulate download
+                const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.href = 'data:application/pdf;base64,JVBERi0xLjcNCiW1tbW1DQoxIDAgb2JqDQo8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMiAwIFI+Pg0KZW5kb2JqDQo='; // Dummy valid tiny PDF Base64
+                a.href = url;
                 a.download = 'Estate_Inventory_Report.pdf';
+                document.body.appendChild(a);
                 a.click();
-
-            }, 3000);
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                btnText.textContent = 'Generate High Court Inventory Report';
+                spinner.classList.add('hidden');
+                btnIcon.classList.remove('hidden');
+                this.disabled = false;
+                this.classList.remove('opacity-50', 'cursor-not-allowed');
+                showToast('Failed to generate report. Please try again.', 'error');
+            }
         });
 
     </script>

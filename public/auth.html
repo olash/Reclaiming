@@ -582,8 +582,14 @@
 
     /* ── Button loading helpers ───────────────────────────────────────────── */
     function setLoading(btn, isLoading, label = 'Authorizing…') {
-      btn.disabled = isLoading;
-      btn.classList.toggle('loading', isLoading);
+      if (isLoading) {
+        btn.setAttribute('disabled', 'true');
+        btn.classList.add('loading', 'opacity-50', 'cursor-not-allowed');
+      } else {
+        btn.removeAttribute('disabled');
+        btn.classList.remove('loading', 'opacity-50', 'cursor-not-allowed');
+      }
+      
       const labelEl = btn.querySelector('.btn-label');
       const spinnerExisting = btn.querySelector('.spinner');
 
