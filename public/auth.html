@@ -662,222 +662,238 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <script>
-    /* ── Supabase Init ────────────────────────────────────────────────────── */
-    const SUPABASE_URL = 'https://rbdwzpecudksbsjwmira.supabase.co';
+    /* ── Supabase Init ──────────────────────────────────────────────────────
+       Use `supabaseClient` to avoid naming collision with the global
+       `window.supabase` namespace injected by the CDN script.
+    ── */
+    const SUPABASE_URL  = 'https://rbdwzpecudksbsjwmira.supabase.co';
     const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJiZHd6cGVjdWRrc2JzandtaXJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NjE2NjgsImV4cCI6MjA5ODUzNzY2OH0.Wqer73d85wITxgoWnqHibeF2mYPlxZD69N-X3vTCKag';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    /* ── If already logged in, skip the auth page entirely ───────────────── */
+    /* ── If already logged in, skip the auth page entirely ─────────────────── */
     (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) window.location.replace('dashboard.html');
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) window.location.replace('dashboard.html');
+      } catch (e) {
+        console.warn('[auth] getSession error:', e);
+      }
     })();
 
-    /* ── Handle Google OAuth redirect coming back to this page ───────────── */
-    supabase.auth.onAuthStateChange((event, session) => {
+    /* ── Handle Google OAuth redirect coming back to this page ─────────────── */
+    supabaseClient.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
         window.location.replace('dashboard.html');
       }
     });
 
-    /* ── Toast System ─────────────────────────────────────────────────────── */
-    const toastContainer = document.getElementById('toast-container');
+    /* ── All DOM interaction wrapped in DOMContentLoaded ────────────────────── */
+    document.addEventListener('DOMContentLoaded', () => {
 
-    function showToast(type, title, msg) {
-      const icons = { success: '✓', error: '✕', info: 'ℹ' };
-      const el = document.createElement('div');
-      el.className = `toast ${type}`;
-      el.innerHTML = `
-        <span class="toast-icon" aria-hidden="true">${icons[type] ?? 'ℹ'}</span>
-        <div class="toast-body">
-          <div class="toast-title">${title}</div>
-          ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
-        </div>`;
-      toastContainer.appendChild(el);
+      /* ── Toast System ──────────────────────────────────────────────────────── */
+      const toastContainer = document.getElementById('toast-container');
 
-      // Auto-dismiss after 4.5 s
-      const dismiss = () => {
-        el.classList.add('out');
-        el.addEventListener('animationend', () => el.remove(), { once: true });
-      };
-      const tid = setTimeout(dismiss, 4500);
-      el.addEventListener('click', () => { clearTimeout(tid); dismiss(); });
-    }
-
-    /* ── Map Supabase error codes to friendly messages ────────────────────── */
-    function friendlyError(err) {
-      if (!err) return 'An unexpected error occurred.';
-      const msg = (err.message || '').toLowerCase();
-      if (msg.includes('invalid login credentials')) return 'Email or password is incorrect. Please try again.';
-      if (msg.includes('email not confirmed')) return 'Please confirm your email address first.';
-      if (msg.includes('user already registered')) return 'An account with this email already exists. Try logging in instead.';
-      if (msg.includes('password should be at least')) return 'Your password must be at least 8 characters long.';
-      if (msg.includes('rate limit')) return 'Too many attempts. Please wait a moment and try again.';
-      return err.message || 'An unexpected error occurred.';
-    }
-
-    /* ── Button loading helpers ───────────────────────────────────────────── */
-    function setLoading(btn, isLoading, label = 'Authorizing…') {
-      if (isLoading) {
-        btn.setAttribute('disabled', 'true');
-        btn.classList.add('loading', 'opacity-50', 'cursor-not-allowed');
-      } else {
-        btn.removeAttribute('disabled');
-        btn.classList.remove('loading', 'opacity-50', 'cursor-not-allowed');
+      function showToast(type, title, msg) {
+        if (!toastContainer) return;
+        const icons = { success: '✓', error: '✕', info: 'ℹ' };
+        const el = document.createElement('div');
+        el.className = `toast ${type}`;
+        el.innerHTML = `
+          <span class="toast-icon" aria-hidden="true">${icons[type] ?? 'ℹ'}</span>
+          <div class="toast-body">
+            <div class="toast-title">${title}</div>
+            ${msg ? `<div class="toast-msg">${msg}</div>` : ''}
+          </div>`;
+        toastContainer.appendChild(el);
+        const dismiss = () => {
+          el.classList.add('out');
+          el.addEventListener('animationend', () => el.remove(), { once: true });
+        };
+        const tid = setTimeout(dismiss, 4500);
+        el.addEventListener('click', () => { clearTimeout(tid); dismiss(); });
       }
 
-      const labelEl = btn.querySelector('.btn-label');
-      const spinnerExisting = btn.querySelector('.spinner');
+      /* ── Map Supabase error codes to friendly messages ─────────────────────── */
+      function friendlyError(err) {
+        if (!err) return 'An unexpected error occurred.';
+        const msg = (err.message || '').toLowerCase();
+        if (msg.includes('invalid login credentials'))  return 'Email or password is incorrect. Please try again.';
+        if (msg.includes('email not confirmed'))         return 'Please confirm your email address first.';
+        if (msg.includes('user already registered'))     return 'An account with this email already exists. Try logging in instead.';
+        if (msg.includes('password should be at least')) return 'Your password must be at least 8 characters long.';
+        if (msg.includes('rate limit'))                  return 'Too many attempts. Please wait a moment and try again.';
+        return err.message || 'An unexpected error occurred.';
+      }
 
-      if (isLoading) {
-        if (labelEl) labelEl.textContent = label;
-        if (!spinnerExisting) {
-          const spinner = document.createElement('span');
-          spinner.className = btn.classList.contains('btn-google') ? 'spinner dark' : 'spinner';
-          btn.insertBefore(spinner, btn.firstChild);
+      /* ── Button loading helpers ─────────────────────────────────────────────── */
+      function setLoading(btn, isLoading, label = 'Authorizing…') {
+        if (!btn) return;
+        if (isLoading) {
+          btn.setAttribute('disabled', 'true');
+          btn.classList.add('loading', 'opacity-50', 'cursor-not-allowed');
+        } else {
+          btn.removeAttribute('disabled');
+          btn.classList.remove('loading', 'opacity-50', 'cursor-not-allowed');
         }
-      } else {
-        if (spinnerExisting) spinnerExisting.remove();
+        const labelEl = btn.querySelector('.btn-label');
+        const spinnerExisting = btn.querySelector('.spinner');
+        if (isLoading) {
+          if (labelEl) labelEl.textContent = label;
+          if (!spinnerExisting) {
+            const spinner = document.createElement('span');
+            spinner.className = btn.classList.contains('btn-google') ? 'spinner dark' : 'spinner';
+            btn.insertBefore(spinner, btn.firstChild);
+          }
+        } else {
+          if (spinnerExisting) spinnerExisting.remove();
+        }
       }
-    }
 
-    function resetBtn(btn, originalLabel) {
-      setLoading(btn, false);
-      const labelEl = btn.querySelector('.btn-label');
-      if (labelEl) labelEl.textContent = originalLabel;
-    }
+      function resetBtn(btn, originalLabel) {
+        setLoading(btn, false);
+        const labelEl = btn && btn.querySelector('.btn-label');
+        if (labelEl) labelEl.textContent = originalLabel;
+      }
 
-    /* ── Auto-switch tab from URL param (?tab=signup) ────────────────────── */
-    (function () {
+      /* ── Tab switcher ───────────────────────────────────────────────────────── */
+      const tabLogin  = document.getElementById('tab-login');
+      const tabSignup = document.getElementById('tab-signup');
+      const secLogin  = document.getElementById('section-login');
+      const secSignup = document.getElementById('section-signup');
+
+      function switchTab(active) {
+        if (!tabLogin || !tabSignup || !secLogin || !secSignup) return;
+        const isLogin = active === 'login';
+        tabLogin.classList.toggle('active', isLogin);
+        tabSignup.classList.toggle('active', !isLogin);
+        tabLogin.setAttribute('aria-selected', String(isLogin));
+        tabSignup.setAttribute('aria-selected', String(!isLogin));
+        secLogin.classList.toggle('hidden-section', !isLogin);
+        secSignup.classList.toggle('hidden-section', isLogin);
+      }
+
+      /* Auto-switch tab from URL param (?tab=signup) */
       const params = new URLSearchParams(window.location.search);
       if (params.get('tab') === 'signup') switchTab('signup');
-    })();
-    const tabLogin = document.getElementById('tab-login');
-    const tabSignup = document.getElementById('tab-signup');
-    const secLogin = document.getElementById('section-login');
-    const secSignup = document.getElementById('section-signup');
 
-    function switchTab(active) {
-      const isLogin = active === 'login';
-      tabLogin.classList.toggle('active', isLogin);
-      tabSignup.classList.toggle('active', !isLogin);
-      tabLogin.setAttribute('aria-selected', isLogin);
-      tabSignup.setAttribute('aria-selected', !isLogin);
-      secLogin.classList.toggle('hidden-section', !isLogin);
-      secSignup.classList.toggle('hidden-section', isLogin);
-    }
+      if (tabLogin)  tabLogin.addEventListener('click',  () => switchTab('login'));
+      if (tabSignup) tabSignup.addEventListener('click', () => switchTab('signup'));
 
-    tabLogin.addEventListener('click', () => switchTab('login'));
-    tabSignup.addEventListener('click', () => switchTab('signup'));
+      /* ── Log In form ────────────────────────────────────────────────────────── */
+      const loginForm = document.getElementById('login-form');
+      if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn   = document.getElementById('login-btn');
+          const email = document.getElementById('login-email').value.trim();
+          const pass  = document.getElementById('login-password').value;
 
-    /* ── Log In form ──────────────────────────────────────────────────────── */
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('login-btn');
-      const email = document.getElementById('login-email').value.trim();
-      const pass = document.getElementById('login-password').value;
+          if (!email || !pass) {
+            showToast('error', 'Missing fields', 'Please enter your email and password.');
+            return;
+          }
 
-      if (!email || !pass) {
-        showToast('error', 'Missing fields', 'Please enter your email and password.');
-        return;
+          setLoading(btn, true, 'Authorizing…');
+
+          const [{ error }] = await Promise.all([
+            supabaseClient.auth.signInWithPassword({ email, password: pass }),
+            new Promise(r => setTimeout(r, 800))
+          ]);
+
+          if (error) {
+            resetBtn(btn, 'Authenticate Protocol');
+            showToast('error', 'Authentication Failed', friendlyError(error));
+            return;
+          }
+
+          showToast('success', 'Authenticated', 'Redirecting to your dashboard…');
+          setTimeout(() => window.location.replace('dashboard.html'), 600);
+        });
       }
 
-      setLoading(btn, true, 'Authorizing…');
+      /* ── Sign Up form ───────────────────────────────────────────────────────── */
+      const signupForm = document.getElementById('signup-form');
+      if (signupForm) {
+        signupForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const btn   = document.getElementById('signup-btn');
+          const email = document.getElementById('signup-email').value.trim();
+          const pass  = document.getElementById('signup-password').value;
 
-      // Minimum shimmer display: 800 ms as specified
-      const [{ error }] = await Promise.all([
-        supabase.auth.signInWithPassword({ email, password: pass }),
-        new Promise(r => setTimeout(r, 800))
-      ]);
+          if (!email || !pass) {
+            showToast('error', 'Missing fields', 'Please enter your email and a password.');
+            return;
+          }
+          if (pass.length < 8) {
+            showToast('error', 'Weak password', 'Password must be at least 8 characters.');
+            return;
+          }
 
-      if (error) {
-        resetBtn(btn, 'Authenticate Protocol');
-        showToast('error', 'Authentication Failed', friendlyError(error));
-        return;
+          setLoading(btn, true, 'Creating Account…');
+
+          const [{ data, error }] = await Promise.all([
+            supabaseClient.auth.signUp({ email, password: pass }),
+            new Promise(r => setTimeout(r, 800))
+          ]);
+
+          if (error) {
+            resetBtn(btn, 'Create Account');
+            showToast('error', 'Registration Failed', friendlyError(error));
+            return;
+          }
+
+          if (data.session) {
+            showToast('success', 'Account Created', 'Redirecting to your dashboard…');
+            setTimeout(() => window.location.replace('dashboard.html'), 600);
+          } else {
+            resetBtn(btn, 'Create Account');
+            showToast('info', 'Confirm your email',
+              'We sent a confirmation link to <strong>' + email + '</strong>. Check your inbox to activate your account.');
+          }
+        });
       }
 
-      showToast('success', 'Authenticated', 'Redirecting to your dashboard…');
-      setTimeout(() => window.location.replace('dashboard.html'), 600);
-    });
-
-    /* ── Sign Up form ─────────────────────────────────────────────────────── */
-    document.getElementById('signup-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('signup-btn');
-      const email = document.getElementById('signup-email').value.trim();
-      const pass = document.getElementById('signup-password').value;
-
-      if (!email || !pass) {
-        showToast('error', 'Missing fields', 'Please enter your email and a password.');
-        return;
-      }
-      if (pass.length < 8) {
-        showToast('error', 'Weak password', 'Password must be at least 8 characters.');
-        return;
-      }
-
-      setLoading(btn, true, 'Creating Account…');
-
-      const [{ data, error }] = await Promise.all([
-        supabase.auth.signUp({ email, password: pass }),
-        new Promise(r => setTimeout(r, 800))
-      ]);
-
-      if (error) {
-        resetBtn(btn, 'Create Account');
-        showToast('error', 'Registration Failed', friendlyError(error));
-        return;
-      }
-
-      // If Supabase requires email confirmation, the session will be null
-      if (data.session) {
-        showToast('success', 'Account Created', 'Redirecting to your dashboard…');
-        setTimeout(() => window.location.replace('dashboard.html'), 600);
-      } else {
-        resetBtn(btn, 'Create Account');
-        showToast('info', 'Confirm your email',
-          'We sent a confirmation link to <strong>' + email + '</strong>. Check your inbox to activate your account.');
-      }
-    });
-
-    /* ── Google OAuth ─────────────────────────────────────────────────────── */
-    async function handleGoogleAuth(btn) {
-      setLoading(btn, true, 'Redirecting…');
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/dashboard.html'
+      /* ── Google OAuth ───────────────────────────────────────────────────────── */
+      async function handleGoogleAuth(btn) {
+        setLoading(btn, true, 'Redirecting…');
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin + '/dashboard.html' }
+        });
+        if (error) {
+          resetBtn(btn, 'Continue with Google');
+          showToast('error', 'Google Sign-In Failed', friendlyError(error));
         }
-      });
-
-      if (error) {
-        resetBtn(btn, 'Continue with Google');
-        showToast('error', 'Google Sign-In Failed', friendlyError(error));
       }
-      // On success: Supabase handles the redirect automatically
-    }
 
-    document.getElementById('google-btn-login').addEventListener('click', () => handleGoogleAuth(document.getElementById('google-btn-login')));
-    document.getElementById('google-btn-signup').addEventListener('click', () => handleGoogleAuth(document.getElementById('google-btn-signup')));
+      const googleBtnLogin  = document.getElementById('google-btn-login');
+      const googleBtnSignup = document.getElementById('google-btn-signup');
+      if (googleBtnLogin)  googleBtnLogin.addEventListener('click',  () => handleGoogleAuth(googleBtnLogin));
+      if (googleBtnSignup) googleBtnSignup.addEventListener('click', () => handleGoogleAuth(googleBtnSignup));
 
-    /* ── Forgot password ──────────────────────────────────────────────────── */
-    document.getElementById('forgot-link').addEventListener('click', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('login-email').value.trim();
-      if (!email) {
-        showToast('info', 'Enter your email first', 'Type your email address above, then click "Forgot password?" again.');
-        return;
+      /* ── Forgot password ────────────────────────────────────────────────────── */
+      const forgotLink = document.getElementById('forgot-link');
+      if (forgotLink) {
+        forgotLink.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const emailEl = document.getElementById('login-email');
+          const email   = emailEl ? emailEl.value.trim() : '';
+          if (!email) {
+            showToast('info', 'Enter your email first', 'Type your email address above, then click "Forgot password?" again.');
+            return;
+          }
+          const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + '/auth.html'
+          });
+          if (error) {
+            showToast('error', 'Reset Failed', friendlyError(error));
+          } else {
+            showToast('success', 'Reset email sent', 'Check your inbox for a password reset link.');
+          }
+        });
       }
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/auth.html'
-      });
-      if (error) {
-        showToast('error', 'Reset Failed', friendlyError(error));
-      } else {
-        showToast('success', 'Reset email sent', 'Check your inbox for a password reset link.');
-      }
-    });
+
+    }); /* end DOMContentLoaded */
   </script>
 </body>
 
