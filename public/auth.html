@@ -680,15 +680,18 @@
       }
     })();
 
-    /* ── Handle Google OAuth redirect coming back to this page ─────────────── */
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-        window.location.replace('dashboard.html');
-      }
-    });
-
     /* ── All DOM interaction wrapped in DOMContentLoaded ────────────────────── */
     document.addEventListener('DOMContentLoaded', () => {
+
+      /* ── Auth State Listener — catches returning Google OAuth token ──────────
+         Must be first inside DOMContentLoaded so the DOM is ready when the
+         SIGNED_IN event fires after the OAuth redirect returns to this page.
+      ── */
+      supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          window.location.href = 'dashboard.html';
+        }
+      });
 
       /* ── Toast System ──────────────────────────────────────────────────────── */
       const toastContainer = document.getElementById('toast-container');
@@ -858,12 +861,17 @@
         setLoading(btn, true, 'Redirecting…');
         const { error } = await supabaseClient.auth.signInWithOAuth({
           provider: 'google',
-          options: { redirectTo: window.location.origin + '/dashboard.html' }
+          options: {
+            redirectTo: window.location.origin + '/dashboard.html'
+          }
         });
         if (error) {
           resetBtn(btn, 'Continue with Google');
           showToast('error', 'Google Sign-In Failed', friendlyError(error));
         }
+        // On success: Supabase redirects the browser to Google, then back to
+        // dashboard.html. The onAuthStateChange SIGNED_IN listener above handles
+        // the case where the redirect lands back on auth.html instead.
       }
 
       const googleBtnLogin  = document.getElementById('google-btn-login');
