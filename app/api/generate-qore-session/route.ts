@@ -30,7 +30,10 @@ export async function POST() {
         'Content-Type': 'application/json',
         'Authorization': `Basic ${credentials}`,
       },
-      body: JSON.stringify({ productCode: 'liveness' }),
+      body: JSON.stringify({
+        productCode: 'liveness',
+        reference: `req_${Date.now()}` // Dynamically generated unique string
+      }),
     });
 
     if (!response.ok) {
