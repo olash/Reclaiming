@@ -2,29 +2,55 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getQoreIdToken } from '@/utils/qoreidAuth';
 
+/**
+ * POST /api/verify-nin
+ *
+ * Accepts NIN + applicant biodata. Hits QoreID NIN Premium endpoint for
+ * cross-matched identity verification. Falls back to basic NIN lookup if
+ * Premium returns a non-200. Caches results in Supabase to prevent
+ * duplicate charges ("Never Pay Twice").
+ *
+ * Body: { nin, firstname, lastname, phone, dob }
+ */
 export async function POST(request: Request) {
   try {
-    // Initialize Supabase client inside the handler to prevent build-time crashes
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-    
+
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.warn('Missing Supabase environment variables');
+      console.warn('[verify-nin] Missing Supabase environment variables');
     }
-    
+
     const supabase = createClient(
-      supabaseUrl || 'https://dummy.supabase.co', 
+      supabaseUrl || 'https://dummy.supabase.co',
       supabaseServiceKey || 'dummy'
     );
 
-    const { nin } = await request.json();
+    // ── Parse & validate body ──────────────────────────────────────────────
+    let body: {
+      nin?: string;
+      firstname?: string;
+      lastname?: string;
+      phone?: string;
+      dob?: string;
+    };
 
-    if (!nin) {
-      return NextResponse.json({ error: 'NIN is required' }, { status: 400 });
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
     }
 
-    // Objective 2: Implement "Never Pay Twice" Database Caching
-    // Query the 'verifications' table using the provided NIN for records less than 30 days old.
+    const { nin, firstname, lastname, phone, dob } = body;
+
+    if (!nin || nin.length !== 11) {
+      return NextResponse.json(
+        { error: 'A valid 11-digit NIN is required.' },
+        { status: 400 }
+      );
+    }
+
+    // ── "Never Pay Twice" cache check ─────────────────────────────────────
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -38,45 +64,108 @@ export async function POST(request: Request) {
       .single();
 
     if (cachedRecord && !cacheError) {
-      // Return cached profile data immediately without hitting QoreID
-      return NextResponse.json({ success: true, data: cachedRecord.profile_data, cached: true });
+      console.log('[verify-nin] Cache hit for NIN:', nin.slice(0, 4) + '****');
+      return NextResponse.json({
+        success: true,
+        matchStatus: 'EXACT_MATCH',
+        data: cachedRecord.profile_data,
+        cached: true,
+      });
     }
 
-    // Cache Miss: Fetch a fresh token and hit QoreID
+    // ── Fetch QoreID access token ──────────────────────────────────────────
     const accessToken = await getQoreIdToken();
 
-    const verifyResponse = await fetch('https://api.qoreid.com/v1/ng/identities/nin', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ idNumber: nin }),
-    });
+    // ── Attempt NIN Premium (cross-matched with biodata) ──────────────────
+    const premiumResponse = await fetch(
+      `https://api.qoreid.com/v1/ng/identities/nin-premium/${nin}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          firstname: firstname ?? '',
+          lastname: lastname ?? '',
+          phone: phone ?? '',
+          dob: dob ?? '',         // expected format: YYYY-MM-DD
+        }),
+      }
+    );
 
-    const verifyData = await verifyResponse.json();
+    let verifyData = await premiumResponse.json();
+    let usedFallback = false;
 
-    if (!verifyResponse.ok || verifyData.status !== 'EXACT_MATCH') {
+    // ── Fallback to basic NIN lookup if Premium fails ─────────────────────
+    if (!premiumResponse.ok) {
+      console.warn(
+        `[verify-nin] NIN Premium returned ${premiumResponse.status}. Falling back to basic NIN lookup.`
+      );
+
+      const fallbackResponse = await fetch('https://api.qoreid.com/v1/ng/identities/nin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ idNumber: nin }),
+      });
+
+      verifyData = await fallbackResponse.json();
+      usedFallback = true;
+
+      if (!fallbackResponse.ok) {
+        return NextResponse.json(
+          {
+            error: 'Identity verification failed. The NIN could not be verified.',
+            details: verifyData,
+          },
+          { status: fallbackResponse.status || 400 }
+        );
+      }
+    }
+
+    // ── Require EXACT_MATCH ────────────────────────────────────────────────
+    const matchStatus: string = verifyData?.applicant?.matchScore?.status
+      ?? verifyData?.status
+      ?? 'NO_MATCH';
+
+    if (matchStatus !== 'EXACT_MATCH') {
       return NextResponse.json(
-        { error: 'Verification failed or not an exact match', details: verifyData }, 
-        { status: verifyResponse.status || 400 }
+        {
+          error: 'Identity verification could not confirm an exact match.',
+          matchStatus,
+          details: verifyData,
+        },
+        { status: 422 }
       );
     }
 
-    // Asynchronously write the verified data into the Supabase cache table
-    // (Awaiting to ensure Edge function doesn't kill execution before network request finishes)
-    await supabase.from('verifications').insert({
-      nin: nin,
+    // ── Write to Supabase cache ────────────────────────────────────────────
+    const { error: insertError } = await supabase.from('verifications').insert({
+      nin,
       profile_data: verifyData,
       created_at: new Date().toISOString(),
     });
 
-    return NextResponse.json({ success: true, data: verifyData, cached: false });
+    if (insertError) {
+      // Non-fatal — log and continue. A cache write failure should not block the user.
+      console.warn('[verify-nin] Cache write failed:', insertError.message);
+    }
+
+    return NextResponse.json({
+      success: true,
+      matchStatus,
+      data: verifyData,
+      cached: false,
+      usedFallback,
+    });
 
   } catch (error) {
-    console.error('NIN Verification Error:', error);
+    console.error('[verify-nin] Unhandled error:', error);
     return NextResponse.json(
-      { error: 'Internal server error while verifying NIN' }, 
+      { error: 'Internal server error while verifying identity.' },
       { status: 500 }
     );
   }

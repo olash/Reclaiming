@@ -1,5 +1,5 @@
 -- ===========================================================================
--- Reclaimng — Supabase SQL Migration
+-- Reclaimng — Supabase SQL Migration (Phase 1)
 -- Purpose: "Never Pay Twice" — Verification Caching Layer
 -- ===========================================================================
 --
@@ -24,111 +24,177 @@
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS public.verifications (
-    -- Primary key: auto-generated UUID for each verification record
     id            UUID          DEFAULT gen_random_uuid() PRIMARY KEY,
-
-    -- Links this record to the Supabase Auth user who triggered the lookup
     user_id       UUID          NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-
-    -- The NIN that was verified. Unique constraint prevents duplicate records.
     nin           TEXT          NOT NULL UNIQUE,
-
-    -- The full JSON response from QoreID (name, DOB, photo URL, etc.)
-    -- Stored as JSONB for efficient indexing and querying.
     profile_data  JSONB         NOT NULL,
-
-    -- Timestamp of when this verification was first cached.
-    -- Used by the API route to enforce the 30-day cache window.
     created_at    TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
--- Index on nin for fast lookups (the most common query pattern)
-CREATE INDEX IF NOT EXISTS idx_verifications_nin
-    ON public.verifications (nin);
-
--- Index on user_id for fast per-user queries
-CREATE INDEX IF NOT EXISTS idx_verifications_user_id
-    ON public.verifications (user_id);
-
--- Index on created_at to efficiently filter by the 30-day window
-CREATE INDEX IF NOT EXISTS idx_verifications_created_at
-    ON public.verifications (created_at DESC);
-
-
--- ---------------------------------------------------------------------------
--- 2. Enable Row Level Security (RLS)
--- ---------------------------------------------------------------------------
--- RLS is OFF by default. Enabling it means NO row is readable unless an
--- explicit policy grants access. This is the secure default for user data.
+CREATE INDEX IF NOT EXISTS idx_verifications_nin        ON public.verifications (nin);
+CREATE INDEX IF NOT EXISTS idx_verifications_user_id    ON public.verifications (user_id);
+CREATE INDEX IF NOT EXISTS idx_verifications_created_at ON public.verifications (created_at DESC);
 
 ALTER TABLE public.verifications ENABLE ROW LEVEL SECURITY;
 
-
--- ---------------------------------------------------------------------------
--- 3. RLS Policies
--- ---------------------------------------------------------------------------
-
--- POLICY: SELECT — Authenticated users may only read their own records.
--- `auth.uid()` returns the UUID of the currently authenticated Supabase user.
--- This prevents User A from ever reading User B's NIN or identity data.
-
 CREATE POLICY "Users can read their own verifications"
-    ON public.verifications
-    FOR SELECT
-    TO authenticated
+    ON public.verifications FOR SELECT TO authenticated
     USING (auth.uid() = user_id);
 
-
--- POLICY: INSERT — Authenticated users may only insert their own records.
--- The `user_id` in the new row must match the session user's UID.
--- The server-side API route (using the service_role key) bypasses RLS
--- and handles all inserts. This policy is a defence-in-depth measure
--- for any direct client SDK calls.
-
 CREATE POLICY "Users can insert their own verifications"
-    ON public.verifications
-    FOR INSERT
-    TO authenticated
+    ON public.verifications FOR INSERT TO authenticated
     WITH CHECK (auth.uid() = user_id);
 
-
--- POLICY: UPDATE — Explicitly deny direct updates from client.
--- All cache refreshes go through the server-side API route only.
--- (No UPDATE policy → no client can update records.)
-
-
--- POLICY: DELETE — Explicitly deny deletion from the client.
--- Records are managed exclusively by the server or Supabase admin.
--- (No DELETE policy → no client can delete records.)
-
-
--- ---------------------------------------------------------------------------
--- 4. Grant Necessary Permissions to the anon & authenticated roles
--- ---------------------------------------------------------------------------
--- Supabase uses two primary roles for client access:
---   anon        → unauthenticated requests
---   authenticated → logged-in users (after auth.signIn)
---
--- We grant SELECT/INSERT to `authenticated` only (no anonymous access).
-
 GRANT SELECT, INSERT ON public.verifications TO authenticated;
-
--- Revoke any broad public access (defence-in-depth)
 REVOKE ALL ON public.verifications FROM anon;
 
 
--- ---------------------------------------------------------------------------
--- 5. Verification: Run these queries to confirm setup is correct
--- ---------------------------------------------------------------------------
--- After running the script above, you can verify with:
+-- ===========================================================================
+-- Reclaimng — Supabase SQL Migration (Phase 2)
+-- Purpose: Estate Submissions Tracking + Probate Document Storage
+-- ===========================================================================
 --
---   SELECT tablename, rowsecurity
---   FROM pg_tables
---   WHERE tablename = 'verifications';
---   -- Expected: rowsecurity = true
+-- WHAT THIS DOES:
+--   1. Creates the `estates` table to track each user's probate application,
+--      document paths, payment reference, and compliance review status.
+--   2. Creates the `probate_documents` Storage bucket for secure file storage.
+--   3. Applies RLS policies so users can only access their own records.
+-- ===========================================================================
+
+
+-- ---------------------------------------------------------------------------
+-- 1. Create the estates table
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.estates (
+    id                              UUID          DEFAULT gen_random_uuid() PRIMARY KEY,
+
+    -- The authenticated user who submitted this application
+    user_id                         UUID          NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+
+    -- Human-readable identifiers
+    estate_name                     TEXT          NOT NULL DEFAULT 'Unknown Estate',
+    deceased_name                   TEXT          NOT NULL DEFAULT 'Unknown',
+
+    -- Compliance workflow status.
+    -- Admin changes this manually in Supabase dashboard to unlock Step 5.
+    -- Values: 'pending_review' | 'under_review' | 'verified' | 'rejected'
+    status                          TEXT          NOT NULL DEFAULT 'pending_review'
+                                    CHECK (status IN ('pending_review', 'under_review', 'verified', 'rejected')),
+
+    -- Paystack payment reference — proof of the ₦75,000 legal submission fee
+    paystack_reference              TEXT          NOT NULL,
+
+    -- Supabase Storage paths for uploaded documents (relative to bucket root)
+    death_certificate_path          TEXT          NOT NULL,
+    letter_of_administration_path   TEXT,         -- NULL if not provided (optional)
+
+    -- Timestamps
+    submitted_at                    TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_at                      TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_estates_user_id     ON public.estates (user_id);
+CREATE INDEX IF NOT EXISTS idx_estates_status      ON public.estates (status);
+CREATE INDEX IF NOT EXISTS idx_estates_submitted_at ON public.estates (submitted_at DESC);
+
+
+-- Auto-update updated_at on any row change
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS estates_updated_at ON public.estates;
+CREATE TRIGGER estates_updated_at
+    BEFORE UPDATE ON public.estates
+    FOR EACH ROW
+    EXECUTE FUNCTION public.update_updated_at_column();
+
+
+-- ---------------------------------------------------------------------------
+-- 2. Enable RLS and set policies on estates
+-- ---------------------------------------------------------------------------
+
+ALTER TABLE public.estates ENABLE ROW LEVEL SECURITY;
+
+-- SELECT: Users read only their own estate records.
+CREATE POLICY "Users can view their own estates"
+    ON public.estates FOR SELECT TO authenticated
+    USING (auth.uid() = user_id);
+
+-- INSERT: Only the owning user may create a record.
+-- (In practice the API route using service_role handles all inserts.)
+CREATE POLICY "Users can create their own estates"
+    ON public.estates FOR INSERT TO authenticated
+    WITH CHECK (auth.uid() = user_id);
+
+-- UPDATE + DELETE: Blocked. Status changes are admin-only via dashboard.
+
+GRANT SELECT, INSERT ON public.estates TO authenticated;
+REVOKE ALL ON public.estates FROM anon;
+
+
+-- ---------------------------------------------------------------------------
+-- 3. Create the probate_documents Storage bucket
+-- ---------------------------------------------------------------------------
+-- NOTE: If the INSERT below fails, create the bucket manually:
+--   Supabase Dashboard → Storage → New Bucket
+--     Name: probate_documents   |   Public: OFF
+-- ---------------------------------------------------------------------------
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'probate_documents',
+    'probate_documents',
+    false,           -- PRIVATE: no public URLs
+    10485760,        -- 10 MB per file
+    ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+)
+ON CONFLICT (id) DO NOTHING;  -- Idempotent: safe to re-run
+
+
+-- ---------------------------------------------------------------------------
+-- 4. Storage RLS Policies for probate_documents
+-- ---------------------------------------------------------------------------
+
+-- UPLOAD: Authenticated users may upload to their own folder only.
+-- Folder structure enforced: {user_id}/{timestamp}_{filename}
+CREATE POLICY "Users can upload their own probate documents"
+    ON storage.objects FOR INSERT TO authenticated
+    WITH CHECK (
+        bucket_id = 'probate_documents'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+-- READ: Users may only read their own documents.
+CREATE POLICY "Users can read their own probate documents"
+    ON storage.objects FOR SELECT TO authenticated
+    USING (
+        bucket_id = 'probate_documents'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+-- DELETE & UPDATE: Blocked for all clients. (No policies = no access.)
+
+
+-- ---------------------------------------------------------------------------
+-- 5. Verification queries
+-- ---------------------------------------------------------------------------
 --
---   SELECT policyname, cmd, roles, qual
---   FROM pg_policies
---   WHERE tablename = 'verifications';
---   -- Expected: two policies listed above
+--   SELECT tablename, rowsecurity FROM pg_tables
+--   WHERE tablename IN ('verifications', 'estates');
+--   -- Expected: rowsecurity = true for both rows
+--
+--   SELECT policyname, tablename FROM pg_policies
+--   WHERE tablename IN ('verifications', 'estates');
+--   -- Expected: 4 policies total
+--
+--   SELECT id, name, public FROM storage.buckets
+--   WHERE id = 'probate_documents';
+--   -- Expected: 1 row, public = false
+--
 -- ===========================================================================

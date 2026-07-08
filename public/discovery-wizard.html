@@ -6,99 +6,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estate Discovery Wizard | Reclaimng</title>
-    
+    <meta name="description" content="Begin your estate asset recovery journey through our secure, court-compliant 5-step verification process.">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
                     colors: {
                         primary: '#0F172A',
-                        accent: '#3B82F6',
-                        glass: 'rgba(255, 255, 255, 0.7)',
-                        glassDark: 'rgba(255, 255, 255, 0.9)'
+                        accent:  '#3B82F6',
                     }
                 }
             }
         }
     </script>
 
-    <!-- Paystack V2: Script is NOT loaded here at page load. -->
-    <!-- It is lazily injected by loadPaystackScript() only when Step 2 is
-         successfully completed, saving bandwidth for mobile users. -->
-
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        body {
-            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-            min-height: 100vh;
-        }
-        
+        body { background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); min-height: 100vh; }
+
         .glass-panel {
-            background: var(--glass);
+            background: rgba(255,255,255,0.75);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.06);
         }
 
+        /* Accordion */
         .accordion-content {
-            transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, padding 0.4s ease-in-out;
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            padding: 0 1.5rem;
+            transition: max-height 0.45s ease-in-out, opacity 0.45s ease-in-out, padding 0.45s ease-in-out;
+            max-height: 0; opacity: 0; overflow: hidden; padding: 0 1.5rem;
         }
+        .accordion-content.active { max-height: 2400px; opacity: 1; padding: 1.5rem; }
 
-        .accordion-content.active {
-            max-height: 2000px; /* arbitrary large height to accommodate content */
-            opacity: 1;
-            padding: 1.5rem;
-        }
+        /* Step locked overlay */
+        .step-locked { opacity: 0.55; pointer-events: none; user-select: none; }
 
-        /* Toast Animation */
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
+        /* Toasts */
+        @keyframes slideInRight  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
         .toast-enter { animation: slideInRight 0.3s forwards; }
-        .toast-exit { animation: slideOutRight 0.3s forwards; }
+        .toast-exit  { animation: slideOutRight 0.3s forwards; }
 
-        /* Loader */
-        .spinner {
-            border: 3px solid rgba(255,255,255,0.3);
+        /* Spinner */
+        .spin {
+            border: 3px solid rgba(255,255,255,0.25);
             border-radius: 50%;
-            border-top: 3px solid #3B82F6;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+            border-top-color: #fff;
+            animation: rotation 0.8s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .spin-dark { border-top-color: #3B82F6; border-color: rgba(59,130,246,0.2); }
+        @keyframes rotation { to { transform: rotate(360deg); } }
+
+        /* File drop zone */
+        .drop-zone { border: 2px dashed #D1D5DB; border-radius: 0.75rem; transition: border-color 0.2s, background 0.2s; }
+        .drop-zone:hover, .drop-zone.dragover { border-color: #3B82F6; background: rgba(59,130,246,0.04); }
+        .drop-zone.file-staged { border-color: #22C55E; background: rgba(34,197,94,0.05); }
+
+        /* Liveness mount container */
+        #qoreid-liveness-mount {
+            min-height: 320px;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background: #F8FAFC;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        /* Pending pulse animation */
+        @keyframes pulse-ring {
+            0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+            70%  { box-shadow: 0 0 0 16px rgba(59,130,246,0); }
+            100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+        }
+        .pulse-icon { animation: pulse-ring 2.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite; }
     </style>
 </head>
-<body class="text-gray-800 antialiased font-sans relative pb-20">
+<body class="text-gray-800 antialiased font-sans pb-24">
 
     <!-- Navbar -->
     <nav class="glass-panel sticky top-0 z-40 px-6 py-4 flex justify-between items-center mb-10">
-        <div class="text-xl font-extrabold text-primary tracking-tight">Reclaim<span class="text-accent">ng</span></div>
+        <a href="dashboard.html" class="text-xl font-extrabold text-primary tracking-tight">Reclaim<span class="text-accent">ng</span></a>
         <div class="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Estate Discovery Portal</div>
     </nav>
 
@@ -106,462 +106,787 @@
     <div id="toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
 
     <!-- Processing Modal -->
-    <div id="processing-modal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden flex items-center justify-center">
-        <div class="glass-panel p-8 rounded-2xl flex flex-col items-center justify-center text-center max-w-sm mx-4 shadow-2xl bg-white/90">
-            <div class="spinner mb-6"></div>
-            <h3 class="text-lg font-bold text-gray-800 mb-2">Verifying Records</h3>
-            <p class="text-sm text-gray-600">Verifying National Population Commission (NPC) Records via QoreID...</p>
+    <div id="processing-modal" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden items-center justify-center">
+        <div class="glass-panel p-8 rounded-2xl flex flex-col items-center text-center max-w-sm mx-4 shadow-2xl bg-white/95">
+            <div class="spin spin-dark mb-6" style="width:44px;height:44px;border-width:3px;"></div>
+            <h3 id="modal-title" class="text-lg font-bold text-gray-800 mb-2">Processing…</h3>
+            <p id="modal-body" class="text-sm text-gray-500">Please wait.</p>
         </div>
     </div>
 
     <!-- Main Container -->
-    <main class="max-w-4xl mx-auto px-4 w-full space-y-6">
+    <main class="max-w-4xl mx-auto px-4 w-full space-y-5">
 
-        <!-- Step 1: Death Certificate Firewall -->
+        <!-- ═══════════════════════════════════════════════════════════════════
+             STEP 1 — Intake & ₦5,000 Identity Verification Paywall
+        ════════════════════════════════════════════════════════════════════ -->
         <div class="glass-panel rounded-2xl overflow-hidden" id="step-1-container">
             <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40 cursor-default">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold shadow-md">1</div>
-                    <h2 class="text-lg font-bold text-gray-800">Pre-Probate: Death Certificate Firewall</h2>
+                    <div id="step-1-icon" class="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold text-sm shadow-md">1</div>
+                    <h2 class="text-base font-bold text-gray-800">Identity Intake &amp; Verification Fee</h2>
                 </div>
                 <span id="step-1-status" class="px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700">In Progress</span>
             </div>
             <div id="step-1-content" class="accordion-content active">
-                <p class="text-sm text-gray-600 mb-6">In compliance with Nigerian Data Protection laws, we must verify the individual's deceased status before accessing financial endpoints.</p>
-                
-                <div id="upload-zone" class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:bg-gray-50/50 hover:border-accent transition-colors cursor-pointer relative">
-                    <input type="file" id="death-cert-file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".pdf,.jpg,.jpeg,.png">
-                    <i class="fa-solid fa-file-contract text-4xl text-gray-400 mb-3"></i>
-                    <h4 class="text-base font-semibold text-gray-800">Upload Official Death Certificate</h4>
-                    <p class="text-sm text-gray-500 mt-1">Drag and drop or click to browse (PDF, JPG, PNG)</p>
-                </div>
-            </div>
-        </div>
+                <p class="text-sm text-gray-500 mb-6 leading-relaxed">
+                    Provide your details and those of the deceased. A one-time <strong>₦5,000 identity verification fee</strong> unlocks the biometric liveness check required by Nigerian Data Protection law before any estate data can be accessed.
+                </p>
 
-        <!-- Step 2: Administrator & Surety Intake -->
-        <div class="glass-panel rounded-2xl overflow-hidden opacity-60" id="step-2-container">
-            <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40">
-                <div class="flex items-center gap-3">
-                    <div id="step-2-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">2</div>
-                    <h2 class="text-lg font-bold text-gray-800">Administrator & Surety Intake</h2>
-                </div>
-                <span id="step-2-status" class="px-3 py-1 text-xs font-bold rounded-full bg-gray-200 text-gray-600 hidden">Locked</span>
-            </div>
-            <div id="step-2-content" class="accordion-content">
-                <form id="intake-form" class="space-y-8">
-                    <!-- Section A -->
+                <form id="step-1-form" novalidate class="space-y-8">
+                    <!-- Your Biodata -->
                     <div class="space-y-4">
-                        <h3 class="text-md font-bold text-gray-800 border-b border-gray-200 pb-2">Section A: Primary Administrator</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 pb-2">Your Details (Administrator / Next-of-Kin)</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Legal Full Name</label>
-                                <input type="text" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="s1-firstname">First Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="s1-firstname" name="firstname" required autocomplete="given-name"
+                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm transition"
+                                    placeholder="e.g. Amaka">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">BVN or NIN</label>
-                                <input type="text" required pattern="[0-9]{11}" class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm" placeholder="11 digits">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="s1-lastname">Last Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="s1-lastname" name="lastname" required autocomplete="family-name"
+                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm transition"
+                                    placeholder="e.g. Okonkwo">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
-                                <input type="tel" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm" placeholder="080...">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="s1-phone">Phone Number <span class="text-red-500">*</span></label>
+                                <input type="tel" id="s1-phone" name="phone" required autocomplete="tel"
+                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm transition"
+                                    placeholder="e.g. 08012345678">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="s1-dob">Date of Birth <span class="text-red-500">*</span></label>
+                                <input type="date" id="s1-dob" name="dob" required
+                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm transition">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="s1-nin">Your NIN (National Identification Number) <span class="text-red-500">*</span></label>
+                                <input type="text" id="s1-nin" name="nin" required maxlength="11" pattern="[0-9]{11}"
+                                    inputmode="numeric"
+                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm transition"
+                                    placeholder="11-digit NIN">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Section B -->
+                    <!-- Deceased's Details -->
                     <div class="space-y-4">
-                        <h3 class="text-md font-bold text-gray-800 border-b border-gray-200 pb-2">Section B: Sureties / Guarantors</h3>
-                        <p class="text-xs text-gray-500">Nigerian Probate Law requires an Administration Bond backed by two verified sureties.</p>
-                        
-                        <!-- Surety 1 -->
-                        <div class="p-4 bg-gray-50/50 rounded-xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="md:col-span-3 text-sm font-semibold text-gray-700">First Surety</div>
+                        <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200 pb-2">Deceased's Details</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Full Name</label>
-                                <input type="text" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="s1-deceased-name">Full Legal Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="s1-deceased-name" name="deceased_name" required
+                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm transition"
+                                    placeholder="As on Death Certificate">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">NIN</label>
-                                <input type="text" required pattern="[0-9]{11}" class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
-                                <input type="tel" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
-                            </div>
-                        </div>
-
-                        <!-- Surety 2 -->
-                        <div class="p-4 bg-gray-50/50 rounded-xl border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="md:col-span-3 text-sm font-semibold text-gray-700">Second Surety</div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Full Name</label>
-                                <input type="text" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">NIN</label>
-                                <input type="text" required pattern="[0-9]{11}" class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-600 mb-1">Phone Number</label>
-                                <input type="tel" required class="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm">
+                                <label class="block text-xs font-semibold text-gray-600 mb-1" for="s1-date-of-death">Date of Death <span class="text-red-500">*</span></label>
+                                <input type="date" id="s1-date-of-death" name="date_of_death" required
+                                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white/80 focus:ring-2 focus:ring-accent outline-none text-sm transition">
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex justify-end mt-4">
-                        <button type="submit" id="btn-validate-identities" class="px-6 py-3 bg-primary hover:bg-gray-800 text-white font-semibold rounded-xl shadow-lg transition-all flex items-center gap-2">
-                            <span>Validate Identities</span>
-                            <i class="fa-solid fa-shield-check"></i>
+                    <!-- Paywall CTA -->
+                    <div class="bg-blue-50/70 border border-blue-100 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Identity Verification Fee</div>
+                            <div class="text-3xl font-extrabold text-primary">₦5,000<span class="text-sm font-medium text-gray-400">.00</span></div>
+                            <p class="text-xs text-gray-500 mt-1">One-time. Unlocks biometric liveness check.</p>
+                        </div>
+                        <button type="submit" id="btn-pay-step1"
+                            class="flex items-center justify-center gap-2 px-7 py-3.5 bg-[#0ba4db] hover:bg-[#0994c8] text-white font-bold rounded-xl shadow-lg transition-all whitespace-nowrap">
+                            <div id="btn-pay-step1-spinner" class="spin hidden" style="width:18px;height:18px;border-width:2px;"></div>
+                            <i id="btn-pay-step1-icon" class="fa-solid fa-lock-open"></i>
+                            <span id="btn-pay-step1-label">Pay ₦5,000 Identity Verification Fee</span>
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Step 3: Paystack Discovery Gate -->
-        <div class="glass-panel rounded-2xl overflow-hidden opacity-60" id="step-3-container">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             STEP 2 — Liveness SDK & NIN Premium Verification
+        ════════════════════════════════════════════════════════════════════ -->
+        <div class="glass-panel rounded-2xl overflow-hidden step-locked" id="step-2-container">
             <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40">
                 <div class="flex items-center gap-3">
-                    <div id="step-3-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">3</div>
-                    <h2 class="text-lg font-bold text-gray-800">Estate Discovery Gate</h2>
+                    <div id="step-2-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold text-sm">2</div>
+                    <h2 class="text-base font-bold text-gray-800">Biometric Liveness &amp; NIN Verification</h2>
                 </div>
-                <span id="step-3-status" class="px-3 py-1 text-xs font-bold rounded-full bg-gray-200 text-gray-600 hidden">Locked</span>
+                <span id="step-2-status" class="px-3 py-1 text-xs font-bold rounded-full bg-gray-200 text-gray-500">Locked</span>
+            </div>
+            <div id="step-2-content" class="accordion-content">
+                <p class="text-sm text-gray-500 mb-5 leading-relaxed">
+                    Complete the biometric liveness check below. Once passed, your identity will be cross-referenced against the NIMC NIN Premium database. Your camera is required — ensure you are in a well-lit area.
+                </p>
+
+                <!-- QoreID Liveness SDK Mount Point -->
+                <div id="qoreid-liveness-mount" class="mb-5 border border-gray-100">
+                    <div id="liveness-idle" class="flex flex-col items-center gap-4 p-8 text-center">
+                        <div class="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-camera text-accent text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 mb-1">Biometric Liveness Check</h4>
+                            <p class="text-sm text-gray-500">Click the button below to start. The check takes approximately 30 seconds.</p>
+                        </div>
+                        <button id="btn-start-liveness"
+                            class="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-gray-800 text-white font-semibold rounded-xl shadow-md transition-all">
+                            <div id="btn-liveness-spinner" class="spin hidden" style="width:16px;height:16px;border-width:2px;"></div>
+                            <i id="btn-liveness-icon" class="fa-solid fa-fingerprint"></i>
+                            <span id="btn-liveness-label">Start Biometric Check</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status after SDK fires -->
+                <div id="liveness-status-panel" class="hidden rounded-xl p-4 flex items-start gap-3"></div>
+
+                <!-- NIN Verification status (auto-triggered after liveness) -->
+                <div id="nin-verify-panel" class="hidden mt-4 bg-gray-50/80 border border-gray-100 rounded-xl p-4">
+                    <div class="flex items-center gap-3">
+                        <div class="spin spin-dark" style="width:20px;height:20px;border-width:2px;"></div>
+                        <span class="text-sm font-semibold text-gray-700">Cross-referencing NIMC database…</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             STEP 3 — Document Upload & ₦75,000 Legal Submission Paywall
+        ════════════════════════════════════════════════════════════════════ -->
+        <div class="glass-panel rounded-2xl overflow-hidden step-locked" id="step-3-container">
+            <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40">
+                <div class="flex items-center gap-3">
+                    <div id="step-3-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold text-sm">3</div>
+                    <h2 class="text-base font-bold text-gray-800">Document Upload &amp; Legal Submission Fee</h2>
+                </div>
+                <span id="step-3-status" class="px-3 py-1 text-xs font-bold rounded-full bg-gray-200 text-gray-500">Locked</span>
             </div>
             <div id="step-3-content" class="accordion-content">
-                <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-6 text-center">
-                    <i class="fa-solid fa-lock text-3xl text-accent mb-4"></i>
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">Estate Discovery & Legal Formatting Fee</h3>
-                    <p class="text-sm text-gray-600 mb-6 max-w-md mx-auto">To initiate the comprehensive asset sweep across NIBSS, CSCS, and e-DMMS registrars, a one-time processing fee is required.</p>
-                    
-                    <div class="text-3xl font-extrabold text-primary mb-6">₦5,000<span class="text-sm font-medium text-gray-500">.00</span></div>
-                    
-                    <button id="btn-paystack" class="px-8 py-3 bg-[#0ba4db] hover:bg-[#0a8cb8] text-white font-bold rounded-xl shadow-lg transition-all">
-                        Pay Securely with Paystack
+                <p class="text-sm text-gray-500 mb-6 leading-relaxed">
+                    Upload your probate documents below. The <strong>Death Certificate is required</strong>. The Letter of Administration is optional but recommended.
+                    Documents are only transmitted to our secure Supabase vault after payment is confirmed.
+                </p>
+
+                <!-- Death Certificate upload -->
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-2">
+                            Death Certificate <span class="text-red-500">*</span>
+                            <span class="text-gray-400 font-normal ml-1">(PDF, JPG, PNG — max 10 MB)</span>
+                        </label>
+                        <div id="dc-drop-zone" class="drop-zone relative p-8 text-center cursor-pointer">
+                            <input type="file" id="dc-file-input" accept=".pdf,.jpg,.jpeg,.png" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <i id="dc-icon" class="fa-solid fa-file-contract text-3xl text-gray-400 mb-2"></i>
+                            <p id="dc-label" class="text-sm font-semibold text-gray-600">Click or drag &amp; drop Death Certificate</p>
+                            <p class="text-xs text-gray-400 mt-1">Required to proceed</p>
+                        </div>
+                    </div>
+
+                    <!-- Letter of Administration upload -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-2">
+                            Letter of Administration
+                            <span class="text-gray-400 font-normal ml-1">(Optional — PDF, JPG, PNG — max 10 MB)</span>
+                        </label>
+                        <div id="loa-drop-zone" class="drop-zone relative p-6 text-center cursor-pointer">
+                            <input type="file" id="loa-file-input" accept=".pdf,.jpg,.jpeg,.png" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <i id="loa-icon" class="fa-solid fa-scroll text-2xl text-gray-400 mb-2"></i>
+                            <p id="loa-label" class="text-sm text-gray-500">Click or drag &amp; drop Letter of Administration</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ₦75k Paywall — hidden until at least death cert is staged -->
+                <div id="step3-paywall" class="hidden mt-6 bg-amber-50/70 border border-amber-100 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Legal Verification &amp; Submission Fee</div>
+                        <div class="text-3xl font-extrabold text-primary">₦75,000<span class="text-sm font-medium text-gray-400">.00</span></div>
+                        <p class="text-xs text-gray-500 mt-1">Documents are uploaded to our secure vault only after payment.</p>
+                    </div>
+                    <button id="btn-pay-step3"
+                        class="flex items-center justify-center gap-2 px-7 py-3.5 bg-[#0ba4db] hover:bg-[#0994c8] text-white font-bold rounded-xl shadow-lg transition-all whitespace-nowrap">
+                        <div id="btn-pay-step3-spinner" class="spin hidden" style="width:18px;height:18px;border-width:2px;"></div>
+                        <i id="btn-pay-step3-icon" class="fa-solid fa-gavel"></i>
+                        <span id="btn-pay-step3-label">Pay ₦75,000 to Submit for Legal Verification</span>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Step 4: Omni-Asset Matrix -->
-        <div class="glass-panel rounded-2xl overflow-hidden opacity-60" id="step-4-container">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             STEP 4 — Async Pending State (LOCKED UI)
+        ════════════════════════════════════════════════════════════════════ -->
+        <div class="glass-panel rounded-2xl overflow-hidden step-locked" id="step-4-container">
             <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40">
                 <div class="flex items-center gap-3">
-                    <div id="step-4-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold">4</div>
-                    <h2 class="text-lg font-bold text-gray-800">Omni-Asset Matrix & e-DMMS</h2>
+                    <div id="step-4-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold text-sm">4</div>
+                    <h2 class="text-base font-bold text-gray-800">Compliance Review — Pending</h2>
                 </div>
-                <span id="step-4-status" class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 hidden">Unlocked</span>
+                <span id="step-4-status" class="px-3 py-1 text-xs font-bold rounded-full bg-gray-200 text-gray-500">Locked</span>
             </div>
             <div id="step-4-content" class="accordion-content">
-                
-                <!-- Tabs -->
-                <div class="flex border-b border-gray-200 mb-6">
-                    <button class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-accent text-accent" data-target="tab-nibss">Bank Balances (NIBSS)</button>
-                    <button class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-target="tab-cscs">Equities (CSCS)</button>
-                    <button class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-target="tab-edmms">Unclaimed Dividends</button>
-                </div>
-
-                <!-- Tab Contents -->
-                <div id="tab-nibss" class="tab-content block">
-                    <div class="bg-white/60 rounded-xl border border-gray-100 p-4 flex justify-between items-center mb-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600"><i class="fa-solid fa-building-columns"></i></div>
-                            <div>
-                                <div class="font-bold text-gray-800">Guaranty Trust Bank (GTBank)</div>
-                                <div class="text-xs text-gray-500">Acct: 0123****89</div>
-                            </div>
-                        </div>
-                        <div class="text-lg font-bold text-gray-900">₦4,500,000.00</div>
+                <div class="flex flex-col items-center text-center py-6 px-4">
+                    <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-6 pulse-icon">
+                        <i class="fa-solid fa-hourglass-half text-3xl text-accent"></i>
                     </div>
-                    <div class="bg-white/60 rounded-xl border border-gray-100 p-4 flex justify-between items-center">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center text-red-600"><i class="fa-solid fa-building-columns"></i></div>
-                            <div>
-                                <div class="font-bold text-gray-800">Zenith Bank Plc</div>
-                                <div class="text-xs text-gray-500">Acct: 2003****11</div>
-                            </div>
-                        </div>
-                        <div class="text-lg font-bold text-gray-900">₦1,250,300.50</div>
+                    <h3 class="text-xl font-extrabold text-gray-800 mb-3">Payment Confirmed &amp; Documents Received</h3>
+                    <p class="text-sm text-gray-600 max-w-lg leading-relaxed">
+                        Our compliance team is conducting offline verification with the <strong>Probate Registry</strong>.
+                        <br><br>
+                        <span class="inline-block bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full mb-3">
+                            Estimated SLA: Up to 30 Days
+                        </span>
+                        <br>
+                        You will receive an <strong>email notification</strong> once your verified asset matrix is ready. No further action is required from you at this time.
+                    </p>
+                    <div class="mt-6 w-full max-w-md bg-gray-50 border border-gray-100 rounded-xl p-4 text-left">
+                        <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">What happens next</div>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li class="flex gap-2"><i class="fa-solid fa-circle-check text-green-500 mt-0.5 shrink-0"></i>Documents submitted to Probate Registry</li>
+                            <li class="flex gap-2"><i class="fa-solid fa-circle-check text-green-500 mt-0.5 shrink-0"></i>Compliance officer assigned to your case</li>
+                            <li class="flex gap-2"><i class="fa-regular fa-circle text-gray-300 mt-0.5 shrink-0"></i>Offline verification with NIBSS, CSCS, e-DMMS</li>
+                            <li class="flex gap-2"><i class="fa-regular fa-circle text-gray-300 mt-0.5 shrink-0"></i>Verified Asset Matrix prepared and emailed</li>
+                        </ul>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div id="tab-cscs" class="tab-content hidden">
-                    <div class="bg-white/60 rounded-xl border border-gray-100 p-4 flex justify-between items-center">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600"><i class="fa-solid fa-chart-line"></i></div>
-                            <div>
-                                <div class="font-bold text-gray-800">Zenith Bank Shares</div>
-                                <div class="text-xs text-gray-500">CSCS CHN: C1234567AB</div>
-                            </div>
-                        </div>
-                        <div class="text-lg font-bold text-gray-900">15,000 Units</div>
-                    </div>
-                </div>
 
-                <div id="tab-edmms" class="tab-content hidden">
-                    <div class="bg-white/60 rounded-xl border border-gray-100 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600"><i class="fa-solid fa-money-bill-wave"></i></div>
-                            <div>
-                                <div class="font-bold text-gray-800">MTN Nigeria Dividends - ₦340,000</div>
-                                <div class="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded mt-1 inline-block"><span class="font-semibold">Registrar:</span> Africa Prudential</div>
-                            </div>
-                        </div>
-                        <button class="px-4 py-2 bg-white border border-gray-200 shadow-sm text-sm font-semibold rounded-lg hover:bg-gray-50 text-accent whitespace-nowrap transition-colors">
-                            <i class="fa-regular fa-file-pdf mr-1"></i> Generate e-Mandate Form
-                        </button>
-                    </div>
+        <!-- ═══════════════════════════════════════════════════════════════════
+             STEP 5 — Asset Matrix & Mandate (Admin-Unlocked Only)
+             Hidden entirely until admin sets status='verified' in Supabase
+        ════════════════════════════════════════════════════════════════════ -->
+        <div class="glass-panel rounded-2xl overflow-hidden hidden" id="step-5-container">
+            <div class="px-6 py-5 border-b border-white/50 flex justify-between items-center bg-white/40">
+                <div class="flex items-center gap-3">
+                    <div id="step-5-icon" class="w-8 h-8 rounded-full bg-gray-300 text-gray-500 flex items-center justify-center font-bold text-sm">5</div>
+                    <h2 class="text-base font-bold text-gray-800">Verified Asset Matrix &amp; Recovery Mandate</h2>
                 </div>
-
-                <div class="mt-10 border-t border-gray-200 pt-6">
-                    <button id="btn-generate-report" class="w-full py-4 bg-primary hover:bg-gray-800 text-white font-bold rounded-xl shadow-xl transition-all flex items-center justify-center gap-2">
-                        <span id="btn-report-text">Generate High Court Inventory Report</span>
-                        <i id="btn-report-icon" class="fa-solid fa-file-invoice"></i>
-                        <div id="btn-report-spinner" class="spinner hidden" style="width:20px; height:20px; border-width:2px;"></div>
-                    </button>
-                </div>
-                
+                <span id="step-5-status" class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700">Verified</span>
+            </div>
+            <div id="step-5-content" class="accordion-content active">
+                <p class="text-sm text-gray-500 mb-6">Your estate has been fully verified. Download your High Court Inventory Report and initiate recovery mandates.</p>
+                <!-- Placeholder: Admin-unlocked asset matrix content goes here -->
+                <button id="btn-generate-report"
+                    class="w-full py-4 bg-primary hover:bg-gray-800 text-white font-bold rounded-xl shadow-xl transition-all flex items-center justify-center gap-2">
+                    <span id="btn-report-text">Generate High Court Inventory Report</span>
+                    <i id="btn-report-icon" class="fa-solid fa-file-invoice"></i>
+                    <div id="btn-report-spinner" class="spin hidden" style="width:20px;height:20px;border-width:2px;"></div>
+                </button>
             </div>
         </div>
 
     </main>
 
-    <!-- Floating WhatsApp Node -->
-    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full shadow-2xl flex items-center justify-center text-white text-3xl hover:bg-green-600 hover:scale-105 transition-all z-40">
+    <!-- Floating WhatsApp -->
+    <a href="https://wa.me/2348135975351" target="_blank" rel="noopener noreferrer"
+        class="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full shadow-2xl flex items-center justify-center text-white text-3xl hover:bg-green-600 hover:scale-105 transition-all z-40"
+        aria-label="Chat on WhatsApp">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 
-    <!-- Application Logic -->
-    <script>
-        // Utilities
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            const isError = type === 'error';
-            const bgColor = isError ? 'bg-red-50/90 border-red-200' : 'bg-green-50/90 border-green-200';
-            const iconColor = isError ? 'text-red-500' : 'text-green-500';
-            const iconClass = isError ? 'fa-circle-exclamation' : 'fa-circle-check';
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         APPLICATION LOGIC
+         Architecture: Pay-Before-Execution
+         Flow: Step1 (Paystack ₦5k) → Step2 (Liveness + NIN) → Step3 (Paystack ₦75k + Upload) → Step4 (Pending) → Step5 (Admin-unlocked)
+    ════════════════════════════════════════════════════════════════════════ -->
+    <script type="module">
+    // ── QoreID Web SDK import ───────────────────────────────────────────────
+    // NOTE: Replace with the official CDN URL provided by QoreID when available.
+    // import QoreID from 'https://esm.sh/@qore-id/web-sdk';
+    //
+    // If the ESM import above fails, comment it out and use the placeholder
+    // simulation below. Wire the real SDK once QoreID provides the CDN URL.
+    // ────────────────────────────────────────────────────────────────────────
 
-            toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-xl border backdrop-blur-md shadow-lg toast-enter ${bgColor}`;
-            toast.innerHTML = `
-                <i class="fa-solid ${iconClass} ${iconColor} mt-0.5 text-lg"></i>
-                <div class="flex-1">
-                    <p class="text-sm font-semibold text-gray-800">${message}</p>
-                </div>
-                <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
-            `;
-            
-            container.appendChild(toast);
+    // ── Module-level application state ─────────────────────────────────────
+    // Collected in Step 1, consumed by Step 2 (NIN verify) and Step 3 (upload)
+    const state = {
+        firstname:     '',
+        lastname:      '',
+        phone:         '',
+        dob:           '',
+        nin:           '',
+        deceasedName:  '',
+        dateOfDeath:   '',
+        userEmail:     '',
+        userId:        '',
+        step1PayRef:   '',
+        step3PayRef:   '',
+        dcFile:        null,   // File object
+        loaFile:       null,   // File object (optional)
+    };
+
+    // ── Resolve authenticated user from authGuard ───────────────────────────
+    // authGuard.js sets window.__reclaimSession before any page content loads
+    if (window.__reclaimSession?.user) {
+        state.userEmail = window.__reclaimSession.user.email ?? '';
+        state.userId    = window.__reclaimSession.user.id    ?? '';
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // UTILITIES
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        const isError = type === 'error';
+        const isInfo  = type === 'info';
+        const bg    = isError ? 'bg-red-50/95 border-red-200'   : isInfo ? 'bg-blue-50/95 border-blue-200'   : 'bg-green-50/95 border-green-200';
+        const icon  = isError ? 'fa-circle-exclamation text-red-500' : isInfo ? 'fa-circle-info text-blue-500' : 'fa-circle-check text-green-500';
+        toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-xl border backdrop-blur-md shadow-lg toast-enter ${bg}`;
+        toast.innerHTML = `
+            <i class="fa-solid ${icon} mt-0.5 text-base shrink-0"></i>
+            <div class="flex-1 text-sm font-medium text-gray-800">${message}</div>
+            <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600 shrink-0"><i class="fa-solid fa-xmark"></i></button>`;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.replace('toast-enter', 'toast-exit');
+            setTimeout(() => toast.remove(), 320);
+        }, 5000);
+    }
+
+    function showModal(title, body) {
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-body').textContent  = body;
+        const m = document.getElementById('processing-modal');
+        m.classList.remove('hidden');
+        m.classList.add('flex');
+    }
+    function hideModal() {
+        const m = document.getElementById('processing-modal');
+        m.classList.add('hidden');
+        m.classList.remove('flex');
+    }
+
+    function setBtn(btnId, { loading = false, label, iconClass } = {}) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        const spinner = document.getElementById(`${btnId}-spinner`);
+        const icon    = document.getElementById(`${btnId}-icon`);
+        const lbl     = document.getElementById(`${btnId}-label`);
+        btn.disabled = loading;
+        if (loading) btn.classList.add('opacity-70', 'cursor-not-allowed');
+        else         btn.classList.remove('opacity-70', 'cursor-not-allowed');
+        if (spinner) spinner.classList.toggle('hidden', !loading);
+        if (icon)    icon.classList.toggle('hidden', loading);
+        if (lbl && label) lbl.textContent = label;
+        if (icon && iconClass && !loading) icon.className = `fa-solid ${iconClass}`;
+    }
+
+    // ── Accordion step management ───────────────────────────────────────────
+    function completeStep(num) {
+        const icon   = document.getElementById(`step-${num}-icon`);
+        const status = document.getElementById(`step-${num}-status`);
+        const content = document.getElementById(`step-${num}-content`);
+        if (icon) {
+            icon.className = 'w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm shadow-md';
+            icon.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+        }
+        if (status) {
+            status.textContent = 'Completed';
+            status.className = 'px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700';
+        }
+        if (content) content.classList.remove('active');
+    }
+
+    function unlockStep(num) {
+        const container = document.getElementById(`step-${num}-container`);
+        const icon      = document.getElementById(`step-${num}-icon`);
+        const status    = document.getElementById(`step-${num}-status`);
+        const content   = document.getElementById(`step-${num}-content`);
+        if (container) container.classList.remove('step-locked', 'hidden');
+        if (icon) {
+            icon.className = 'w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold text-sm shadow-md';
+            icon.textContent = String(num);
+        }
+        if (status) {
+            status.textContent = 'In Progress';
+            status.className = 'px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700';
+        }
+        if (content) content.classList.add('active');
+        // Scroll into view
+        container?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ── Lazy-load Paystack script ───────────────────────────────────────────
+    let paystackLoaded = false;
+    function loadPaystack() {
+        return new Promise((resolve, reject) => {
+            if (paystackLoaded || window.PaystackPop) { paystackLoaded = true; resolve(); return; }
+            const s = document.createElement('script');
+            s.src = 'https://js.paystack.co/v2/inline.js';
+            s.async = true;
+            s.onload  = () => { paystackLoaded = true; resolve(); };
+            s.onerror = () => reject(new Error('Failed to load payment module.'));
+            document.body.appendChild(s);
+        });
+    }
+
+    // ── Open Paystack popup ─────────────────────────────────────────────────
+    function openPaystack({ amount, onSuccess }) {
+        try {
+            const handler = window.PaystackPop.setup({
+                key:      'pk_live_bfcdd0b59354de929f5ed2d690603ae96a32224b',
+                email:    state.userEmail || 'user@reclaimng.com',
+                amount,   // in kobo
+                currency: 'NGN',
+                ref:      'RC_' + Date.now() + '_' + Math.floor(Math.random() * 1e6),
+                callback: (response) => onSuccess(response.reference),
+                onClose:  () => showToast('Payment window closed. Click the button to try again.', 'info'),
+            });
+            handler.openIframe();
+        } catch (err) {
+            console.error('[Paystack]', err);
+            showToast('Payment initialisation failed. Please refresh and try again.', 'error');
+        }
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 1 — Intake form + ₦5,000 Paystack paywall
+    // ═══════════════════════════════════════════════════════════════════════
+
+    document.getElementById('step-1-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Collect & validate fields
+        const firstname    = document.getElementById('s1-firstname').value.trim();
+        const lastname     = document.getElementById('s1-lastname').value.trim();
+        const phone        = document.getElementById('s1-phone').value.trim();
+        const dob          = document.getElementById('s1-dob').value;
+        const nin          = document.getElementById('s1-nin').value.trim();
+        const deceasedName = document.getElementById('s1-deceased-name').value.trim();
+        const dateOfDeath  = document.getElementById('s1-date-of-death').value;
+
+        if (!firstname || !lastname || !phone || !dob || !nin || !deceasedName || !dateOfDeath) {
+            showToast('Please complete all required fields before proceeding.', 'error');
+            return;
+        }
+        if (!/^\d{11}$/.test(nin)) {
+            showToast('NIN must be exactly 11 digits.', 'error');
+            return;
+        }
+
+        setBtn('btn-pay-step1', { loading: true, label: 'Loading payment…' });
+
+        try {
+            await loadPaystack();
+        } catch {
+            setBtn('btn-pay-step1', { loading: false, label: 'Pay ₦5,000 Identity Verification Fee' });
+            showToast('Could not load payment module. Please check your connection.', 'error');
+            return;
+        }
+
+        setBtn('btn-pay-step1', { loading: false, label: 'Pay ₦5,000 Identity Verification Fee' });
+
+        // Open Paystack — NOTHING else executes until callback fires
+        openPaystack({
+            amount: 500000, // ₦5,000 in kobo
+            onSuccess: (reference) => {
+                // Store biodata in module-level state
+                Object.assign(state, { firstname, lastname, phone, dob, nin, deceasedName, dateOfDeath });
+                state.step1PayRef = reference;
+
+                completeStep(1);
+                unlockStep(2);
+                showToast('Payment confirmed! Please complete the biometric check.', 'success');
+            },
+        });
+    });
+
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 2 — QoreID Liveness SDK + NIN Premium auto-trigger
+    // ═══════════════════════════════════════════════════════════════════════
+
+    document.getElementById('btn-start-liveness').addEventListener('click', async () => {
+        setBtn('btn-start-liveness', { loading: true, label: 'Fetching session…' });
+
+        // Phase A: Request SDK session token from our backend
+        let sdkToken;
+        try {
+            const res = await fetch('/api/generate-qore-session', { method: 'POST' });
+            const json = await res.json();
+            if (!res.ok || !json.sdkSessionToken) throw new Error(json.error ?? 'Session fetch failed');
+            sdkToken = json.sdkSessionToken;
+        } catch (err) {
+            console.error('[Liveness] Session error:', err);
+            setBtn('btn-start-liveness', { loading: false, label: 'Start Biometric Check', iconClass: 'fa-fingerprint' });
+            showToast('Could not start identity session. Please try again.', 'error');
+            return;
+        }
+
+        setBtn('btn-start-liveness', { loading: true, label: 'Starting camera…' });
+
+        // Phase B: Mount QoreID SDK
+        // ────────────────────────────────────────────────────────────────────
+        // PRODUCTION: Uncomment the ESM import at the top and replace this
+        // simulation block with:
+        //
+        //   const qoreInstance = new QoreID({ token: sdkToken });
+        //   qoreInstance.on('success', handleLivenessSuccess);
+        //   qoreInstance.on('error',   handleLivenessError);
+        //
+        // DEVELOPMENT SIMULATION (remove when SDK is available):
+        // ────────────────────────────────────────────────────────────────────
+        console.log('[Liveness] SDK Token received:', sdkToken);
+        document.getElementById('liveness-idle').innerHTML = `
+            <div class="flex flex-col items-center gap-3 p-8 text-center w-full">
+                <div class="spin spin-dark mb-2" style="width:36px;height:36px;border-width:3px;"></div>
+                <p class="text-sm font-semibold text-gray-700">Biometric check in progress…</p>
+                <p class="text-xs text-gray-400">Simulating liveness SDK — wire real SDK here.</p>
+                <p class="text-xs text-gray-400 mt-2 font-mono break-all">Token: ${sdkToken.slice(0,24)}…</p>
+            </div>`;
+
+        // Simulate SDK success after 3 seconds (replace with real SDK events)
+        setTimeout(() => {
+            handleLivenessSuccess({ sessionId: sdkToken, score: 99.1 });
+        }, 3000);
+    });
+
+    async function handleLivenessSuccess(livenessData) {
+        console.log('[Liveness] Success payload:', livenessData);
+
+        // Show liveness passed banner
+        const panel = document.getElementById('liveness-status-panel');
+        panel.className = 'rounded-xl p-4 flex items-start gap-3 bg-green-50 border border-green-200';
+        panel.innerHTML = `
+            <i class="fa-solid fa-circle-check text-green-500 mt-0.5 text-lg shrink-0"></i>
+            <div>
+                <p class="text-sm font-bold text-green-800">Liveness Check Passed</p>
+                <p class="text-xs text-green-600">Biometric score: ${livenessData.score ?? '—'}. Cross-referencing NIMC database…</p>
+            </div>`;
+        panel.classList.remove('hidden');
+
+        // Show NIN verification spinner
+        const ninPanel = document.getElementById('nin-verify-panel');
+        ninPanel.classList.remove('hidden');
+
+        // Phase C: Auto-trigger NIN Premium verification
+        try {
+            const res = await fetch('/api/verify-nin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nin:       state.nin,
+                    firstname: state.firstname,
+                    lastname:  state.lastname,
+                    phone:     state.phone,
+                    dob:       state.dob,
+                }),
+            });
+            const json = await res.json();
+
+            ninPanel.classList.add('hidden');
+
+            if (!res.ok || json.matchStatus !== 'EXACT_MATCH') {
+                // Show failure
+                panel.className = 'rounded-xl p-4 flex items-start gap-3 bg-red-50 border border-red-200';
+                panel.innerHTML = `
+                    <i class="fa-solid fa-circle-xmark text-red-500 mt-0.5 text-lg shrink-0"></i>
+                    <div>
+                        <p class="text-sm font-bold text-red-800">Identity Verification Failed</p>
+                        <p class="text-xs text-red-600">${json.error ?? 'Your details could not be matched to the NIMC database. Please contact support.'}</p>
+                    </div>`;
+                showToast('NIN verification failed. Contact support if you believe this is an error.', 'error');
+                return;
+            }
+
+            // EXACT_MATCH — unlock Step 3
+            panel.className = 'rounded-xl p-4 flex items-start gap-3 bg-green-50 border border-green-200';
+            panel.innerHTML = `
+                <i class="fa-solid fa-circle-check text-green-500 mt-0.5 text-lg shrink-0"></i>
+                <div>
+                    <p class="text-sm font-bold text-green-800">Identity Verified — EXACT MATCH</p>
+                    <p class="text-xs text-green-600">Your NIN has been successfully matched in the NIMC database. Proceeding to document submission…</p>
+                </div>`;
+            showToast('Identity verified! Please upload your probate documents.', 'success');
 
             setTimeout(() => {
-                toast.classList.replace('toast-enter', 'toast-exit');
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
+                completeStep(2);
+                unlockStep(3);
+            }, 1000);
+
+        } catch (err) {
+            console.error('[verify-nin] Network error:', err);
+            ninPanel.classList.add('hidden');
+            panel.className = 'rounded-xl p-4 flex items-start gap-3 bg-red-50 border border-red-200';
+            panel.innerHTML = `
+                <i class="fa-solid fa-circle-xmark text-red-500 mt-0.5 text-lg shrink-0"></i>
+                <div>
+                    <p class="text-sm font-bold text-red-800">Network Error</p>
+                    <p class="text-xs text-red-600">Could not reach the verification service. Please check your connection and try again.</p>
+                </div>`;
+            showToast('Network error during verification. Please try again.', 'error');
+        }
+    }
+
+    function handleLivenessError(err) {
+        console.error('[Liveness] SDK error:', err);
+        setBtn('btn-start-liveness', { loading: false, label: 'Retry Biometric Check', iconClass: 'fa-redo' });
+        showToast('Biometric check failed. Please ensure your camera is accessible and try again.', 'error');
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 3 — Document Upload + ₦75,000 Paystack paywall
+    // ═══════════════════════════════════════════════════════════════════════
+
+    function wireDropZone(zoneId, inputId, iconId, labelId, stateKey) {
+        const zone  = document.getElementById(zoneId);
+        const input = document.getElementById(inputId);
+
+        function handleFile(file) {
+            if (!file) return;
+            const maxBytes = 10 * 1024 * 1024; // 10 MB
+            if (file.size > maxBytes) {
+                showToast(`File too large. Maximum size is 10 MB.`, 'error');
+                return;
+            }
+            state[stateKey] = file;
+            zone.classList.add('file-staged');
+            document.getElementById(iconId).className = 'fa-solid fa-circle-check text-green-500 text-3xl mb-2';
+            document.getElementById(labelId).textContent = `✓ ${file.name}`;
+            document.getElementById(labelId).className = 'text-sm font-semibold text-green-700';
+            checkStep3Paywall();
         }
 
-        function unlockStep(stepNum) {
-            // Mark previous step as completed
-            const prevStepNum = stepNum - 1;
-            if(prevStepNum > 0) {
-                document.getElementById(`step-${prevStepNum}-icon`)?.classList.replace('bg-accent', 'bg-green-500');
-                const statusBadge = document.getElementById(`step-${prevStepNum}-status`);
-                if(statusBadge) {
-                    statusBadge.textContent = 'Completed';
-                    statusBadge.className = 'px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-700 block';
-                }
-                document.getElementById(`step-${prevStepNum}-content`).classList.remove('active');
-            }
-
-            // Activate new step
-            const container = document.getElementById(`step-${stepNum}-container`);
-            container.classList.remove('opacity-60');
-            
-            const icon = document.getElementById(`step-${stepNum}-icon`);
-            if(icon) {
-                icon.classList.remove('bg-gray-300', 'text-gray-600');
-                icon.classList.add('bg-accent', 'text-white');
-            }
-
-            const status = document.getElementById(`step-${stepNum}-status`);
-            if(status) {
-                status.classList.remove('hidden');
-                status.textContent = 'In Progress';
-                status.className = 'px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700 block';
-            }
-
-            document.getElementById(`step-${stepNum}-content`).classList.add('active');
-        }
-
-        // --- Step 1 Logic ---
-        document.getElementById('death-cert-file').addEventListener('change', function(e) {
-            if(this.files && this.files.length > 0) {
-                const modal = document.getElementById('processing-modal');
-                modal.classList.remove('hidden');
-                
-                // Simulate QoreID/NPC Verification
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    showToast('Death Certificate verified successfully against NPC records.', 'success');
-                    unlockStep(2);
-                }, 3000);
-            }
-        });
-
-        // --- Objective 4: Lazy-Load Paystack Script ---
-        // The Paystack SDK is NOT included in <head>. It is dynamically injected into
-        // the DOM only when Step 2 is validated, reducing initial page weight and
-        // saving bandwidth for users on slow 2G/3G mobile networks in Nigeria.
-        let paystackLoaded = false;
-
-        function loadPaystackScript() {
-            return new Promise((resolve, reject) => {
-                if (paystackLoaded) { resolve(); return; }
-                const script = document.createElement('script');
-                script.src = 'https://js.paystack.co/v2/inline.js';
-                script.async = true;
-                script.onload = () => { paystackLoaded = true; resolve(); };
-                script.onerror = () => reject(new Error('Failed to load Paystack script.'));
-                document.body.appendChild(script);
-            });
-        }
-
-        // --- Step 2 Logic ---
-        document.getElementById('intake-form').addEventListener('submit', async function(e) {
+        input.addEventListener('change', () => handleFile(input.files?.[0] ?? null));
+        zone.addEventListener('dragover',  (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+        zone.addEventListener('dragleave', ()  => zone.classList.remove('dragover'));
+        zone.addEventListener('drop', (e) => {
             e.preventDefault();
-            
-            const btn = document.getElementById('btn-validate-identities');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;border-top-color:white;"></div> <span class="ml-2">Validating...</span>';
-            btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-
-            try {
-                const ninInput = document.querySelector('input[placeholder="11 digits"]').value.trim();
-                if (!ninInput || ninInput.length !== 11) {
-                    btn.innerHTML = originalHTML;
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    showToast('Please enter a valid 11-digit NIN.', 'error');
-                    return;
-                }
-                const response = await fetch('/api/verify-nin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nin: ninInput }) });
-                if (!response.ok) throw new Error('API Error');
-                
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                showToast('Identities validated via NIMC database.', 'success');
-                
-                // Lazy-inject Paystack exactly at the moment it is needed
-                try {
-                    showToast('Loading payment module...', 'success');
-                    await loadPaystackScript();
-                    unlockStep(3);
-                } catch (err) {
-                    showToast('Could not load payment module. Please check your connection.', 'error');
-                }
-            } catch (error) {
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                showToast('Verification failed. Please try again.', 'error');
-            }
+            zone.classList.remove('dragover');
+            handleFile(e.dataTransfer?.files?.[0] ?? null);
         });
+    }
 
-        // --- Step 3 Logic ---
-        document.getElementById('btn-paystack').addEventListener('click', function() {
-            // PaystackPop is guaranteed to be available here since loadPaystackScript() resolved before Step 3 unlocked.
-            try {
-                let handler = PaystackPop.setup({
-                    key: 'pk_live_bfcdd0b59354de929f5ed2d690603ae96a32224b',
-                    email: 'user@reclaimng.com',
-                    amount: 500000, // ₦5,000 in kobo
-                    currency: 'NGN',
-                    ref: 'RC_' + Math.floor((Math.random() * 1000000000) + 1),
-                    callback: function(response) {
-                        showToast('Payment successful. Initiating asset discovery...', 'success');
-                        unlockStep(4);
-                    },
-                    onClose: function() {
-                        showToast('Payment window closed. Please try again to proceed.', 'error');
-                    }
-                });
-                handler.openIframe();
+    wireDropZone('dc-drop-zone',  'dc-file-input',  'dc-icon',  'dc-label',  'dcFile');
+    wireDropZone('loa-drop-zone', 'loa-file-input', 'loa-icon', 'loa-label', 'loaFile');
 
-            } catch (error) {
-                console.error('[Paystack] Error initialising payment:', error);
-                showToast('Payment initialisation failed. Please refresh and try again.', 'error');
-            }
+    function checkStep3Paywall() {
+        // Only reveal pay button after Death Certificate is staged (required)
+        const paywall = document.getElementById('step3-paywall');
+        if (state.dcFile) paywall.classList.remove('hidden');
+        else              paywall.classList.add('hidden');
+    }
+
+    document.getElementById('btn-pay-step3').addEventListener('click', async () => {
+        if (!state.dcFile) {
+            showToast('Please upload the Death Certificate before paying.', 'error');
+            return;
+        }
+
+        setBtn('btn-pay-step3', { loading: true, label: 'Loading payment…' });
+
+        try {
+            await loadPaystack();
+        } catch {
+            setBtn('btn-pay-step3', { loading: false, label: 'Pay ₦75,000 to Submit for Legal Verification' });
+            showToast('Could not load payment module. Please check your connection.', 'error');
+            return;
+        }
+
+        setBtn('btn-pay-step3', { loading: false, label: 'Pay ₦75,000 to Submit for Legal Verification' });
+
+        // Open Paystack — documents NOT uploaded until callback fires
+        openPaystack({
+            amount: 7500000, // ₦75,000 in kobo
+            onSuccess: async (reference) => {
+                state.step3PayRef = reference;
+                setBtn('btn-pay-step3', { loading: true, label: 'Uploading documents…' });
+                showModal('Securing Documents', 'Uploading your documents to our secure vault. Please do not close this tab…');
+                await uploadDocumentsAndAdvance();
+            },
         });
+    });
 
-        // --- Step 4 Logic ---
-        // Tab switching
-        const tabBtns = document.querySelectorAll('.tab-btn');
-        const tabContents = document.querySelectorAll('.tab-content');
+    async function uploadDocumentsAndAdvance() {
+        try {
+            const form = new FormData();
+            form.append('death_certificate',          state.dcFile);
+            if (state.loaFile) form.append('letter_of_administration', state.loaFile);
+            form.append('estate_name',         state.deceasedName + ' Estate');
+            form.append('deceased_name',       state.deceasedName);
+            form.append('paystack_reference',  state.step3PayRef);
+            form.append('user_id',             state.userId);
 
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Reset buttons
-                tabBtns.forEach(b => {
-                    b.classList.remove('border-accent', 'text-accent');
-                    b.classList.add('border-transparent', 'text-gray-500');
-                });
-                // Activate clicked button
-                btn.classList.remove('border-transparent', 'text-gray-500');
-                btn.classList.add('border-accent', 'text-accent');
+            const res  = await fetch('/api/submit-documents', { method: 'POST', body: form });
+            const json = await res.json();
 
-                // Hide all contents
-                tabContents.forEach(c => c.classList.add('hidden'));
-                
-                // Show target content
-                document.getElementById(btn.getAttribute('data-target')).classList.remove('hidden');
-            });
-        });
+            hideModal();
 
-        // Report Generation Simulation
-        document.getElementById('btn-generate-report').addEventListener('click', async function() {
-            const btnText = document.getElementById('btn-report-text');
-            const btnIcon = document.getElementById('btn-report-icon');
-            const spinner = document.getElementById('btn-report-spinner');
+            if (!res.ok) throw new Error(json.error ?? 'Upload failed');
 
-            btnText.textContent = 'Generating PDF...';
-            btnIcon.classList.add('hidden');
-            spinner.classList.remove('hidden');
-            this.disabled = true;
-            this.classList.add('opacity-50', 'cursor-not-allowed');
+            setBtn('btn-pay-step3', { loading: false, label: 'Documents Submitted ✓', iconClass: 'fa-check' });
+            showToast('Documents secured and submitted for legal review.', 'success');
 
+            completeStep(3);
+            unlockStep(4);
+
+        } catch (err) {
+            console.error('[submit-documents]', err);
+            hideModal();
+            setBtn('btn-pay-step3', { loading: false, label: 'Pay ₦75,000 to Submit for Legal Verification' });
+            showToast(
+                'Your payment was captured but document upload failed. Reference: ' + state.step3PayRef + '. Please contact support.',
+                'error'
+            );
+        }
+    }
+
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // STEP 5 — Admin-unlocked asset matrix (check Supabase estate status)
+    // ═══════════════════════════════════════════════════════════════════════
+    // The Supabase JS CDN is NOT loaded on this page to keep it lightweight.
+    // This check is only performed once on page load via a lightweight server
+    // route. Create /api/check-estate-status if you need this check:
+    //
+    //   fetch('/api/check-estate-status')
+    //     .then(r => r.json())
+    //     .then(({ status }) => {
+    //       if (status === 'verified') showStep5();
+    //     });
+    //
+    // For now, Step 5 remains hidden by default. The admin sets
+    // status='verified' in Supabase, which the user sees on next login.
+    // ════════════════════════════════════════════════════════════════════════
+
+    // Step 5 report generation (only reached if admin has unlocked it)
+    const reportBtn = document.getElementById('btn-generate-report');
+    if (reportBtn) {
+        reportBtn.addEventListener('click', async () => {
+            setBtn('btn-generate-report', { loading: true, label: 'Generating PDF…' });
             try {
-                const response = await fetch('/api/generate-inventory');
-                if (!response.ok) throw new Error('API Error');
-                const blob = await response.blob();
-                
-                btnText.textContent = 'High Court Inventory Report Generated';
-                spinner.classList.add('hidden');
-                btnIcon.classList.remove('hidden');
-                btnIcon.className = 'fa-solid fa-check ml-2';
-                this.classList.replace('bg-primary', 'bg-green-600');
-                this.classList.replace('hover:bg-gray-800', 'hover:bg-green-700');
-                this.classList.remove('opacity-50', 'cursor-not-allowed');
-                
-                showToast('Inventory Report successfully generated and downloaded.', 'success');
-                
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'Estate_Inventory_Report.pdf';
+                const res = await fetch('/api/generate-inventory');
+                if (!res.ok) throw new Error('API Error');
+                const blob = await res.blob();
+                const url  = URL.createObjectURL(blob);
+                const a    = Object.assign(document.createElement('a'), { href: url, download: 'Estate_Inventory_Report.pdf' });
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
-                window.URL.revokeObjectURL(url);
-            } catch (err) {
-                btnText.textContent = 'Generate High Court Inventory Report';
-                spinner.classList.add('hidden');
-                btnIcon.classList.remove('hidden');
-                this.disabled = false;
-                this.classList.remove('opacity-50', 'cursor-not-allowed');
-                showToast('Failed to generate report. Please try again.', 'error');
+                URL.revokeObjectURL(url);
+                setBtn('btn-generate-report', { loading: false, label: 'Report Downloaded ✓', iconClass: 'fa-check' });
+                showToast('Estate Inventory Report downloaded.', 'success');
+            } catch {
+                setBtn('btn-generate-report', { loading: false, label: 'Generate High Court Inventory Report', iconClass: 'fa-file-invoice' });
+                showToast('Report generation failed. Please try again.', 'error');
             }
         });
+    }
 
     </script>
 </body>
