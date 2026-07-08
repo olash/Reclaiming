@@ -8,7 +8,7 @@ let cachedToken: CachedToken | null = null;
 
 export async function getQoreIdToken(): Promise<string> {
   const clientId = process.env.QOREID_CLIENT_ID;
-  const secret = process.env.QOREID_SECRET_KEY;
+  const secret = process.env.QOREID_CLIENT_SECRET;
   const authUrl = process.env.QOREID_AUTH_URL;
 
   if (!clientId || !secret || !authUrl) {
