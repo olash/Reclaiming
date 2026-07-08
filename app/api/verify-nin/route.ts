@@ -126,28 +126,17 @@ export async function POST(request: Request) {
       }
     }
 
-    // ── Require EXACT_MATCH ────────────────────────────────────────────────
-    let matchStatus: string = verifyData?.applicant?.matchScore?.status
-      ?? verifyData?.status
-      ?? 'NO_MATCH';
+    // Bypass QoreID's sandbox false-positive error string by explicitly checking the match status
+    const isPerfectMatch = 
+      verifyData.matchStatus?.status === 'verified' || 
+      verifyData.details?.summary?.nin_check?.status === 'EXACT_MATCH';
 
-    const isSandboxMatch = 
-      verifyData?.matchStatus?.status === 'verified' || 
-      verifyData?.details?.summary?.nin_check?.status === 'EXACT_MATCH';
-
-    if (isSandboxMatch) {
-      matchStatus = 'EXACT_MATCH';
-    }
-
-    if (matchStatus !== 'EXACT_MATCH') {
-      return NextResponse.json(
-        {
-          error: 'Identity verification could not confirm an exact match.',
-          matchStatus,
-          details: verifyData,
-        },
-        { status: 422 }
-      );
+    if (!isPerfectMatch) {
+      // Only throw the 422 if the actual biometric/data match failed
+      return new Response(JSON.stringify(verifyData), {
+        status: 422,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // ── Write to Supabase cache ────────────────────────────────────────────
@@ -162,12 +151,16 @@ export async function POST(request: Request) {
       console.warn('[verify-nin] Cache write failed:', insertError.message);
     }
 
-    return NextResponse.json({
+    // Return 200 OK for a successful match
+    return new Response(JSON.stringify({
       success: true,
-      matchStatus,
+      matchStatus: 'EXACT_MATCH',
       data: verifyData,
       cached: false,
       usedFallback,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
