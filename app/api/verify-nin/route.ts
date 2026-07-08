@@ -127,9 +127,17 @@ export async function POST(request: Request) {
     }
 
     // ── Require EXACT_MATCH ────────────────────────────────────────────────
-    const matchStatus: string = verifyData?.applicant?.matchScore?.status
+    let matchStatus: string = verifyData?.applicant?.matchScore?.status
       ?? verifyData?.status
       ?? 'NO_MATCH';
+
+    const isSandboxMatch = 
+      verifyData?.matchStatus?.status === 'verified' || 
+      verifyData?.details?.summary?.nin_check?.status === 'EXACT_MATCH';
+
+    if (isSandboxMatch) {
+      matchStatus = 'EXACT_MATCH';
+    }
 
     if (matchStatus !== 'EXACT_MATCH') {
       return NextResponse.json(
