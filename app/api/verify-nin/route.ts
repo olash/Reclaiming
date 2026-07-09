@@ -127,8 +127,8 @@ export async function POST(request: Request) {
     }
 
     // Bypass QoreID's sandbox false-positive error string by explicitly checking the match status
-    const isPerfectMatch = 
-      verifyData.matchStatus?.status === 'verified' || 
+    const isPerfectMatch =
+      verifyData.matchStatus?.status === 'verified' ||
       verifyData.details?.summary?.nin_check?.status === 'EXACT_MATCH' ||
       verifyData.status?.status === 'verified' ||
       verifyData.summary?.nin_check?.status === 'EXACT_MATCH';
