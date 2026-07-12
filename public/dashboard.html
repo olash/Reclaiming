@@ -110,51 +110,14 @@
                             <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="text-sm divide-y divide-[var(--border-color)] bg-[var(--panel-bg)]">
-                        <tr class="hover:bg-[var(--canvas-bg)] transition-colors group">
-                            <td class="py-4 px-6 font-medium text-[var(--text-primary)]">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-[var(--canvas-bg)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]">
-                                        <iconify-icon icon="solar:folder-with-files-bold-duotone"></iconify-icon>
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-sm">Estate of Late Alice Bello</div>
-                                        <div class="text-[11px] text-[var(--text-muted)]">REQ-4091</div>
-                                    </div>
+                    <tbody id="recoveries-tbody" class="text-sm divide-y divide-[var(--border-color)] bg-[var(--panel-bg)]">
+                        <!-- Rows injected by hydrateRecoveries() below -->
+                        <tr id="recoveries-loading-row">
+                            <td colspan="5" class="py-10 px-6 text-center text-sm text-[var(--text-muted)]">
+                                <div class="flex items-center justify-center gap-2">
+                                    <iconify-icon icon="solar:spinner-linear" class="animate-spin" style="font-size:1.25rem;"></iconify-icon>
+                                    Loading your recoveries…
                                 </div>
-                            </td>
-                            <td class="py-4 px-6 text-[var(--text-muted)] text-sm">Completed</td>
-                            <td class="py-4 px-6">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-[var(--primary-accent)] border border-[var(--border-color)] bg-[var(--canvas-bg)]">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[var(--primary-accent)]"></span> Verified
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 font-semibold text-sm">₦5,000,000.00</td>
-                            <td class="py-4 px-6 text-right">
-                                <a href="recovery-detail.html" class="inline-flex items-center justify-center text-xs font-medium text-[var(--text-primary)] bg-[var(--panel-bg)] border border-[var(--border-color)] px-4 py-2 rounded-[var(--radius-normal)] hover:bg-[var(--canvas-bg)] transition-colors">View Assets</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-[var(--canvas-bg)] transition-colors group">
-                            <td class="py-4 px-6 font-medium text-[var(--text-primary)]">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-[var(--canvas-bg)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]">
-                                        <iconify-icon icon="solar:folder-with-files-bold-duotone"></iconify-icon>
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-sm">Estate of Late Samuel Bello</div>
-                                        <div class="text-[11px] text-[var(--text-muted)]">REQ-8992</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-4 px-6 text-[var(--text-muted)] text-sm">Step 2/4</td>
-                            <td class="py-4 px-6">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-[#B45309] border border-[#FDE68A] bg-[#FFFBEB]">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-pulse"></span> Pending
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 font-semibold text-sm">₦12,450,000.00</td>
-                            <td class="py-4 px-6 text-right">
-                                <a href="recovery-detail.html" class="inline-flex items-center justify-center text-xs font-medium text-[var(--text-primary)] bg-[var(--panel-bg)] border border-[var(--border-color)] px-4 py-2 rounded-[var(--radius-normal)] hover:bg-[var(--canvas-bg)] transition-colors">View Assets</a>
                             </td>
                         </tr>
                     </tbody>
@@ -174,10 +137,167 @@
             // Check session storage for administrative clearance trigger
             if (sessionStorage.getItem('assetSweepCleared') === 'true') {
                 document.getElementById('approvalBanner').classList.remove('hidden');
-                // Optional: clear the token after display
-                // sessionStorage.removeItem('assetSweepCleared');
             }
         });
+    </script>
+
+    <!-- ── Dashboard Data Hydration ────────────────────────────────────────── -->
+    <!-- Fetches authenticated user's estates from Supabase and populates the  -->
+    <!-- "All Recoveries" table, replacing the static placeholder rows.         -->
+    <script type="module">
+        // ── Status → human-readable progress label mapping ──────────────────
+        function mapStatusToProgress(status) {
+            const map = {
+                pending_review: 'Step 2/4',
+                under_review:   'Step 3/4',
+                verified:       'Step 4/4',
+                settled:        'Completed',
+                rejected:       'Rejected',
+            };
+            return map[status] ?? status ?? 'Unknown';
+        }
+
+        // ── Status → verification badge HTML ────────────────────────────────
+        function mapStatusToBadge(status) {
+            if (status === 'verified' || status === 'settled') {
+                return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-[var(--primary-accent)] border border-[var(--border-color)] bg-[var(--canvas-bg)]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[var(--primary-accent)]"></span> Verified
+                        </span>`;
+            }
+            if (status === 'rejected') {
+                return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-red-700 border border-red-200 bg-red-50">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Rejected
+                        </span>`;
+            }
+            // pending_review | under_review | unknown
+            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-[#B45309] border border-[#FDE68A] bg-[#FFFBEB]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-pulse"></span> Pending
+                    </span>`;
+        }
+
+        // ── Format currency from database value ──────────────────────────────
+        function formatCurrency(value) {
+            if (value === null || value === undefined) return '₦0.00 (Pending Assessment)';
+            return '₦' + Number(value).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // ── Render a single estate row ───────────────────────────────────────
+        function buildRow(estate) {
+            const shortId   = 'REQ-' + estate.id.substring(0, 6).toUpperCase();
+            const progress  = mapStatusToProgress(estate.status);
+            const badge     = mapStatusToBadge(estate.status);
+            const value     = formatCurrency(estate.total_asset_value);
+            const name      = estate.estate_name || 'Unnamed Estate';
+
+            return `
+            <tr class="hover:bg-[var(--canvas-bg)] transition-colors group">
+                <td class="py-4 px-6 font-medium text-[var(--text-primary)]">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-[var(--canvas-bg)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]">
+                            <iconify-icon icon="solar:folder-with-files-bold-duotone"></iconify-icon>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-sm">${name}</div>
+                            <div class="text-[11px] text-[var(--text-muted)]">${shortId}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="py-4 px-6 text-[var(--text-muted)] text-sm">${progress}</td>
+                <td class="py-4 px-6">${badge}</td>
+                <td class="py-4 px-6 font-semibold text-sm">${value}</td>
+                <td class="py-4 px-6 text-right">
+                    <a href="recovery-detail.html?id=${estate.id}" class="inline-flex items-center justify-center text-xs font-medium text-[var(--text-primary)] bg-[var(--panel-bg)] border border-[var(--border-color)] px-4 py-2 rounded-[var(--radius-normal)] hover:bg-[var(--canvas-bg)] transition-colors">View Assets</a>
+                </td>
+            </tr>`;
+        }
+
+        // ── Main: fetch and render ───────────────────────────────────────────
+        async function hydrateRecoveries() {
+            const tbody = document.getElementById('recoveries-tbody');
+            if (!tbody) return;
+
+            try {
+                // 1. Load Supabase credentials from the server-side config endpoint
+                const cfgRes = await fetch('/api/config');
+                if (!cfgRes.ok) throw new Error(`Config endpoint error: ${cfgRes.status}`);
+                const cfg = await cfgRes.json();
+
+                // 2. Wait for authGuard to resolve the session
+                const session = window.__reclaimSession;
+                if (!session?.user?.id) throw new Error('No authenticated session found.');
+
+                const userId      = session.user.id;
+                const accessToken = session.access_token;
+
+                // 3. Query Supabase REST API for this user's estates
+                //    (SELECT columns include total_asset_value per user feedback)
+                const dbRes = await fetch(
+                    `${cfg.supabaseUrl}/rest/v1/estates?user_id=eq.${userId}&select=id,estate_name,status,total_asset_value,submitted_at&order=submitted_at.desc`,
+                    {
+                        headers: {
+                            'apikey':        cfg.supabaseAnonKey,
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type':  'application/json',
+                        },
+                    }
+                );
+
+                if (!dbRes.ok) {
+                    const errText = await dbRes.text();
+                    throw new Error(`Database query failed (${dbRes.status}): ${errText}`);
+                }
+
+                const estates = await dbRes.json();
+
+                // 4. Clear loading spinner
+                tbody.innerHTML = '';
+
+                if (!estates || estates.length === 0) {
+                    // Empty state
+                    tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-16 px-6 text-center">
+                            <div class="flex flex-col items-center gap-3 text-[var(--text-muted)]">
+                                <iconify-icon icon="solar:folder-with-files-linear" style="font-size:2.5rem; opacity:0.4;"></iconify-icon>
+                                <p class="text-sm font-medium">No recovery requests yet.</p>
+                                <p class="text-xs">Start your first asset recovery by clicking <strong>Add Asset Recovery</strong>.</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                    return;
+                }
+
+                // 5. Inject one row per estate
+                estates.forEach(estate => {
+                    tbody.insertAdjacentHTML('beforeend', buildRow(estate));
+                });
+
+            } catch (err) {
+                console.error('[dashboard] Failed to load recoveries:', err);
+                if (document.getElementById('recoveries-tbody')) {
+                    document.getElementById('recoveries-tbody').innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-10 px-6 text-center text-sm text-red-500">
+                            Failed to load recovery data. Please refresh the page or contact support.
+                        </td>
+                    </tr>`;
+                }
+            }
+        }
+
+        // authGuard runs async — wait for the SDK session to be confirmed before querying
+        // Use a small polling loop with a timeout (max 4 seconds)
+        function waitForSession(callback, attempts = 0) {
+            if (window.__reclaimSession?.user?.id) {
+                callback();
+            } else if (attempts < 20) {
+                setTimeout(() => waitForSession(callback, attempts + 1), 200);
+            } else {
+                console.warn('[dashboard] Session not available after timeout. Aborting data fetch.');
+            }
+        }
+
+        waitForSession(hydrateRecoveries);
     </script>
 </body>
 </html>

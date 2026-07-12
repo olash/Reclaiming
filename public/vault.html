@@ -69,47 +69,14 @@
             <p class="text-sm text-[var(--text-muted)]">Your securely cleared financial transitions.</p>
         </div>
 
-        <!-- Settled Holdings List -->
-        <div class="flex flex-col gap-6">
-            
-            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-6 shadow-none flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center text-[var(--primary-accent)]">
-                        <iconify-icon icon="solar:safe-circle-linear" style="font-size: 1.5rem;"></iconify-icon>
-                    </div>
-                    <div>
-                        <div class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-0.5">REQ-4091</div>
-                        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Estate of Late Alice Bello</h3>
-                        <p class="text-xs text-[var(--text-muted)]">Settled on Mar 15, 2026 via NIBSS</p>
-                    </div>
-                </div>
-                <div class="flex flex-col md:items-end gap-3 w-full md:w-auto">
-                    <div class="text-xl font-bold text-[var(--text-primary)]">₦4,500,000.00 <span class="text-sm font-medium text-[var(--text-muted)] ml-1">NET</span></div>
-                    <button onclick="downloadClearance(this, 'REQ-4091')" class="w-full md:w-auto bg-[var(--canvas-bg)] text-[var(--text-primary)] border border-[var(--border-color)] px-4 py-2 text-sm font-medium rounded-[var(--radius-normal)] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                        <iconify-icon icon="solar:document-text-linear"></iconify-icon> <span class="btn-label">Download Clearance PDF</span>
-                    </button>
+        <!-- Cards injected by hydrateVault() — loading state shown initially -->
+        <div id="vault-cards-container" class="flex flex-col gap-6">
+            <div id="vault-loading" class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-10 text-center">
+                <div class="flex items-center justify-center gap-2 text-sm text-[var(--text-muted)]">
+                    <iconify-icon icon="solar:spinner-linear" class="animate-spin" style="font-size:1.25rem;"></iconify-icon>
+                    Loading your settled assets…
                 </div>
             </div>
-
-            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-6 shadow-none flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center text-[var(--primary-accent)]">
-                        <iconify-icon icon="solar:safe-circle-linear" style="font-size: 1.5rem;"></iconify-icon>
-                    </div>
-                    <div>
-                        <div class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-0.5">REQ-8992</div>
-                        <h3 class="text-lg font-semibold text-[var(--text-primary)]">Estate of Late Samuel Bello</h3>
-                        <p class="text-xs text-[var(--text-muted)]">Settled on May 20, 2026 via NIBSS</p>
-                    </div>
-                </div>
-                <div class="flex flex-col md:items-end gap-3 w-full md:w-auto">
-                    <div class="text-xl font-bold text-[var(--text-primary)]">₦11,205,000.00 <span class="text-sm font-medium text-[var(--text-muted)] ml-1">NET</span></div>
-                    <button onclick="downloadClearance(this, 'REQ-8992')" class="w-full md:w-auto bg-[var(--canvas-bg)] text-[var(--text-primary)] border border-[var(--border-color)] px-4 py-2 text-sm font-medium rounded-[var(--radius-normal)] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                        <iconify-icon icon="solar:document-text-linear"></iconify-icon> <span class="btn-label">Download Clearance PDF</span>
-                    </button>
-                </div>
-            </div>
-
         </div>
 
     </main>
@@ -128,12 +95,10 @@
             btn.classList.add('opacity-50', 'cursor-not-allowed');
 
             try {
-                // Fetch the PDF clearance document
                 const response = await fetch('/api/generate-inventory');
                 if (!response.ok) throw new Error('API Error');
                 const blob = await response.blob();
                 
-                // Simulate download
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -146,8 +111,6 @@
                 btn.innerHTML = originalHTML;
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                
-                // Custom minimalist toast/alert via DOM insertion
                 showToast('Clearance document downloaded securely.', 'success');
                 
             } catch (err) {
@@ -170,6 +133,138 @@
                 setTimeout(() => container.remove(), 300);
             }, 3500);
         }
+    </script>
+
+    <!-- ── Vault Data Hydration ───────────────────────────────────────────── -->
+    <!-- Fetches settled estates from Supabase and renders asset cards.        -->
+    <script type="module">
+        // ── Format a date string as "Settled on Month DD, YYYY via NIBSS" ──
+        function formatSettledDate(dateStr) {
+            if (!dateStr) return 'Settlement date unavailable';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return 'Settlement date unavailable';
+            return 'Settled on ' + d.toLocaleDateString('en-NG', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            }) + ' via NIBSS';
+        }
+
+        // ── Format currency from DB value ────────────────────────────────────
+        function formatCurrency(value) {
+            if (value === null || value === undefined) return '₦0.00 (Pending Assessment)';
+            return '₦' + Number(value).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // ── Build a single asset card ─────────────────────────────────────────
+        function buildCard(estate) {
+            const shortId  = 'REQ-' + estate.id.substring(0, 6).toUpperCase();
+            const name     = estate.estate_name || 'Unnamed Estate';
+            const dateStr  = formatSettledDate(estate.updated_at);
+            const value    = formatCurrency(estate.total_asset_value);
+
+            return `
+            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-6 shadow-none flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] flex items-center justify-center text-[var(--primary-accent)]">
+                        <iconify-icon icon="solar:safe-circle-linear" style="font-size: 1.5rem;"></iconify-icon>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-0.5">${shortId}</div>
+                        <h3 class="text-lg font-semibold text-[var(--text-primary)]">${name}</h3>
+                        <p class="text-xs text-[var(--text-muted)]">${dateStr}</p>
+                    </div>
+                </div>
+                <div class="flex flex-col md:items-end gap-3 w-full md:w-auto">
+                    <div class="text-xl font-bold text-[var(--text-primary)]">${value} <span class="text-sm font-medium text-[var(--text-muted)] ml-1">NET</span></div>
+                    <button onclick="downloadClearance(this, '${shortId}')" class="w-full md:w-auto bg-[var(--canvas-bg)] text-[var(--text-primary)] border border-[var(--border-color)] px-4 py-2 text-sm font-medium rounded-[var(--radius-normal)] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                        <iconify-icon icon="solar:document-text-linear"></iconify-icon> <span class="btn-label">Download Clearance PDF</span>
+                    </button>
+                </div>
+            </div>`;
+        }
+
+        // ── Main: fetch and render ────────────────────────────────────────────
+        async function hydrateVault() {
+            const container = document.getElementById('vault-cards-container');
+            if (!container) return;
+
+            try {
+                // 1. Get Supabase credentials from the env-driven config endpoint
+                const cfgRes = await fetch('/api/config');
+                if (!cfgRes.ok) throw new Error(`Config endpoint error: ${cfgRes.status}`);
+                const cfg = await cfgRes.json();
+
+                // 2. Resolve session
+                const session = window.__reclaimSession;
+                if (!session?.user?.id) throw new Error('No authenticated session found.');
+
+                const userId      = session.user.id;
+                const accessToken = session.access_token;
+
+                // 3. Query only settled/verified estates for this user
+                //    Filter: status=in.(settled,verified) to catch both terminal states
+                const dbRes = await fetch(
+                    `${cfg.supabaseUrl}/rest/v1/estates?user_id=eq.${userId}&status=in.(settled,verified)&select=id,estate_name,status,total_asset_value,updated_at&order=updated_at.desc`,
+                    {
+                        headers: {
+                            'apikey':        cfg.supabaseAnonKey,
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type':  'application/json',
+                        },
+                    }
+                );
+
+                if (!dbRes.ok) {
+                    const errText = await dbRes.text();
+                    throw new Error(`Database query failed (${dbRes.status}): ${errText}`);
+                }
+
+                const estates = await dbRes.json();
+
+                // 4. Clear loading state
+                container.innerHTML = '';
+
+                if (!estates || estates.length === 0) {
+                    // Clean empty state
+                    container.innerHTML = `
+                    <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-16 text-center">
+                        <div class="flex flex-col items-center gap-3 text-[var(--text-muted)]">
+                            <iconify-icon icon="solar:safe-2-linear" style="font-size:3rem; opacity:0.35;"></iconify-icon>
+                            <p class="text-sm font-semibold">No settled assets yet.</p>
+                            <p class="text-xs max-w-xs mx-auto">You currently have no settled assets in your vault. Assets appear here once your recovery has been fully processed and cleared.</p>
+                        </div>
+                    </div>`;
+                    return;
+                }
+
+                // 5. Render one card per settled estate
+                estates.forEach(estate => {
+                    container.insertAdjacentHTML('beforeend', buildCard(estate));
+                });
+
+            } catch (err) {
+                console.error('[vault] Failed to load settled assets:', err);
+                const container = document.getElementById('vault-cards-container');
+                if (container) {
+                    container.innerHTML = `
+                    <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] rounded-[var(--radius-large)] p-10 text-center text-sm text-red-500">
+                        Failed to load vault data. Please refresh or contact support.
+                    </div>`;
+                }
+            }
+        }
+
+        // Wait for authGuard session before querying (same pattern as dashboard)
+        function waitForSession(callback, attempts = 0) {
+            if (window.__reclaimSession?.user?.id) {
+                callback();
+            } else if (attempts < 20) {
+                setTimeout(() => waitForSession(callback, attempts + 1), 200);
+            } else {
+                console.warn('[vault] Session not available after timeout. Aborting data fetch.');
+            }
+        }
+
+        waitForSession(hydrateVault);
     </script>
 </body>
 </html>

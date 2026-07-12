@@ -10,7 +10,7 @@ import { getQoreIdToken } from '@/utils/qoreidAuth';
  * Premium returns a non-200. Caches results in Supabase to prevent
  * duplicate charges ("Never Pay Twice").
  *
- * Body: { nin, firstname, lastname, phone, dob }
+ * Body: { nin, firstname, lastname, phone, dob, user_id }
  */
 export async function POST(request: Request) {
   try {
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
       lastname?: string;
       phone?: string;
       dob?: string;
+      user_id?: string;
     };
 
     try {
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 });
     }
 
-    const { nin, firstname, lastname, phone, dob } = body;
+    const { nin, firstname, lastname, phone, dob, user_id } = body;
 
     if (!nin || nin.length !== 11) {
       return NextResponse.json(
@@ -50,7 +51,16 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!user_id) {
+      return NextResponse.json(
+        { error: 'user_id is required.' },
+        { status: 400 }
+      );
+    }
+
     // ── "Never Pay Twice" cache check ─────────────────────────────────────
+    // Scoped to user_id for defence-in-depth (alongside RLS SELECT policy)
+    // to prevent cross-user data leakage.
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -58,6 +68,7 @@ export async function POST(request: Request) {
       .from('verifications')
       .select('profile_data, created_at')
       .eq('nin', nin)
+      .eq('user_id', user_id)
       .gte('created_at', thirtyDaysAgo.toISOString())
       .order('created_at', { ascending: false })
       .limit(1)
@@ -141,16 +152,21 @@ export async function POST(request: Request) {
       });
     }
 
-    // ── Write to Supabase cache ────────────────────────────────────────────
+    // ── Write KYC record to Supabase verifications ────────────────────────
+    // Columns: user_id (NOT NULL FK → auth.users), nin (UNIQUE TEXT),
+    //          profile_data (JSONB — full QoreID response payload)
     const { error: insertError } = await supabase.from('verifications').insert({
+      user_id,                          // satisfies NOT NULL constraint & RLS policy
       nin,
-      profile_data: verifyData,
+      profile_data: verifyData,         // complete QoreID JSON response
       created_at: new Date().toISOString(),
     });
 
     if (insertError) {
       // Non-fatal — log and continue. A cache write failure should not block the user.
-      console.warn('[verify-nin] Cache write failed:', insertError.message);
+      console.warn('[verify-nin] KYC record write failed:', insertError.message);
+    } else {
+      console.log('[verify-nin] KYC record stored for user:', user_id.slice(0, 8) + '...');
     }
 
     // Return 200 OK for a successful match

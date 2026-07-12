@@ -582,6 +582,27 @@
             state.userId = window.__reclaimSession.user.id ?? '';
         }
 
+        // ── Runtime config from /api/config ────────────────────────────────────
+        // Static HTML files cannot read process.env, so we fetch public keys from
+        // a dedicated server-side endpoint that reads from environment variables.
+        let paystackPublicKey = '';
+
+        async function initConfig() {
+            try {
+                const res = await fetch('/api/config');
+                if (!res.ok) throw new Error(`/api/config returned ${res.status}`);
+                const cfg = await res.json();
+                paystackPublicKey = cfg.paystackPublicKey ?? '';
+                if (!paystackPublicKey) {
+                    console.error('[config] Paystack public key is empty. Payments will be unavailable.');
+                }
+            } catch (err) {
+                console.error('[config] Failed to load runtime config:', err);
+            }
+        }
+        // Start fetching immediately — resolves well before any payment button click.
+        initConfig();
+
         // ═══════════════════════════════════════════════════════════════════════
         // UTILITIES
         // ═══════════════════════════════════════════════════════════════════════
@@ -669,12 +690,18 @@
         }
 
         // ── Open Paystack popup ─────────────────────────────────────────────────
+        // Key is loaded at startup from /api/config (env-driven, never hardcoded).
         function openPaystack({ amount, onSuccess }) {
+            if (!paystackPublicKey) {
+                showToast('Payment gateway is not ready. Please refresh and try again.', 'error');
+                console.error('[Paystack] Public key not yet loaded from /api/config.');
+                return;
+            }
             try {
                 const paystack = new PaystackPop();
                 paystack.newTransaction({
-                    key: 'pk_test_2e4872140582d3800739670a01ce80c411d64cd0',
-                    email: state.userEmail || 'test@reclaimng.com',
+                    key: paystackPublicKey,  // <- driven by NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY env var
+                    email: state.userEmail || 'user@reclaimng.com',
                     amount: amount, // in kobo
                     currency: 'NGN',
                     reference: 'RC_' + Date.now() + '_' + Math.floor(Math.random() * 1e6),
@@ -813,6 +840,7 @@
                         lastname: state.lastname,
                         phone: state.phone,
                         dob: state.dob,
+                        user_id: state.userId,   // required to store KYC record in verifications table
                     }),
                 });
                 const json = await res.json();
