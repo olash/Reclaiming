@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     if (!supabaseUrl || !supabaseServiceKey || !monoSecKey) {
       console.error('[verify-otp] Missing environment variables.');
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
+      return NextResponse.json({ error: 'Server configuration error: Missing Mono credentials' }, { status: 503 });
     }
 
     // 1. Mono Auto-Route: Details

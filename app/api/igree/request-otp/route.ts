@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     if (!supabaseUrl || !supabaseServiceKey || !monoSecKey) {
       console.error('[request-otp] Missing environment variables.');
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
+      return NextResponse.json({ error: 'Server configuration error: Missing Mono credentials' }, { status: 503 });
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -77,10 +77,10 @@ export async function POST(request: Request) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'mono-sec-key': monoSecKey
+        'mono-sec-key': monoSecKey,
+        'x-session-id': sessionId
       },
       body: JSON.stringify({
-        session_id: sessionId,
         method: "phone"
       })
     });
