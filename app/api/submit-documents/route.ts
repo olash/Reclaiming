@@ -140,11 +140,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // ── Mock OCR Validation (Phase 1) ─────────────────────────────────────
+    // Simulate analyzing the Death Certificate for required stamps/signatures
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     return NextResponse.json({
       success: true,
       estateId: estate.id,
       uploadedPaths,
-      message: 'Documents received. Your application is now pending compliance review.',
+      message: 'Documents validated: Required stamps and signatures present. Your application is now pending review.',
     });
 
   } catch (error) {

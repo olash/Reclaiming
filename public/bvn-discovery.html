@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BVN Asset Discovery via iGree</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4 font-sans text-gray-800">
+    
+    <div class="bg-white rounded-lg shadow-md max-w-md w-full p-8">
+        <h1 class="text-2xl font-bold mb-2 text-center text-green-900">NIBSS iGree Consent</h1>
+        <p class="text-sm text-gray-500 text-center mb-8">Initiate an asset sweep to discover all bank accounts linked to the deceased's BVN.</p>
+
+        <!-- Step 1: Request OTP -->
+        <div id="step1">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deceased's BVN</label>
+                <input type="text" id="bvnInput" placeholder="Enter 11-digit BVN" maxlength="11" class="w-full border border-gray-300 rounded-md p-2 focus:ring-green-500 focus:border-green-500" />
+            </div>
+            <button id="requestOtpBtn" onclick="requestOtp()" class="w-full bg-green-700 text-white font-medium py-2 rounded-md hover:bg-green-800 transition-colors">Request Consent OTP</button>
+            <p id="step1Error" class="text-red-500 text-sm mt-2 hidden"></p>
+        </div>
+
+        <!-- Step 2: Verify OTP -->
+        <div id="step2" class="hidden">
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-md mb-4">
+                OTP sent to registered phone: <span id="maskedPhoneDisplay" class="font-bold"></span>
+                <br>
+                <span class="text-xs text-blue-600 mt-1 block">(Hint: Use 123456 for the mock environment)</span>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
+                <input type="text" id="otpInput" placeholder="6-digit code" maxlength="6" class="w-full border border-gray-300 rounded-md p-2 text-center tracking-widest text-xl focus:ring-green-500 focus:border-green-500" />
+            </div>
+            <button id="verifyOtpBtn" onclick="verifyOtp()" class="w-full bg-blue-600 text-white font-medium py-2 rounded-md hover:bg-blue-700 transition-colors">Verify & Start Asset Sweep</button>
+            <p id="step2Error" class="text-red-500 text-sm mt-2 hidden"></p>
+        </div>
+
+        <!-- Step 3: Results -->
+        <div id="step3" class="hidden">
+            <div class="flex items-center justify-center mb-4 text-green-600">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h2 class="text-xl font-bold text-center mb-6">Asset Sweep Complete</h2>
+            
+            <div class="border border-gray-200 rounded-md p-4 bg-gray-50 mb-6">
+                <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
+                    <span class="text-sm font-medium text-gray-500">Total Asset Value</span>
+                    <span id="totalValueDisplay" class="text-lg font-bold text-green-800"></span>
+                </div>
+                <div id="accountsList" class="space-y-2 mt-4">
+                    <!-- Accounts injected here -->
+                </div>
+            </div>
+
+            <a href="dashboard.html" class="block text-center w-full bg-gray-800 text-white font-medium py-2 rounded-md hover:bg-gray-900 transition-colors">Return to Dashboard</a>
+        </div>
+
+    </div>
+
+    <script>
+        let currentSessionId = null;
+        let estateId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Extract estate_id from URL query params
+            const params = new URLSearchParams(window.location.search);
+            estateId = params.get('estate_id');
+        });
+
+        async function requestOtp() {
+            const bvn = document.getElementById('bvnInput').value;
+            const errorEl = document.getElementById('step1Error');
+            const btn = document.getElementById('requestOtpBtn');
+            
+            errorEl.classList.add('hidden');
+            
+            if (!bvn || bvn.length !== 11) {
+                errorEl.innerText = "Please enter a valid 11-digit BVN.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            btn.innerText = "Requesting...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/igree/request-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bvn })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    currentSessionId = data.sessionId;
+                    document.getElementById('maskedPhoneDisplay').innerText = data.maskedPhone;
+                    
+                    document.getElementById('step1').classList.add('hidden');
+                    document.getElementById('step2').classList.remove('hidden');
+                } else {
+                    errorEl.innerText = data.error || "Failed to request OTP.";
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorEl.innerText = "Network error. Please try again.";
+                errorEl.classList.remove('hidden');
+            } finally {
+                btn.innerText = "Request Consent OTP";
+                btn.disabled = false;
+            }
+        }
+
+        async function verifyOtp() {
+            const otp = document.getElementById('otpInput').value;
+            const errorEl = document.getElementById('step2Error');
+            const btn = document.getElementById('verifyOtpBtn');
+            
+            errorEl.classList.add('hidden');
+            
+            if (!otp || otp.length !== 6) {
+                errorEl.innerText = "Please enter the 6-digit OTP.";
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
+            btn.innerText = "Verifying...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/igree/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: currentSessionId, otp, estateId })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Set special flag for dashboard persistent banner
+                    sessionStorage.setItem('assetSweepCleared', 'true');
+                    
+                    // Display results
+                    document.getElementById('totalValueDisplay').innerText = '₦' + data.totalAssetValue.toLocaleString('en-NG', { minimumFractionDigits: 2 });
+                    
+                    const accountsList = document.getElementById('accountsList');
+                    accountsList.innerHTML = '';
+                    
+                    data.accounts.forEach(acc => {
+                        const bal = '₦' + acc.balance.toLocaleString('en-NG', { minimumFractionDigits: 2 });
+                        accountsList.innerHTML += `
+                            <div class="flex justify-between items-center text-sm">
+                                <div>
+                                    <div class="font-medium">${acc.bankName}</div>
+                                    <div class="text-xs text-gray-500">${acc.accountNumber}</div>
+                                </div>
+                                <div class="font-semibold">${bal}</div>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById('step2').classList.add('hidden');
+                    document.getElementById('step3').classList.remove('hidden');
+                } else {
+                    errorEl.innerText = data.error || "Invalid OTP.";
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorEl.innerText = "Network error. Please try again.";
+                errorEl.classList.remove('hidden');
+            } finally {
+                btn.innerText = "Verify & Start Asset Sweep";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

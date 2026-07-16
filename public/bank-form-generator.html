@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Update Form Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; }
+            .print-container { border: none; box-shadow: none; max-width: none; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8 font-sans">
+    <div class="max-w-2xl mx-auto no-print bg-white p-6 rounded-lg shadow-md mb-8">
+        <h1 class="text-xl font-bold mb-4">Notification of Death & BVN Phone Update Request</h1>
+        <p class="text-gray-600 mb-6">Enter the deceased's bank name to generate a printable letter to submit to the branch manager.</p>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+            <input type="text" id="bankNameInput" placeholder="e.g. Zenith Bank Plc" class="w-full border border-gray-300 rounded-md p-2 focus:ring-green-500 focus:border-green-500">
+        </div>
+        <button onclick="generateLetter()" class="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-green-800 transition-colors">Generate Letter</button>
+    </div>
+
+    <!-- Letter Preview (Also what gets printed) -->
+    <div id="letterPreview" class="max-w-4xl mx-auto bg-white p-12 border border-gray-200 shadow-sm print-container hidden">
+        <div class="text-right mb-12">
+            <p id="currentDate"></p>
+        </div>
+        
+        <div class="mb-8">
+            <p>The Branch Manager,</p>
+            <p class="font-bold" id="bankNameDisplay">[Bank Name]</p>
+            <p>Dear Sir/Madam,</p>
+        </div>
+
+        <h2 class="text-lg font-bold text-center underline mb-8">NOTIFICATION OF DEATH AND REQUEST TO UPDATE BVN PHONE NUMBER</h2>
+
+        <div class="space-y-4 text-justify">
+            <p>We write to formally notify you of the demise of the deceased, who held an account with your esteemed bank.</p>
+            <p>In our capacity as the legally appointed administrators of the deceased's estate (evidenced by the attached Letter of Administration and Death Certificate), we are currently in the process of gathering and consolidating the assets of the estate for proper distribution.</p>
+            <p>To facilitate the retrieval of the deceased's BVN records and the subsequent discovery of all associated bank accounts across the financial system via the NIBSS iGree platform, it is imperative that we receive SMS OTPs linked to the deceased's BVN.</p>
+            <p>Therefore, we kindly request that you update the phone number attached to the deceased's BVN profile to the following number: <strong>[Administrator's Phone Number]</strong>.</p>
+            <p>This update is solely for the purpose of receiving the iGree consent OTP to allow us to discover the deceased's assets, as required by NIBSS protocols for estate administrators.</p>
+            <p>We have attached the following documents for your perusal and verification:</p>
+            <ul class="list-disc pl-8">
+                <li>Certified True Copy of the Death Certificate</li>
+                <li>Letter of Administration issued by the Probate Court</li>
+                <li>Valid Identification of the Administrators</li>
+            </ul>
+            <p>We anticipate your prompt assistance in this matter to enable us to fulfill our legal duties to the estate.</p>
+            <p>Yours faithfully,</p>
+        </div>
+
+        <div class="mt-16 flex justify-between">
+            <div>
+                <p>___________________________</p>
+                <p class="font-bold mt-2">Estate Administrator</p>
+            </div>
+            <div>
+                <p>___________________________</p>
+                <p class="font-bold mt-2">Estate Administrator (2)</p>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center no-print">
+            <button onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors">Print Letter</button>
+        </div>
+    </div>
+
+    <script>
+        function generateLetter() {
+            const bankName = document.getElementById('bankNameInput').value;
+            if (!bankName) {
+                alert('Please enter a bank name');
+                return;
+            }
+            
+            document.getElementById('bankNameDisplay').innerText = bankName;
+            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+            
+            document.getElementById('letterPreview').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
