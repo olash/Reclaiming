@@ -134,7 +134,7 @@
                 const res = await fetch('/api/igree/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionId: currentSessionId, otp, estateId })
+                    body: JSON.stringify({ sessionId: currentSessionId, otp, estate_id: estateId })
                 });
 
                 const data = await res.json();

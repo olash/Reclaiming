@@ -19,9 +19,19 @@
         <h1 class="text-xl font-bold mb-4">Notification of Death & BVN Phone Update Request</h1>
         <p class="text-gray-600 mb-6">Enter the deceased's bank name to generate a printable letter to submit to the branch manager.</p>
         
-        <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
-            <input type="text" id="bankNameInput" placeholder="e.g. Zenith Bank Plc" class="w-full border border-gray-300 rounded-md p-2 focus:ring-green-500 focus:border-green-500">
+        <div class="mb-4 space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deceased's Name</label>
+                <input type="text" id="deceasedNameInput" placeholder="e.g. John Doe" class="w-full border border-gray-300 rounded-md p-2 focus:ring-green-500 focus:border-green-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Next of Kin Name / Administrator</label>
+                <input type="text" id="nokNameInput" placeholder="e.g. Jane Doe" class="w-full border border-gray-300 rounded-md p-2 focus:ring-green-500 focus:border-green-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                <input type="text" id="bankNameInput" placeholder="e.g. Zenith Bank Plc" class="w-full border border-gray-300 rounded-md p-2 focus:ring-green-500 focus:border-green-500">
+            </div>
         </div>
         <button onclick="generateLetter()" class="bg-green-700 text-white px-4 py-2 rounded-md hover:bg-green-800 transition-colors">Generate Letter</button>
     </div>
@@ -38,10 +48,10 @@
             <p>Dear Sir/Madam,</p>
         </div>
 
-        <h2 class="text-lg font-bold text-center underline mb-8">NOTIFICATION OF DEATH AND REQUEST TO UPDATE BVN PHONE NUMBER</h2>
+        <h2 class="text-lg font-bold text-center underline mb-8 uppercase">NOTIFICATION OF DEATH AND REQUEST TO UPDATE BVN PHONE NUMBER FOR <span id="deceasedNameDisplay">[Deceased Name]</span></h2>
 
         <div class="space-y-4 text-justify">
-            <p>We write to formally notify you of the demise of the deceased, who held an account with your esteemed bank.</p>
+            <p>We write to formally notify you of the demise of the deceased, <span class="font-bold" id="deceasedNameInlineDisplay">[Deceased Name]</span>, who held an account with your esteemed bank.</p>
             <p>In our capacity as the legally appointed administrators of the deceased's estate (evidenced by the attached Letter of Administration and Death Certificate), we are currently in the process of gathering and consolidating the assets of the estate for proper distribution.</p>
             <p>To facilitate the retrieval of the deceased's BVN records and the subsequent discovery of all associated bank accounts across the financial system via the NIBSS iGree platform, it is imperative that we receive SMS OTPs linked to the deceased's BVN.</p>
             <p>Therefore, we kindly request that you update the phone number attached to the deceased's BVN profile to the following number: <strong>[Administrator's Phone Number]</strong>.</p>
@@ -59,7 +69,8 @@
         <div class="mt-16 flex justify-between">
             <div>
                 <p>___________________________</p>
-                <p class="font-bold mt-2">Estate Administrator</p>
+                <p class="font-bold mt-2" id="nokNameDisplay">[Next of Kin]</p>
+                <p class="text-sm">Estate Administrator</p>
             </div>
             <div>
                 <p>___________________________</p>
@@ -75,12 +86,17 @@
     <script>
         function generateLetter() {
             const bankName = document.getElementById('bankNameInput').value;
-            if (!bankName) {
-                alert('Please enter a bank name');
+            const deceasedName = document.getElementById('deceasedNameInput').value;
+            const nokName = document.getElementById('nokNameInput').value;
+            if (!bankName || !deceasedName || !nokName) {
+                alert('Please fill all fields');
                 return;
             }
             
             document.getElementById('bankNameDisplay').innerText = bankName;
+            document.getElementById('deceasedNameDisplay').innerText = deceasedName;
+            document.getElementById('deceasedNameInlineDisplay').innerText = deceasedName;
+            document.getElementById('nokNameDisplay').innerText = nokName;
             document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
             
             document.getElementById('letterPreview').classList.remove('hidden');
