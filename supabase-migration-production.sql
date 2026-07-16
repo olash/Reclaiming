@@ -10,3 +10,7 @@ CHECK (payment_status IN ('unpaid', 'paid', 'refunded'));
 
 -- Index for efficient paywall checking
 CREATE INDEX IF NOT EXISTS idx_estates_payment_status ON public.estates (payment_status);
+
+-- 2. Add `mandate_acknowledged` to sync UI states
+ALTER TABLE public.estates 
+ADD COLUMN IF NOT EXISTS mandate_acknowledged BOOLEAN DEFAULT FALSE NOT NULL;
