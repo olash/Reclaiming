@@ -154,8 +154,15 @@ export async function POST(request: Request) {
     try {
       const buffer = Buffer.from(await fileData.arrayBuffer());
       
+      const gcpKeyBase64 = process.env.GCP_SERVICE_ACCOUNT_KEY_BASE64;
+      if (!gcpKeyBase64) {
+        return NextResponse.json({ error: 'OCR Configuration Error: Missing GCP Credentials' }, { status: 503 });
+      }
+      
+      const credentials = JSON.parse(Buffer.from(gcpKeyBase64, 'base64').toString('utf-8'));
+
       const vision = require('@google-cloud/vision');
-      const client = new vision.ImageAnnotatorClient();
+      const client = new vision.ImageAnnotatorClient({ credentials });
 
       // Run Document Text Detection
       const [result] = await client.documentTextDetection({

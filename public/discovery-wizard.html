@@ -974,20 +974,25 @@
 
                 hideModal();
 
-                if (!res.ok) throw new Error(json.error ?? 'Upload failed');
+                if (!res.ok) {
+                    if (res.status === 503) {
+                        alert(json.error || 'OCR Configuration Error: Missing GCP Credentials');
+                    }
+                    throw new Error(json.error ?? 'Upload failed');
+                }
 
                 setBtn('btn-pay-step3', { loading: false, label: 'Documents Submitted ✓', iconClass: 'fa-check' });
                 showToast('Documents secured and submitted for legal review.', 'success');
 
-                completeStep(3);
-                unlockStep(4);
+                // Redirect immediately after successful payment and document submission
+                window.location.href = '/dashboard.html';
 
             } catch (err) {
                 console.error('[submit-documents]', err);
                 hideModal();
                 setBtn('btn-pay-step3', { loading: false, label: 'Pay ₦75,000 to Submit for Legal Verification' });
                 showToast(
-                    'Your payment was captured but document upload failed. Reference: ' + state.step3PayRef + '. Please contact support.',
+                    err.message || 'Your payment was captured but document upload failed. Reference: ' + state.step3PayRef + '. Please contact support.',
                     'error'
                 );
             }
