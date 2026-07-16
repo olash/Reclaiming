@@ -140,9 +140,52 @@ export async function POST(request: Request) {
       );
     }
 
-    // ── Mock OCR Validation (Phase 1) ─────────────────────────────────────
-    // Simulate analyzing the Death Certificate for required stamps/signatures
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // ── Live OCR Validation (Phase 4) ─────────────────────────────────────
+    // Download the uploaded Death Certificate for OCR processing
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('probate_documents')
+      .download(dcPath);
+
+    if (downloadError || !fileData) {
+      console.error('[submit-documents] Failed to download DC for OCR:', downloadError?.message);
+      return NextResponse.json({ error: 'Failed to process document for OCR' }, { status: 500 });
+    }
+
+    try {
+      const buffer = Buffer.from(await fileData.arrayBuffer());
+      
+      const vision = require('@google-cloud/vision');
+      const client = new vision.ImageAnnotatorClient();
+
+      // Run Document Text Detection
+      const [result] = await client.documentTextDetection({
+        image: { content: buffer.toString('base64') }
+      });
+
+      const fullText = result.fullTextAnnotation?.text || '';
+      const textLower = fullText.toLowerCase();
+
+      // Basic legal validation keyword check
+      const hasHighCourt = textLower.includes('high court');
+      const hasProbate = textLower.includes('probate');
+      const hasStampOrSign = textLower.includes('stamp') || textLower.includes('signature') || textLower.includes('sign');
+
+      if (!hasHighCourt || !hasProbate || !hasStampOrSign) {
+        // Update estate status to rejected if it fails compliance
+        await supabase.from('estates').update({ status: 'rejected' }).eq('id', estate.id);
+        
+        return NextResponse.json({
+          error: 'OCR Validation Failed: Document does not appear to be a valid Probate or High Court document. Missing required stamps/keywords.'
+        }, { status: 400 });
+      }
+
+      // If passed, we leave it as pending_review or we could update it to approved.
+      // For now, pending_review is safe as it requires a final human glance.
+      
+    } catch (ocrError) {
+      console.error('[submit-documents] OCR Vision API failed:', ocrError);
+      return NextResponse.json({ error: 'OCR processing failed. Check GCP credentials.' }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,

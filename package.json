@@ -8,16 +8,17 @@
     "start": "next start"
   },
   "dependencies": {
+    "@google-cloud/vision": "^5.3.7",
+    "@supabase/supabase-js": "^2.43.5",
     "next": "^14.2.5",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "pdf-lib": "^1.17.1",
-    "@supabase/supabase-js": "^2.43.5"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "typescript": "^5.4.5",
     "@types/node": "^20.14.2",
     "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0"
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.4.5"
   }
 }

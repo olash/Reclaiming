@@ -10,41 +10,54 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Session ID and OTP are required' }, { status: 400 });
     }
 
-    // Mock validation
-    if (otp !== '123456') {
-      return NextResponse.json({ error: 'Invalid OTP' }, { status: 401 });
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const monoSecKey = process.env.MONO_SEC_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey || !monoSecKey) {
+      console.error('[verify-otp] Missing environment variables.');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
     }
 
-    // Mock discovered accounts
-    const mockAccounts = [
-      { bankName: 'GTBank', accountNumber: '0123456789', balance: 2500000 },
-      { bankName: 'Zenith Bank', accountNumber: '2123456789', balance: 2000000 }
-    ];
-    const totalAssetValue = 4500000;
+    // 1. Mono Auto-Route: Details
+    const detailsRes = await fetch('https://api.withmono.com/v2/lookup/bvn/details', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'mono-sec-key': monoSecKey,
+        'x-session-id': sessionId
+      },
+      body: JSON.stringify({
+        otp: otp
+      })
+    });
+
+    const detailsData = await detailsRes.json();
+
+    if (!detailsRes.ok) {
+      console.error('[verify-otp] Mono details failed:', detailsData);
+      return NextResponse.json({ error: detailsData.message || 'Failed to verify OTP with Mono' }, { status: detailsRes.status });
+    }
+
+    // `detailsData.data` is an array of accounts returned by Mono
+    const discoveredAccounts = Array.isArray(detailsData.data) ? detailsData.data : [];
 
     // Phase 4: Database Update (if finalEstateId is provided)
     if (finalEstateId) {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-      if (supabaseUrl && supabaseServiceKey) {
-        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      const { error: updateError } = await supabase
+        .from('estates')
+        .update({
+          status: 'verified',
+          discovered_accounts: discoveredAccounts
+        })
+        .eq('id', finalEstateId);
         
-        const { error: updateError } = await supabase
-          .from('estates')
-          .update({
-            status: 'verified',
-            total_asset_value: totalAssetValue
-          })
-          .eq('id', finalEstateId);
-          
-        if (updateError) {
-          console.error('[verify-otp] DB update failed:', updateError.message);
-        } else {
-          console.log(`[verify-otp] Estate ${finalEstateId} updated to verified with value ${totalAssetValue}`);
-        }
+      if (updateError) {
+        console.error('[verify-otp] DB update failed:', updateError.message);
       } else {
-        console.warn('[verify-otp] Missing Supabase keys. Cannot update estate.');
+        console.log(`[verify-otp] Estate ${finalEstateId} updated to verified with ${discoveredAccounts.length} accounts`);
       }
     } else {
       console.warn('[verify-otp] No estate_id provided in payload. Skipping DB update.');
@@ -53,8 +66,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       message: 'BVN verified successfully',
-      accounts: mockAccounts,
-      totalAssetValue
+      accounts: discoveredAccounts
     });
 
   } catch (error) {

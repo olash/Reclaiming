@@ -18,7 +18,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Deceased's BVN</label>
                 <input type="text" id="bvnInput" placeholder="Enter 11-digit BVN" maxlength="11" class="w-full border border-gray-300 rounded-md p-2 focus:ring-green-500 focus:border-green-500" />
             </div>
-            <button id="requestOtpBtn" onclick="requestOtp()" class="w-full bg-green-700 text-white font-medium py-2 rounded-md hover:bg-green-800 transition-colors">Request Consent OTP</button>
+            <button id="requestOtpBtn" onclick="requestOtp()" disabled class="w-full bg-green-700 text-white font-medium py-2 rounded-md hover:bg-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Request Consent OTP</button>
             <p id="step1Error" class="text-red-500 text-sm mt-2 hidden"></p>
         </div>
 
@@ -47,10 +47,9 @@
             
             <div class="border border-gray-200 rounded-md p-4 bg-gray-50 mb-6">
                 <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-2">
-                    <span class="text-sm font-medium text-gray-500">Total Asset Value</span>
-                    <span id="totalValueDisplay" class="text-lg font-bold text-green-800"></span>
+                    <span class="text-sm font-medium text-gray-500">Discovered Accounts</span>
                 </div>
-                <div id="accountsList" class="space-y-2 mt-4">
+                <div id="accountsList" class="space-y-3 mt-4">
                     <!-- Accounts injected here -->
                 </div>
             </div>
@@ -68,6 +67,27 @@
             // Extract estate_id from URL query params
             const params = new URLSearchParams(window.location.search);
             estateId = params.get('estate_id');
+
+            // Strict BVN Validation
+            const bvnInput = document.getElementById('bvnInput');
+            const requestOtpBtn = document.getElementById('requestOtpBtn');
+            const step1Error = document.getElementById('step1Error');
+
+            bvnInput.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (/^\d{11}$/.test(val)) {
+                    requestOtpBtn.disabled = false;
+                    step1Error.classList.add('hidden');
+                } else {
+                    requestOtpBtn.disabled = true;
+                    if (val.length > 0 && !/^\d*$/.test(val)) {
+                        step1Error.innerText = "BVN must contain only numeric digits.";
+                        step1Error.classList.remove('hidden');
+                    } else {
+                        step1Error.classList.add('hidden');
+                    }
+                }
+            });
         });
 
         async function requestOtp() {
@@ -77,8 +97,8 @@
             
             errorEl.classList.add('hidden');
             
-            if (!bvn || bvn.length !== 11) {
-                errorEl.innerText = "Please enter a valid 11-digit BVN.";
+            if (!/^\d{11}$/.test(bvn)) {
+                errorEl.innerText = "Please enter a valid 11-digit numeric BVN.";
                 errorEl.classList.remove('hidden');
                 return;
             }
@@ -144,20 +164,20 @@
                     sessionStorage.setItem('assetSweepCleared', 'true');
                     
                     // Display results
-                    document.getElementById('totalValueDisplay').innerText = '₦' + data.totalAssetValue.toLocaleString('en-NG', { minimumFractionDigits: 2 });
-                    
                     const accountsList = document.getElementById('accountsList');
                     accountsList.innerHTML = '';
                     
                     data.accounts.forEach(acc => {
-                        const bal = '₦' + acc.balance.toLocaleString('en-NG', { minimumFractionDigits: 2 });
                         accountsList.innerHTML += `
-                            <div class="flex justify-between items-center text-sm">
+                            <div class="bg-white border border-gray-200 rounded p-3 text-sm flex justify-between items-center shadow-sm">
                                 <div>
-                                    <div class="font-medium">${acc.bankName}</div>
-                                    <div class="text-xs text-gray-500">${acc.accountNumber}</div>
+                                    <div class="font-bold text-gray-800">${acc.institution || acc.bankName || 'Unknown Bank'}</div>
+                                    <div class="text-xs text-gray-500">${acc.account_number || acc.accountNumber || 'N/A'} • ${acc.account_type || 'Account'}</div>
+                                    <div class="text-[10px] text-gray-400 mt-1 uppercase">${acc.account_name || ''}</div>
                                 </div>
-                                <div class="font-semibold">${bal}</div>
+                                <div class="text-right">
+                                    <span class="inline-block bg-yellow-100 text-yellow-800 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wider text-center">Balance Access Pending<br>Estate Account</span>
+                                </div>
                             </div>
                         `;
                     });

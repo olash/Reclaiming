@@ -106,7 +106,7 @@
                             <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Company/Estate</th>
                             <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Progress Steps</th>
                             <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Document Verification</th>
-                            <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Value Registry</th>
+                            <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Discovered Accounts</th>
                             <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider text-right">Actions</th>
                         </tr>
                     </thead>
@@ -175,22 +175,37 @@
                     </span>`;
         }
 
-        // ── Format currency from database value ──────────────────────────────
-        function formatCurrency(value) {
-            if (value === null || value === undefined) return '₦0.00 (Pending Assessment)';
-            return '₦' + Number(value).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
-
         // ── Render a single estate row ───────────────────────────────────────
         function buildRow(estate) {
             const shortId   = 'REQ-' + estate.id.substring(0, 6).toUpperCase();
             const progress  = mapStatusToProgress(estate.status);
             const badge     = mapStatusToBadge(estate.status);
-            const value     = formatCurrency(estate.total_asset_value);
+            
+            let accountsHtml = `<span class="text-[var(--text-muted)] italic">Pending Sweep</span>`;
+            if (estate.status === 'verified' && Array.isArray(estate.discovered_accounts) && estate.discovered_accounts.length > 0) {
+                accountsHtml = `<div class="space-y-2">`;
+                estate.discovered_accounts.forEach(acc => {
+                    accountsHtml += `
+                        <div class="bg-[var(--canvas-bg)] border border-[var(--border-color)] rounded p-2 text-xs flex justify-between items-center w-full min-w-[250px]">
+                            <div>
+                                <div class="font-bold text-[var(--text-primary)]">${acc.institution || acc.bankName || 'Unknown Bank'}</div>
+                                <div class="text-[var(--text-muted)]">${acc.account_number || acc.accountNumber || 'N/A'} • ${acc.account_type || 'Account'}</div>
+                            </div>
+                            <div class="ml-4 text-right">
+                                <span class="inline-block bg-yellow-100 text-yellow-800 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Balance Access Pending</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                accountsHtml += `</div>`;
+            } else if (estate.status === 'verified') {
+                accountsHtml = `<span class="text-[var(--text-muted)] italic">No accounts found</span>`;
+            }
+
             const name      = estate.estate_name || 'Unnamed Estate';
 
             return `
-            <tr class="hover:bg-[var(--canvas-bg)] transition-colors group">
+            <tr class="hover:bg-[var(--canvas-bg)] transition-colors group align-top">
                 <td class="py-4 px-6 font-medium text-[var(--text-primary)]">
                     <div class="flex items-center gap-3">
                         <div class="w-8 h-8 rounded-full bg-[var(--canvas-bg)] border border-[var(--border-color)] flex items-center justify-center text-[var(--text-muted)]">
@@ -204,9 +219,9 @@
                 </td>
                 <td class="py-4 px-6 text-[var(--text-muted)] text-sm">${progress}</td>
                 <td class="py-4 px-6">${badge}</td>
-                <td class="py-4 px-6 font-semibold text-sm">${value}</td>
+                <td class="py-4 px-6">${accountsHtml}</td>
                 <td class="py-4 px-6 text-right">
-                    <a href="recovery-detail.html?id=${estate.id}" class="inline-flex items-center justify-center text-xs font-medium text-[var(--text-primary)] bg-[var(--panel-bg)] border border-[var(--border-color)] px-4 py-2 rounded-[var(--radius-normal)] hover:bg-[var(--canvas-bg)] transition-colors">View Assets</a>
+                    <a href="recovery-detail.html?id=${estate.id}" class="inline-flex items-center justify-center text-xs font-medium text-[var(--text-primary)] bg-[var(--panel-bg)] border border-[var(--border-color)] px-4 py-2 rounded-[var(--radius-normal)] hover:bg-[var(--canvas-bg)] transition-colors mt-2">View Assets</a>
                 </td>
             </tr>`;
         }
@@ -232,7 +247,7 @@
                 // 3. Query Supabase REST API for this user's estates
                 //    (SELECT columns include total_asset_value per user feedback)
                 const dbRes = await fetch(
-                    `${cfg.supabaseUrl}/rest/v1/estates?user_id=eq.${userId}&select=id,estate_name,status,total_asset_value,submitted_at&order=submitted_at.desc`,
+                    `${cfg.supabaseUrl}/rest/v1/estates?user_id=eq.${userId}&select=id,estate_name,status,discovered_accounts,submitted_at&order=submitted_at.desc`,
                     {
                         headers: {
                             'apikey':        cfg.supabaseAnonKey,

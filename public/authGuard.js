@@ -128,6 +128,31 @@
         await client.auth.signOut();
         window.location.replace(buildAuthUrl());
       };
+
+      // ── Payment Gate Enforcement ──────────────────────────────────────────
+      var path = window.location.pathname;
+      if (path.includes('bvn-discovery.html') || path.includes('recovery-detail.html')) {
+        client.from('estates')
+          .select('payment_status')
+          .eq('user_id', session.user.id)
+          .order('submitted_at', { ascending: false })
+          .limit(1)
+          .single()
+          .then(function(res) {
+            if (!res.data || res.data.payment_status !== 'paid') {
+              console.warn('[authGuard] Payment not completed. Redirecting to checkout.');
+              // Hide body to prevent UI flicker
+              if (document.body) document.body.style.visibility = 'hidden';
+              
+              var parts = window.location.pathname.split('/');
+              parts[parts.length - 1] = 'dashboard.html'; // Assuming checkout is initiated from dashboard
+              window.location.replace(window.location.origin + parts.join('/'));
+            }
+          })
+          .catch(function(err) {
+            console.error('[authGuard] Error checking payment status:', err);
+          });
+      }
     }).catch(function () {
       // Network error during validation — conservatively allow page to render
       // (local token was already validated above)
