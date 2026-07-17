@@ -249,19 +249,104 @@
                     </div>
                 </div>
 
+                <!-- Phase 4: Asset Vault Workspace -->
+                <div id="workspace-m4" class="hidden flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto">
+                    <div class="mb-6 flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-gray-900">Estate Asset Report</h3>
+                        <div class="px-3 py-1 bg-green-100 text-green-800 text-xs font-bold rounded-full flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Sweep Complete
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white border border-[var(--border-color)] overflow-x-auto rounded-[var(--radius-large)] shadow-sm flex-1">
+                        <table class="w-full text-left border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="border-b border-[var(--border-color)] bg-[var(--canvas-bg)]">
+                                    <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Bank Name</th>
+                                    <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Account Number</th>
+                                    <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Account Type</th>
+                                    <th class="py-3 px-6 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountsTableBody" class="text-sm divide-y divide-[var(--border-color)]">
+                                <!-- Dynamic rows injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Success Modal (Hidden by Default) -->
+        <div id="success-modal" class="hidden fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center backdrop-blur-sm transition-opacity">
+            <div class="bg-white rounded-[var(--radius-large)] shadow-2xl p-8 max-w-sm w-full mx-4 text-center transform scale-95 transition-transform">
+                <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <iconify-icon icon="solar:check-circle-bold" style="font-size: 3rem;"></iconify-icon>
+                </div>
+                <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Sweep Successful!</h2>
+                <p class="text-sm text-gray-600 mb-8">We discovered <span id="accountCount" class="font-bold text-gray-900">0</span> active accounts linked to this estate.</p>
+                <button id="btn-view-report" class="w-full bg-[var(--primary-accent)] text-white px-4 py-3 text-sm font-bold rounded-md shadow-md hover:opacity-90 transition">
+                    View Asset Report
+                </button>
             </div>
         </div>
     </main>
 
     <script type="module">
+        window.handleSweepSuccess = function(accountsArray) {
+            const tbody = document.getElementById('accountsTableBody');
+            const countSpan = document.getElementById('accountCount');
+            const modal = document.getElementById('success-modal');
+            
+            // 1. Update count
+            countSpan.innerText = accountsArray ? accountsArray.length : 0;
+            
+            // 2. Clear placeholder
+            tbody.innerHTML = '';
+            
+            // 3. Render rows
+            if (!accountsArray || accountsArray.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-10 px-6 text-center text-sm text-[var(--text-muted)] italic">
+                            No active accounts were discovered for this BVN.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                accountsArray.forEach(account => {
+                    const bankName = account.institution?.name || account.bank || 'Unknown Bank';
+                    const accNumber = account.account_number || 'N/A';
+                    const accType = account.type ? account.type.charAt(0).toUpperCase() + account.type.slice(1) : 'Unknown';
+                    
+                    const row = `
+                        <tr class="hover:bg-[var(--canvas-bg)] transition-colors">
+                            <td class="py-4 px-6 font-medium text-[var(--text-primary)]">${bankName}</td>
+                            <td class="py-4 px-6 font-mono text-[var(--text-primary)]">${accNumber}</td>
+                            <td class="py-4 px-6 text-[var(--text-muted)]">${accType}</td>
+                            <td class="py-4 px-6 text-right">
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Active</span>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+            }
+            
+            // 4. Show modal
+            modal.classList.remove('hidden');
+        };
+
         document.addEventListener("DOMContentLoaded", async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const estateId = urlParams.get('id');
 
+            // The Failsafe Kickout
             if (!estateId) {
-                alert('No estate ID provided.');
-                window.location.href = 'dashboard.html';
-                return;
+                console.error("No Estate ID provided in URL. Redirecting to dashboard.");
+                window.location.href = '/dashboard.html';
+                return; // Stop execution
             }
 
             const headerName = document.getElementById('header-estate-name');
@@ -435,6 +520,43 @@
                 // Set Launch link
                 document.getElementById('btn-launch-bvn').href = `bvn-discovery.html?estate_id=${eid}`;
             }
+
+            // Modal Button Listener
+            document.getElementById('btn-view-report').addEventListener('click', () => {
+                const modal = document.getElementById('success-modal');
+                const wsM3 = document.getElementById('workspace-m3');
+                const wsM4 = document.getElementById('workspace-m4');
+                
+                // Hide modal
+                modal.classList.add('hidden');
+                
+                // Hide M3, Show M4
+                wsM3.classList.add('hidden');
+                wsM3.classList.remove('flex');
+                wsM4.classList.remove('hidden');
+                wsM4.classList.add('flex');
+                
+                // Update Sidebar
+                const s3 = document.getElementById('stepper-m3');
+                const s3Dot = document.getElementById('stepper-m3-dot');
+                const s3Title = document.getElementById('stepper-m3-title');
+                
+                s3Dot.className = 'absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white ring-4 ring-green-50 flex items-center justify-center';
+                s3Title.className = 'font-bold text-sm text-green-700 flex items-center gap-2';
+                s3Title.innerHTML = 'Phase 3: BVN Sweep <iconify-icon icon="solar:check-circle-bold"></iconify-icon>';
+
+                const s4 = document.getElementById('stepper-m4'); // Ensure step 4 has this ID or modify DOM accordingly
+                // In case it wasn't added earlier, we will just target it generally if ID is missing
+                const s4Container = document.querySelectorAll('.relative.pl-6')[3]; // 4th stepper item
+                if (s4Container) {
+                    s4Container.classList.remove('opacity-50');
+                    const s4Dot = s4Container.querySelector('.w-4.h-4.rounded-full');
+                    if(s4Dot) s4Dot.className = 'absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white ring-4 ring-blue-50';
+                    const s4Title = s4Container.querySelector('.font-bold.text-sm');
+                    if(s4Title) s4Title.className = 'font-bold text-sm text-blue-700';
+                }
+            });
+
         });
     </script>
 </body>

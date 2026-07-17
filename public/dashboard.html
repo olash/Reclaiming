@@ -221,7 +221,7 @@
                 <td class="py-4 px-6">${badge}</td>
                 <td class="py-4 px-6">${accountsHtml}</td>
                 <td class="py-4 px-6 text-right">
-                    <a href="recovery-detail.html?id=${estate.id}" class="inline-flex items-center justify-center text-xs font-medium text-[var(--text-primary)] bg-[var(--panel-bg)] border border-[var(--border-color)] px-4 py-2 rounded-[var(--radius-normal)] hover:bg-[var(--canvas-bg)] transition-colors mt-2">Manage Recovery</a>
+                    <button type="button" onclick="window.location.href='recovery-detail.html?id=${estate.id}'" class="inline-flex items-center justify-center text-xs font-medium text-[var(--text-primary)] bg-[var(--panel-bg)] border border-[var(--border-color)] px-4 py-2 rounded-[var(--radius-normal)] hover:bg-[var(--canvas-bg)] transition-colors mt-2">Manage Recovery</button>
                 </td>
             </tr>`;
         }
