@@ -342,9 +342,10 @@
             const urlParams = new URLSearchParams(window.location.search);
             const estateId = urlParams.get('id');
 
-            // The Failsafe Kickout
-            if (!estateId) {
-                console.error("No Estate ID provided in URL. Redirecting to dashboard.");
+            // The Smarter Failsafe
+            if (!estateId || estateId === 'undefined' || estateId === '${estate.id}') {
+                console.error("Failsafe Triggered: Invalid or missing Estate ID ->", estateId);
+                alert("Error: Could not load the specific estate data. Redirecting to dashboard.");
                 window.location.href = '/dashboard.html';
                 return; // Stop execution
             }
