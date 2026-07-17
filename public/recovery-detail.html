@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Session Guard -->
+    <script src="authGuard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reclaimng - Detail View</title>
+    <title>Reclaimng - Manage Recovery</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --canvas-bg: #F8FAF9;
@@ -21,11 +24,36 @@
             --radius-large: 12px;
         }
         body { font-family: 'Inter', sans-serif; background-color: var(--canvas-bg); color: var(--text-primary); }
+        .a4-preview {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: black;
+            box-sizing: border-box;
+        }
+        @media (max-width: 1024px) {
+            .a4-container {
+                transform: scale(0.6);
+                transform-origin: top center;
+            }
+        }
+        @media (max-width: 768px) {
+            .a4-container {
+                transform: scale(0.4);
+                transform-origin: top center;
+            }
+        }
     </style>
 </head>
-<body class="flex min-h-screen antialiased selection:bg-[var(--primary-accent)] selection:text-white">
+<body class="flex min-h-screen antialiased">
 
-    <!-- Navigation Shell -->
+    <!-- Navigation Shell (Same as dashboard) -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 bg-[var(--panel-bg)] border-r border-[var(--border-color)] w-[72px] sm:w-[260px] transition-all duration-300 z-50 flex flex-col overflow-hidden">
         <div class="h-16 flex items-center px-5 border-b border-[var(--border-color)] justify-between">
             <a href="dashboard.html" class="flex items-center gap-2 overflow-hidden">
@@ -35,103 +63,379 @@
         </div>
         <nav class="flex-1 py-6 px-3 flex flex-col gap-1">
             <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
-                <iconify-icon icon="solar:arrow-left-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
-                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Back to Dashboard</span>
+                <iconify-icon icon="solar:home-smile-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Home</span>
             </a>
+            <a href="dashboard.html" class="flex items-center gap-3 px-3 py-2 bg-[var(--canvas-bg)] text-[var(--text-primary)] rounded-[var(--radius-normal)]">
+                <iconify-icon icon="solar:folder-with-files-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">My Recoveries</span>
+            </a>
+            <a href="vault.html" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors">
+                <iconify-icon icon="solar:safe-2-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Unified Vault</span>
+            </a>
+            <button onclick="window.__reclaimSignOut && window.__reclaimSignOut()" class="flex items-center gap-3 px-3 py-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] rounded-[var(--radius-normal)] transition-colors mt-auto w-full text-left bg-transparent border-none cursor-pointer">
+                <iconify-icon icon="solar:logout-linear" style="font-size: 1.25rem; stroke-width: 1.5;"></iconify-icon>
+                <span class="text-sm font-medium sidebar-text hidden sm:block whitespace-nowrap">Sign Out</span>
+            </button>
         </nav>
     </aside>
 
-    <main class="flex-1 ml-[72px] sm:ml-[260px] p-8 sm:p-12 max-w-3xl mx-auto min-h-screen">
+    <main class="flex-1 ml-[72px] sm:ml-[260px] transition-all duration-300 min-h-screen flex flex-col">
         
-        <!-- Breadcrumbs -->
-        <div class="flex items-center space-x-2 text-sm text-[var(--text-muted)] mb-6">
-            <a href="dashboard.html" class="hover:text-[var(--text-primary)] transition-colors">Home</a>
-            <span>/</span>
-            <a href="dashboard.html" class="hover:text-[var(--text-primary)] transition-colors">My Recoveries</a>
-            <span>/</span>
-            <span class="text-[var(--text-primary)]">Asset Detail</span>
-        </div>
-
-        <div class="mb-12">
-            <div class="flex flex-col gap-2">
-                <span class="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">Gross Estate Valuation</span>
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-[var(--radius-normal)] bg-[var(--canvas-bg)] border border-[var(--border-color)] flex items-center justify-center text-[var(--primary-accent)]">
-                        <iconify-icon icon="solar:wallet-money-linear" style="font-size: 1.5rem;"></iconify-icon>
-                    </div>
-                    <h1 class="text-4xl sm:text-5xl font-semibold tracking-tight">12,450,000.00 <span class="text-xl text-[var(--text-muted)] font-medium">NGN</span></h1>
-                </div>
+        <!-- Header -->
+        <div class="h-16 px-6 sm:px-8 border-b border-[var(--border-color)] bg-white flex items-center justify-between shrink-0">
+            <div class="flex items-center space-x-2 text-sm text-[var(--text-muted)]">
+                <a href="dashboard.html" class="hover:text-[var(--text-primary)] transition-colors">My Recoveries</a>
+                <span>/</span>
+                <span class="text-[var(--text-primary)] font-medium" id="header-estate-name">Loading...</span>
             </div>
+            <a href="dashboard.html" class="text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)]">Back to Dashboard</a>
         </div>
 
-        <div class="flex flex-col gap-6">
+        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
             
-            <!-- Cash Account Records -->
-            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden rounded-[var(--radius-large)]">
-                <div class="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--canvas-bg)]">
-                    <h3 class="text-sm font-semibold tracking-tight">Cash Account Records</h3>
-                </div>
-                <div class="divide-y divide-[var(--border-color)]">
-                    <div class="px-6 py-5 flex items-center justify-between hover:bg-[var(--canvas-bg)] transition-colors">
-                        <div>
-                            <div class="text-sm font-medium text-[var(--text-primary)] mb-0.5">Guaranty Trust Bank (Savings)</div>
-                            <div class="text-xs text-[var(--text-muted)]">Verified via NIBSS • Acct: ****1102</div>
+            <!-- Left Sidebar (Vertical Stepper) - 25% -->
+            <div class="w-full lg:w-1/4 bg-white border-r border-[var(--border-color)] p-6 lg:p-8 shrink-0 overflow-y-auto">
+                <h2 class="text-lg font-bold text-gray-800 mb-8">Recovery Progress</h2>
+                
+                <div class="relative border-l-2 border-gray-100 ml-3 space-y-8">
+                    
+                    <!-- Step 1: Verification -->
+                    <div class="relative pl-6">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white ring-4 ring-green-50 flex items-center justify-center"></div>
+                        <div class="font-bold text-sm text-green-700 flex items-center gap-2">
+                            Phase 1: Verification <iconify-icon icon="solar:check-circle-bold"></iconify-icon>
                         </div>
-                        <div class="text-sm font-semibold">7,000,000.00 NGN</div>
+                        <p class="text-xs text-gray-500 mt-1">Legal verification completed.</p>
                     </div>
-                    <div class="px-6 py-5 flex items-center justify-between hover:bg-[var(--canvas-bg)] transition-colors">
-                        <div>
-                            <div class="text-sm font-medium text-[var(--text-primary)] mb-0.5">First Bank PLC (Current)</div>
-                            <div class="text-xs text-[var(--text-muted)]">Verified via NIBSS • Acct: ****4920</div>
+
+                    <!-- Step 2: Bank Mandate -->
+                    <div class="relative pl-6" id="stepper-m2">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white ring-4 ring-blue-50" id="stepper-m2-dot"></div>
+                        <div class="font-bold text-sm text-blue-700" id="stepper-m2-title">Phase 2: Bank Mandate</div>
+                        <p class="text-xs text-gray-500 mt-1">Generate and acknowledge the bank mandate letter.</p>
+                    </div>
+
+                    <!-- Step 3: BVN Sweep -->
+                    <div class="relative pl-6 opacity-50" id="stepper-m3">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-300 border-2 border-white" id="stepper-m3-dot"></div>
+                        <div class="font-bold text-sm text-gray-500" id="stepper-m3-title">Phase 3: BVN Sweep</div>
+                        <p class="text-xs text-gray-500 mt-1">Initiate live banking sweep.</p>
+                    </div>
+
+                    <!-- Step 4: Vault -->
+                    <div class="relative pl-6 opacity-50">
+                        <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-300 border-2 border-white"></div>
+                        <div class="font-bold text-sm text-gray-500">Phase 4: Asset Vault</div>
+                        <p class="text-xs text-gray-500 mt-1">Review discovered accounts.</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Column (Main Workspace) - 75% -->
+            <div class="w-full lg:w-3/4 bg-[var(--canvas-bg)] flex flex-col h-full overflow-hidden">
+                
+                <!-- Loading State -->
+                <div id="workspace-loading" class="flex-1 flex items-center justify-center text-[var(--text-muted)]">
+                    <div class="flex items-center gap-2">
+                        <iconify-icon icon="solar:spinner-linear" class="animate-spin" style="font-size:1.5rem;"></iconify-icon>
+                        Loading workspace...
+                    </div>
+                </div>
+
+                <!-- Phase 2: Mandate Workspace -->
+                <div id="workspace-m2" class="hidden flex-1 flex flex-col xl:flex-row h-full overflow-hidden">
+                    
+                    <!-- Form Area -->
+                    <div class="w-full xl:w-1/3 bg-white border-r border-[var(--border-color)] p-6 overflow-y-auto shadow-sm z-10 flex flex-col">
+                        <h3 class="font-bold text-gray-800 mb-1">Mandate Details</h3>
+                        <p class="text-xs text-gray-500 mb-6">Fill out the form below to dynamically generate your Letter of Administration mandate. This will be physically submitted to the target bank.</p>
+                        
+                        <div class="space-y-4 flex-1">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Target Bank Name</label>
+                                <input type="text" id="input-bank" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Guaranty Trust Bank">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Branch Address</label>
+                                <textarea id="input-branch" rows="2" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. 123 Main Street, Victoria Island, Lagos"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Deceased Name</label>
+                                <input type="text" id="input-deceased-name" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Deceased BVN</label>
+                                <input type="text" id="input-deceased-bvn" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Executor Name</label>
+                                <input type="text" id="input-executor-name" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Executor Phone Number</label>
+                                <input type="text" id="input-executor-phone" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. +234 800 000 0000">
+                            </div>
                         </div>
-                        <div class="text-sm font-semibold">5,450,000.00 NGN</div>
+
+                        <div class="mt-8 pt-4 border-t border-gray-100">
+                            <button id="btn-download-mandate" class="w-full bg-blue-600 text-white px-4 py-3 text-sm font-bold rounded-md shadow-md hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                                <iconify-icon icon="solar:download-square-bold"></iconify-icon>
+                                Download Mandate & Continue
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live Preview Area -->
+                    <div class="w-full xl:w-2/3 bg-gray-100 p-8 overflow-y-auto flex justify-center items-start a4-container">
+                        <div id="pdf-content" class="a4-preview">
+                            <div class="text-right mb-8" id="preview-date">
+                                [Date]
+                            </div>
+                            <div class="mb-8">
+                                <p>The Branch Manager,</p>
+                                <p id="preview-bank" class="font-bold">[Target Bank Name]</p>
+                                <p id="preview-branch">[Branch Address]</p>
+                            </div>
+                            <div class="mb-6">
+                                <p>Dear Sir/Madam,</p>
+                            </div>
+                            <div class="mb-6">
+                                <p class="font-bold uppercase underline">SUBJECT: REQUEST FOR BVN PHONE NUMBER UPDATE FOR DIGITAL ESTATE DISCOVERY – LATE <span id="preview-deceased-name-1">[DECEASED NAME]</span></p>
+                            </div>
+                            <div class="mb-4 text-justify">
+                                <p>I, <strong id="preview-executor-name-1">[Executor Name]</strong>, acting in my capacity as the legally appointed Administrator/Executor of the Estate of the late <strong id="preview-deceased-name-2">[Deceased Name]</strong>, write to formally request an administrative update to the deceased's Bank Verification Number (BVN) profile.</p>
+                            </div>
+                            <div class="mb-4 text-justify">
+                                <p>To facilitate the lawful discovery of the deceased's financial assets in accordance with the Letter of Administration, I require my mobile number, <strong id="preview-executor-phone">[Executor Phone Number]</strong>, to be securely linked to the deceased’s BVN: <strong id="preview-deceased-bvn">[Deceased BVN]</strong>.</p>
+                            </div>
+                            <div class="mb-4 text-justify">
+                                <p>This linkage is strictly to allow the estate to receive the NIBSS/iGree network One-Time Password (OTP) required for digital asset discovery.</p>
+                            </div>
+                            <div class="mb-8 text-justify">
+                                <p>Attached to this mandate, please find certified true copies of:</p>
+                                <ol class="list-decimal pl-6 mt-2">
+                                    <li>The Death Certificate</li>
+                                    <li>The Letter of Administration</li>
+                                    <li>My valid Government-Issued Identity Document</li>
+                                </ol>
+                            </div>
+                            <div class="mb-12">
+                                <p>Yours faithfully,</p>
+                            </div>
+                            <div>
+                                <p>___________________________</p>
+                                <p class="font-bold mt-1" id="preview-executor-name-2">[Executor Name]</p>
+                                <p>Administrator, Estate of Late <span id="preview-deceased-name-3">[Deceased Name]</span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Stock/Equity Value Registries -->
-            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden rounded-[var(--radius-large)]">
-                <div class="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--canvas-bg)] flex justify-between items-center">
-                    <h3 class="text-sm font-semibold tracking-tight">Stock/Equity Registries</h3>
-                    <span class="text-[11px] bg-[var(--canvas-bg)] border border-[var(--border-color)] text-[var(--text-muted)] px-2.5 py-1 rounded-[var(--radius-normal)] font-medium">No Active Records</span>
-                </div>
-                <div class="px-6 py-8 text-center text-sm text-[var(--text-muted)]">
-                    CSCS registry scan returned zero equities linked to provided BVN.
-                </div>
-            </div>
-
-            <!-- Unclaimed Dividend Registries -->
-            <div class="bg-[var(--panel-bg)] border border-[var(--border-color)] overflow-hidden rounded-[var(--radius-large)]">
-                <div class="px-6 py-4 border-b border-[var(--border-color)] bg-[var(--canvas-bg)] flex justify-between items-center">
-                    <h3 class="text-sm font-semibold tracking-tight">Unclaimed Dividends</h3>
-                    <span class="text-[11px] bg-[#ECFDF5] text-[#065F46] px-2.5 py-1 rounded-[var(--radius-normal)] border border-[#A7F3D0] font-medium">Scanned</span>
-                </div>
-                <div class="px-6 py-5 flex items-center justify-between hover:bg-[var(--canvas-bg)] transition-colors">
-                    <div>
-                        <div class="text-sm font-medium text-[var(--text-primary)] mb-0.5">Zenith Bank Plc Dividends</div>
-                        <div class="text-xs text-[var(--text-muted)]">Warrant #8892 • Year 2018</div>
+                <!-- Phase 3: Launch BVN Discovery Workspace -->
+                <div id="workspace-m3" class="hidden flex-1 flex items-center justify-center bg-[var(--canvas-bg)] p-6">
+                    <div class="bg-white border border-[var(--border-color)] p-8 rounded-[var(--radius-large)] max-w-lg w-full text-center shadow-sm">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <iconify-icon icon="solar:shield-check-bold-duotone" style="font-size: 2rem;"></iconify-icon>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">Mandate Acknowledged</h3>
+                        <p class="text-sm text-gray-500 mb-8">You can now proceed to the live banking sweep using the deceased's verified BVN.</p>
+                        
+                        <a href="#" id="btn-launch-bvn" class="inline-flex items-center justify-center gap-2 w-full bg-[var(--primary-accent)] text-white px-4 py-3 text-sm font-bold rounded-md shadow-md hover:opacity-90 transition">
+                            Launch BVN Discovery <iconify-icon icon="solar:arrow-right-linear"></iconify-icon>
+                        </a>
                     </div>
-                    <div class="text-sm font-semibold text-[var(--text-muted)]">Included in GTB balance</div>
                 </div>
-            </div>
 
-            <!-- Billing Summary Box -->
-            <div class="mt-2 bg-[var(--canvas-bg)] border border-[var(--border-color)] p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-[var(--radius-large)]">
-                <div class="flex flex-col gap-1">
-                    <span class="text-sm font-medium">Platform Service Fee: 10%</span>
-                    <span class="text-xs text-[var(--text-muted)]">Automatically deducted upon final settlement sweep.</span>
-                </div>
-                <div class="text-right">
-                    <span class="block text-[11px] font-medium text-[var(--text-muted)] uppercase tracking-wide mb-1">Net Beneficiary Allocation</span>
-                    <span class="text-lg font-semibold text-[var(--primary-accent)]">11,205,000.00 NGN</span>
-                </div>
             </div>
-
         </div>
     </main>
-    
-    <a href="https://wa.me/2348135975351" target="_blank" class="fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-[var(--primary-accent)] rounded-full flex items-center justify-center text-white border border-[var(--border-color)] shadow-none hover:scale-105 transition-transform animate-bounce hover:animate-none">
-        <iconify-icon icon="solar:chat-round-line-linear" style="font-size: 1.5rem; stroke-width: 1.5;"></iconify-icon>
-    </a>
+
+    <script type="module">
+        document.addEventListener("DOMContentLoaded", async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const estateId = urlParams.get('id');
+
+            if (!estateId) {
+                alert('No estate ID provided.');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            const headerName = document.getElementById('header-estate-name');
+            const loading = document.getElementById('workspace-loading');
+            const wsM2 = document.getElementById('workspace-m2');
+            const wsM3 = document.getElementById('workspace-m3');
+
+            // Wait for auth session
+            function waitForSession(callback, attempts = 0) {
+                if (window.__reclaimSession?.user?.id) {
+                    callback();
+                } else if (attempts < 20) {
+                    setTimeout(() => waitForSession(callback, attempts + 1), 200);
+                } else {
+                    console.warn('Session not available.');
+                    alert('Session error. Please login again.');
+                    window.location.href = 'index.html';
+                }
+            }
+
+            waitForSession(async () => {
+                try {
+                    const cfgRes = await fetch('/api/config');
+                    const cfg = await cfgRes.json();
+                    const session = window.__reclaimSession;
+
+                    // Fetch estate details
+                    const dbRes = await fetch(
+                        `${cfg.supabaseUrl}/rest/v1/estates?id=eq.${estateId}&select=*`,
+                        {
+                            headers: {
+                                'apikey': cfg.supabaseAnonKey,
+                                'Authorization': `Bearer ${session.access_token}`,
+                                'Content-Type': 'application/json',
+                            }
+                        }
+                    );
+
+                    if (!dbRes.ok) throw new Error('Failed to fetch estate');
+                    const estates = await dbRes.json();
+                    if (estates.length === 0) throw new Error('Estate not found');
+                    
+                    const estate = estates[0];
+                    headerName.innerText = estate.estate_name || 'Unnamed Estate';
+                    
+                    loading.classList.add('hidden');
+
+                    if (estate.mandate_acknowledged) {
+                        // Already acknowledged -> Show Phase 3
+                        transitionToPhase3(estateId);
+                    } else {
+                        // Show Phase 2 Interactive Form
+                        wsM2.classList.remove('hidden');
+                        wsM2.classList.add('flex');
+                        
+                        // Setup Auto-populate
+                        const inputs = {
+                            bank: document.getElementById('input-bank'),
+                            branch: document.getElementById('input-branch'),
+                            deceasedName: document.getElementById('input-deceased-name'),
+                            bvn: document.getElementById('input-deceased-bvn'),
+                            executorName: document.getElementById('input-executor-name'),
+                            phone: document.getElementById('input-executor-phone')
+                        };
+
+                        inputs.deceasedName.value = estate.deceased_name || estate.estate_name || '';
+                        inputs.bvn.value = estate.bvn || '';
+                        inputs.executorName.value = session.user.user_metadata?.full_name || '';
+                        inputs.phone.value = session.user.phone || '';
+
+                        // Setup Live Preview Update
+                        const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+                        document.getElementById('preview-date').innerText = today;
+
+                        function updatePreview() {
+                            document.getElementById('preview-bank').innerText = inputs.bank.value || '[Target Bank Name]';
+                            document.getElementById('preview-branch').innerText = inputs.branch.value || '[Branch Address]';
+                            
+                            const dName = inputs.deceasedName.value || '[DECEASED NAME]';
+                            document.getElementById('preview-deceased-name-1').innerText = dName.toUpperCase();
+                            document.getElementById('preview-deceased-name-2').innerText = dName;
+                            document.getElementById('preview-deceased-name-3').innerText = dName;
+
+                            document.getElementById('preview-deceased-bvn').innerText = inputs.bvn.value || '[Deceased BVN]';
+                            
+                            const eName = inputs.executorName.value || '[Executor Name]';
+                            document.getElementById('preview-executor-name-1').innerText = eName;
+                            document.getElementById('preview-executor-name-2').innerText = eName;
+
+                            document.getElementById('preview-executor-phone').innerText = inputs.phone.value || '[Executor Phone Number]';
+                        }
+
+                        // Attach listeners
+                        Object.values(inputs).forEach(input => {
+                            input.addEventListener('input', updatePreview);
+                        });
+
+                        // Initial render
+                        updatePreview();
+
+                        // Setup Download Action
+                        document.getElementById('btn-download-mandate').addEventListener('click', async (e) => {
+                            const btn = e.currentTarget;
+                            btn.innerHTML = '<iconify-icon icon="solar:spinner-linear" class="animate-spin"></iconify-icon> Processing...';
+                            btn.disabled = true;
+
+                            try {
+                                // 1. Generate PDF
+                                const element = document.getElementById('pdf-content');
+                                const opt = {
+                                    margin:       0,
+                                    filename:     `Bank_Mandate_${estate.estate_name || 'Estate'}.pdf`,
+                                    image:        { type: 'jpeg', quality: 0.98 },
+                                    html2canvas:  { scale: 2 },
+                                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                                };
+                                await html2pdf().set(opt).from(element).save();
+
+                                // 2. Update Milestone API
+                                const res = await fetch('/api/update-milestone', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ estateId: estate.id, mandateAcknowledged: true })
+                                });
+
+                                if (res.ok) {
+                                    transitionToPhase3(estate.id);
+                                } else {
+                                    alert('Failed to sync progress. Please try again.');
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                alert('An error occurred while generating the mandate.');
+                            } finally {
+                                btn.innerHTML = '<iconify-icon icon="solar:download-square-bold"></iconify-icon> Download Mandate & Continue';
+                                btn.disabled = false;
+                            }
+                        });
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    loading.innerHTML = `<div class="text-red-500">Failed to load workspace.</div>`;
+                }
+            });
+
+            function transitionToPhase3(eid) {
+                // Hide M2, Show M3
+                wsM2.classList.add('hidden');
+                wsM2.classList.remove('flex');
+                wsM3.classList.remove('hidden');
+                wsM3.classList.add('flex');
+
+                // Update Sidebar UI
+                const s2 = document.getElementById('stepper-m2');
+                const s2Dot = document.getElementById('stepper-m2-dot');
+                const s2Title = document.getElementById('stepper-m2-title');
+                
+                s2Dot.className = 'absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-500 border-2 border-white ring-4 ring-green-50 flex items-center justify-center';
+                s2Title.className = 'font-bold text-sm text-green-700 flex items-center gap-2';
+                s2Title.innerHTML = 'Phase 2: Bank Mandate <iconify-icon icon="solar:check-circle-bold"></iconify-icon>';
+
+                const s3 = document.getElementById('stepper-m3');
+                const s3Dot = document.getElementById('stepper-m3-dot');
+                const s3Title = document.getElementById('stepper-m3-title');
+
+                s3.classList.remove('opacity-50');
+                s3Dot.className = 'absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-500 border-2 border-white ring-4 ring-blue-50';
+                s3Title.className = 'font-bold text-sm text-blue-700';
+
+                // Set Launch link
+                document.getElementById('btn-launch-bvn').href = `bvn-discovery.html?estate_id=${eid}`;
+            }
+        });
+    </script>
 </body>
 </html>

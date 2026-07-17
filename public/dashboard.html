@@ -91,58 +91,11 @@
                 </a>
             </div>
 
-            <!-- Milestone Tracker -->
-            <div id="milestone-tracker" class="mb-10 bg-white border border-[var(--border-color)] rounded-[var(--radius-large)] p-6 hidden">
-                <h2 class="text-lg font-bold text-gray-800 mb-6">Asset Discovery Milestones</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Milestone 1 -->
-                    <div class="flex flex-col gap-2 p-4 bg-green-50 border border-green-100 rounded-lg relative overflow-hidden">
-                        <div class="flex items-center gap-2 text-green-700 font-bold text-sm z-10">
-                            <iconify-icon icon="solar:check-circle-bold" style="font-size: 1.25rem;"></iconify-icon>
-                            Milestone 1: Verification
-                        </div>
-                        <p class="text-xs text-green-800/70 z-10">Legal verification and verification fee completed.</p>
-                        <iconify-icon icon="solar:check-circle-bold" class="absolute -bottom-4 -right-4 text-green-200/50" style="font-size: 6rem;"></iconify-icon>
-                    </div>
-
-                    <!-- Milestone 2 -->
-                    <div id="m2-container" class="flex flex-col gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg relative transition-all duration-300">
-                        <div id="m2-header" class="flex items-center gap-2 text-blue-700 font-bold text-sm">
-                            <iconify-icon id="m2-icon" icon="solar:document-add-bold-duotone" style="font-size: 1.25rem;"></iconify-icon>
-                            Milestone 2: Bank Mandate
-                        </div>
-                        <p id="m2-desc" class="text-xs text-blue-800/80">Generate your Letter of Administration and submit it to your bank to link your phone number.</p>
-                        <div class="mt-3 space-y-2" id="m2-actions">
-                            <button class="w-full bg-blue-600 text-white px-3 py-2.5 text-xs font-bold rounded-md shadow-sm hover:bg-blue-700 transition">Generate Letter of Administration</button>
-                            <button id="btn-continue-discovery" class="w-full bg-white text-blue-700 border border-blue-200 px-3 py-2 text-xs font-bold rounded-md shadow-sm hover:bg-blue-50 transition flex items-center justify-center gap-2">
-                                I have my letter. Continue to Discovery
-                            </button>
-                        </div>
-                        <p id="m2-note" class="text-[10px] text-blue-700 bg-blue-100/50 p-2 rounded italic mt-2 leading-tight">Note: You must physically submit this letter to the bank to link your phone number to the account. You cannot complete the next step without receiving the bank's SMS OTP.</p>
-                    </div>
-
-                    <!-- Milestone 3 -->
-                    <div id="m3-container" class="flex flex-col gap-2 p-4 bg-gray-50 border border-gray-200 rounded-lg opacity-50 pointer-events-none transition-all duration-300">
-                        <div id="m3-header" class="flex items-center gap-2 text-gray-500 font-bold text-sm">
-                            <iconify-icon icon="solar:magnifer-bold-duotone" style="font-size: 1.25rem;"></iconify-icon>
-                            Milestone 3: BVN Discovery
-                        </div>
-                        <p class="text-xs text-gray-500">Initiate the live banking sweep using your verified BVN.</p>
-                        <div class="mt-auto pt-4" id="m3-actions">
-                            <a id="btn-start-discovery" href="bvn-discovery.html" class="flex items-center justify-center gap-2 w-full bg-gray-200 text-gray-500 px-3 py-2.5 text-xs font-bold rounded-md cursor-not-allowed transition-all duration-300">
-                                <iconify-icon icon="solar:lock-keyhole-bold" id="m3-btn-icon"></iconify-icon>
-                                Start BVN Sweep
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Vault Sub-navigation Tabs -->
-            <div class="flex items-center justify-between border-b border-[var(--border-color)] mb-6 pb-0">
-                <div class="flex items-center gap-6">
-                    <a href="dashboard.html" class="text-sm font-medium text-[var(--text-primary)] border-b-2 border-[var(--text-primary)] pb-3 -mb-[1px]">Unified Vault Data</a>
-                </div>
+            <!-- Horizontal Sub-navigation Tabs -->
+            <div class="flex items-center gap-6 border-b border-[var(--border-color)] mb-8 pb-0">
+                <a href="dashboard.html" class="text-sm font-medium text-[var(--text-primary)] border-b-2 border-[var(--text-primary)] pb-3 -mb-[1px]">All Recoveries</a>
+                <a href="dashboard.html" class="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] pb-3 -mb-[1px] transition-colors border-b-2 border-transparent hover:border-[var(--border-color)]">Active Audits</a>
+                <a href="dashboard.html" class="text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] pb-3 -mb-[1px] transition-colors border-b-2 border-transparent hover:border-[var(--border-color)]">Settled Closures</a>
             </div>
 
             <!-- High-Density Data Matrix / Table -->
@@ -268,7 +221,7 @@
                 <td class="py-4 px-6">${badge}</td>
                 <td class="py-4 px-6">${accountsHtml}</td>
                 <td class="py-4 px-6 text-right">
-                    <a href="recovery-detail.html?id=${estate.id}" class="inline-flex items-center justify-center text-xs font-medium text-[var(--text-primary)] bg-[var(--panel-bg)] border border-[var(--border-color)] px-4 py-2 rounded-[var(--radius-normal)] hover:bg-[var(--canvas-bg)] transition-colors mt-2">View Assets</a>
+                    <a href="recovery-detail.html?id=${estate.id}" class="inline-flex items-center justify-center text-xs font-medium text-[var(--text-primary)] bg-[var(--panel-bg)] border border-[var(--border-color)] px-4 py-2 rounded-[var(--radius-normal)] hover:bg-[var(--canvas-bg)] transition-colors mt-2">Manage Recovery</a>
                 </td>
             </tr>`;
         }
@@ -327,78 +280,6 @@
                     </tr>`;
                     return;
                 }
-
-                // --- Milestone Tracker Logic ---
-                const milestoneTracker = document.getElementById('milestone-tracker');
-                if (milestoneTracker && estates.length > 0) {
-                    milestoneTracker.classList.remove('hidden');
-                    
-                    const latestEstate = estates[0];
-                    const m2Container = document.getElementById('m2-container');
-                    const m2Header = document.getElementById('m2-header');
-                    const m2Icon = document.getElementById('m2-icon');
-                    const m2Desc = document.getElementById('m2-desc');
-                    const m2Actions = document.getElementById('m2-actions');
-                    const m2Note = document.getElementById('m2-note');
-                    
-                    const m3Container = document.getElementById('m3-container');
-                    const m3Header = document.getElementById('m3-header');
-                    const m3Btn = document.getElementById('btn-start-discovery');
-                    const m3BtnIcon = document.getElementById('m3-btn-icon');
-                    
-                    function unlockMilestone3() {
-                        // M2 visual update
-                        m2Container.className = 'flex flex-col gap-2 p-4 bg-green-50 border border-green-100 rounded-lg relative overflow-hidden transition-all duration-300';
-                        m2Header.className = 'flex items-center gap-2 text-green-700 font-bold text-sm z-10';
-                        m2Icon.setAttribute('icon', 'solar:check-circle-bold');
-                        m2Desc.className = 'text-xs text-green-800/70 z-10';
-                        m2Desc.innerText = 'Bank Mandate acknowledged and prepared for submission.';
-                        if (m2Actions) m2Actions.style.display = 'none';
-                        if (m2Note) m2Note.style.display = 'none';
-                        if (!m2Container.querySelector('.bg-check')) {
-                            m2Container.insertAdjacentHTML('beforeend', '<iconify-icon class="bg-check absolute -bottom-4 -right-4 text-green-200/50" icon="solar:check-circle-bold" style="font-size: 6rem;"></iconify-icon>');
-                        }
-                        
-                        // M3 visual update
-                        m3Container.className = 'flex flex-col gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg transition-all duration-300 shadow-sm';
-                        m3Header.className = 'flex items-center gap-2 text-blue-700 font-bold text-sm';
-                        m3Btn.className = 'flex items-center justify-center gap-2 w-full bg-[var(--primary-accent)] text-white px-3 py-2.5 text-xs font-bold rounded-md shadow-sm hover:opacity-90 transition cursor-pointer';
-                        m3BtnIcon.setAttribute('icon', 'solar:magnifer-bold-duotone');
-                    }
-
-                    if (latestEstate.mandate_acknowledged) {
-                        unlockMilestone3();
-                    } else {
-                        const btnContinue = document.getElementById('btn-continue-discovery');
-                        if (btnContinue) {
-                            btnContinue.addEventListener('click', async () => {
-                                btnContinue.innerHTML = '<iconify-icon icon="solar:spinner-linear" class="animate-spin"></iconify-icon> Saving...';
-                                btnContinue.disabled = true;
-
-                                try {
-                                    const res = await fetch('/api/update-milestone', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ estateId: latestEstate.id, mandateAcknowledged: true })
-                                    });
-
-                                    if (res.ok) {
-                                        unlockMilestone3();
-                                    } else {
-                                        alert('Failed to update milestone. Please try again.');
-                                        btnContinue.innerText = 'I have my letter. Continue to Discovery';
-                                        btnContinue.disabled = false;
-                                    }
-                                } catch (err) {
-                                    alert('Network error updating milestone.');
-                                    btnContinue.innerText = 'I have my letter. Continue to Discovery';
-                                    btnContinue.disabled = false;
-                                }
-                            });
-                        }
-                    }
-                }
-                // --- End Milestone Tracker Logic ---
 
                 // 5. Inject one row per estate
                 estates.forEach(estate => {
