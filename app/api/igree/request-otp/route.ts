@@ -1,109 +1,72 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { HttpError, assertUuid, json, readJson, route } from '@/lib/server/http';
+import { bvnProvider } from '@/lib/server/bvn-discovery';
+import { adminClient, requireOwnEstate, requireUser } from '@/lib/server/supabase';
 
-export async function POST(request: Request) {
-  try {
-    const { bvn } = await request.json();
+export const dynamic = 'force-dynamic';
 
-    // 1. Strict Server-Side Validation
-    if (!bvn || !/^\d{11}$/.test(bvn)) {
-      return NextResponse.json({ error: 'Valid 11-digit numeric BVN is required' }, { status: 400 });
+const MAX_PER_HOUR = 5;
+const maskBvn = (bvn: string) => `${bvn.slice(0, 3)}*****${bvn.slice(-3)}`;
+const PHONE = /^(?:\+?234|0)[7-9][01]\d{8}$/;
+
+/**
+ * POST /api/igree/request-otp        (signed-in owner of an approved case only)
+ *
+ * Step 1 — body { bvn, estate_id }
+ *   Starts a consented (NIBSS iGree) BVN search and returns where the
+ *   one-time code can be sent: { sessionId, channels: [{ method, label, needsPhone }] }.
+ *
+ * Step 2 — body { sessionId, method, phone_number?, estate_id }
+ *   Sends the code to the chosen channel: { sentTo }.
+ *
+ * Starting a search is limited to 5 an hour per account (not per IP, which
+ * a caller can fake). The BVN is never written to our logs in full.
+ */
+export const POST = route('request-otp', async (request) => {
+  const user = await requireUser(request);
+  const body = await readJson<{ bvn?: string; estate_id?: string; estateId?: string; sessionId?: string; method?: string; phone_number?: string }>(request);
+  const estate = await requireOwnEstate(user.id, assertUuid(body.estate_id ?? body.estateId, 'case id'));
+  if (estate.status !== 'verified') throw new HttpError(409, 'Account discovery opens once our team has approved your documents.', 'NOT_APPROVED');
+  const provider = bvnProvider();
+
+  // ── Step 2: send the code to the chosen channel ──────────────────────────
+  if (body.sessionId) {
+    const method = String(body.method ?? '').trim();
+    if (!/^[a-z_0-9]{2,32}$/.test(method)) throw new HttpError(400, 'Please choose where the code should be sent.', 'INVALID_METHOD');
+    let phone: string | undefined;
+    if (method === 'alternate_phone') {
+      phone = String(body.phone_number ?? '').replace(/[\s-]/g, '');
+      if (!PHONE.test(phone)) throw new HttpError(400, 'Enter a Nigerian mobile number, like 0801 234 5678.', 'INVALID_PHONE');
     }
-
-    // Capture IP for rate limiting
-    // Note: In Vercel, x-forwarded-for header contains the real IP
-    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
-    
-    // Attempt to extract userId from headers if passed, else null
-    // Since this route doesn't require auth yet, we rely heavily on IP
-    const userId = request.headers.get('x-user-id') || null;
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const monoSecKey = process.env.MONO_SEC_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey || !monoSecKey) {
-      console.error('[request-otp] Missing environment variables.');
-      return NextResponse.json({ error: 'Server configuration error: Missing Mono credentials' }, { status: 503 });
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // 2. Throttling System: Max 3 requests per hour per IP
-    const oneHourAgo = new Date();
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1);
-
-    const { count, error: countError } = await supabase
-      .from('bvn_request_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('ip_address', ip)
-      .gte('created_at', oneHourAgo.toISOString());
-
-    if (countError) {
-      console.error('[request-otp] Rate limit check failed:', countError.message);
-      return NextResponse.json({ error: 'Internal error checking rate limit' }, { status: 500 });
-    }
-
-    if (count !== null && count >= 3) {
-      console.warn(`[request-otp] Rate limit exceeded for IP: ${ip}`);
-      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
-    }
-
-    // 3. Mono Auto-Route: Initiate
-    const initiateRes = await fetch('https://api.withmono.com/v2/lookup/bvn/initiate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'mono-sec-key': monoSecKey
-      },
-      body: JSON.stringify({
-        bvn: bvn,
-        scope: "bank_accounts"
-      })
-    });
-
-    const initiateData = await initiateRes.json();
-
-    if (!initiateRes.ok || !initiateData.session_id) {
-      // Log failed attempt
-      await supabase.from('bvn_request_logs').insert({ ip_address: ip, user_id: userId, bvn, status: 'failed_initiate' });
-      return NextResponse.json({ error: initiateData.message || 'Failed to initiate BVN lookup' }, { status: initiateRes.status });
-    }
-
-    const sessionId = initiateData.session_id;
-
-    // 4. Mono Auto-Route: Verify (Trigger OTP)
-    const verifyRes = await fetch('https://api.withmono.com/v2/lookup/bvn/verify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'mono-sec-key': monoSecKey,
-        'x-session-id': sessionId
-      },
-      body: JSON.stringify({
-        method: "phone"
-      })
-    });
-
-    const verifyData = await verifyRes.json();
-
-    if (!verifyRes.ok) {
-      await supabase.from('bvn_request_logs').insert({ ip_address: ip, user_id: userId, bvn, status: 'failed_verify' });
-      return NextResponse.json({ error: verifyData.message || 'Failed to trigger OTP' }, { status: verifyRes.status });
-    }
-
-    // Log success
-    await supabase.from('bvn_request_logs').insert({ ip_address: ip, user_id: userId, bvn, status: 'success' });
-
-    // Return session_id and hint to frontend
-    return NextResponse.json({
-      success: true,
-      sessionId: sessionId,
-      message: verifyData.message || 'OTP sent to registered phone'
-    });
-
-  } catch (error) {
-    console.error('[request-otp] Error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const { sentTo } = await provider.sendCode(String(body.sessionId), method, phone);
+    return json({ success: true, sentTo });
   }
-}
+
+  // ── Step 1: start the search ─────────────────────────────────────────────
+  const bvn = String(body.bvn ?? '').trim();
+  if (!/^\d{11}$/.test(bvn)) throw new HttpError(400, 'A BVN is exactly 11 digits.', 'INVALID_BVN');
+
+  const supabase = adminClient();
+  const since = new Date(Date.now() - 3_600_000).toISOString();
+  const { count, error: countError } = await supabase
+    .from('bvn_request_logs')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .gte('created_at', since);
+  if (countError) {
+    console.error('[request-otp] rate limit check failed:', countError.message);
+    throw new HttpError(500, 'We could not start the search. Please try again.', 'DB_ERROR');
+  }
+  if ((count ?? 0) >= MAX_PER_HOUR) throw new HttpError(429, 'You have started several searches in a short time. Please wait an hour and try again.', 'RATE_LIMITED');
+
+  const ip = (request.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null;
+  const log = (status: string) => supabase.from('bvn_request_logs').insert({ ip_address: ip, user_id: user.id, bvn: maskBvn(bvn), status });
+
+  try {
+    const { sessionId, channels } = await provider.start(bvn);
+    await log('initiated');
+    return json({ success: true, sessionId, channels, provider: provider.name });
+  } catch (err) {
+    await log('failed_initiate');
+    throw err;
+  }
+});
