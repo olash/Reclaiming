@@ -365,6 +365,16 @@ async function handleStorage(req, res, url) {
   const m = /^\/storage\/v1\/object\/(?:authenticated\/|sign\/)?(.+)$/.exec(decodeURIComponent(url.pathname));
   if (!m) return send(res, 404, { message: 'not found' });
   const key = m[1];
+  // Signed URLs: POST /object/sign/{bucket}/{path} → { signedURL }, then GET it with ?token=
+  if (req.method === 'POST' && url.pathname.startsWith('/storage/v1/object/sign/')) {
+    if (caller(req).role !== 'service') return send(res, 400, { statusCode: '403', error: 'Unauthorized', message: 'signing needs the service key' });
+    if (!db.objects.has(key)) return send(res, 400, { statusCode: '404', error: 'not_found', message: 'Object not found' });
+    return send(res, 200, { signedURL: `/object/sign/${key}?token=mock-signed` });
+  }
+  if (req.method === 'GET' && url.pathname.startsWith('/storage/v1/object/sign/') && url.searchParams.get('token') === 'mock-signed') {
+    const obj = db.objects.get(key);
+    return obj ? send(res, 200, obj.body, { 'content-type': obj.contentType }) : send(res, 404, { message: 'not found' });
+  }
   const who = caller(req);
   if (who.role === 'anon') return send(res, 400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
   const [, owner] = key.split('/');

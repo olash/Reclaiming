@@ -614,6 +614,78 @@ describe('POST /api/generate-inventory', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
+describe('Review console: /api/admin/*', () => {
+  let reviewer;
+  before(async () => {
+    const r = await admin('/user', { email: 'reviewer@reclaimng.test' });
+    reviewer = { id: r.user.id, token: r.session.access_token };
+  });
+
+  test('families cannot reach any admin route', async () => {
+    const u = await newUser();
+    assert.equal((await call('/api/admin/me', { token: u.token })).body.admin, false);
+    for (const path of ['/api/admin/cases', '/api/admin/case', '/api/admin/decision']) {
+      const r = await call(path, { token: u.token, json: {} });
+      assert.equal(r.status, 403, path);
+      assert.equal(r.body.code, 'FORBIDDEN');
+    }
+    assert.equal((await call('/api/admin/cases', { json: {} })).status, 401);
+  });
+
+  test('the reviewer sees every family\'s cases with identity checks at a glance', async () => {
+    assert.equal((await call('/api/admin/me', { token: reviewer.token })).body.admin, true);
+    const { estateId } = await userWithEstate({ status: 'pending_review' });
+    const r = await call('/api/admin/cases', { token: reviewer.token, json: {} });
+    assert.equal(r.status, 200);
+    const c = r.body.cases.find((x) => x.id === estateId);
+    assert.ok(c, 'case listed');
+    assert.equal(c.applicant, 'Amaka Okonkwo');
+    assert.match(c.nin_masked, /^\d{3}\*{5}\d{3}$/, 'NIN is masked even for reviewers');
+    const only = await call('/api/admin/cases', { token: reviewer.token, json: { status: 'pending_review' } });
+    assert.ok(only.body.cases.every((x) => x.status === 'pending_review'));
+  });
+
+  test('documents open through short-lived signed links', async () => {
+    const u = await newUser();
+    await admin('/row', { table: 'verifications', row: { id: crypto.randomUUID(), user_id: u.id, nin: String(10000000000 + ++n), profile_data: { applicant: { firstname: 'A', lastname: 'B' }, liveness: { status: 'submitted', reference: 'x' } }, created_at: new Date().toISOString() } });
+    await paid('DOC_ADMIN', 7500000, u, 'submission');
+    const sub = await call('/api/submit-documents', { token: u.token, form: docForm({ deceased_name: 'Grace Nkechi Eze', paystack_reference: 'DOC_ADMIN' }) });
+    const r = await call('/api/admin/case', { token: reviewer.token, json: { estate_id: sub.body.estateId } });
+    assert.equal(r.status, 200);
+    assert.ok(r.body.documents.death_certificate, 'signed link returned');
+    assert.equal(r.body.documents.letter_of_administration, null);
+    const file = await fetch(r.body.documents.death_certificate.replace(/^https?:\/\/[^/]+/, MOCK));
+    assert.equal(file.status, 200);
+  });
+
+  test('approve, send back (note required) and settle (amount required)', async () => {
+    const { estateId } = await userWithEstate({ status: 'pending_review' });
+    const decide = (body) => call('/api/admin/decision', { token: reviewer.token, json: { estate_id: estateId, ...body } });
+    assert.equal((await decide({ action: 'teleport' })).status, 400);
+    assert.equal((await decide({ action: 'reject', note: 'no' })).body.code, 'NOTE_REQUIRED');
+    assert.equal((await decide({ action: 'reject', note: 'The certificate photo is too blurry to read.' })).status, 200);
+    let row = await estateRow(estateId);
+    assert.equal(row.status, 'rejected');
+    if (SCHEMA !== 'v1') assert.equal(row.review_note, 'The certificate photo is too blurry to read.');
+    assert.equal((await decide({ action: 'approve' })).status, 200);
+    row = await estateRow(estateId);
+    assert.equal(row.status, 'verified');
+    if (SCHEMA !== 'v1') assert.equal(row.review_note, null, 'the old note is cleared on approval');
+    assert.equal((await decide({ action: 'settle' })).body.code, 'AMOUNT_REQUIRED');
+    const settled = await decide({ action: 'settle', amount: 11205000 });
+    if (SCHEMA === 'v1') {
+      // Before migration 0005 the database does not allow "settled": the reviewer is told exactly why.
+      assert.equal(settled.status, 500);
+      assert.match(settled.body.error, /migration 0005/);
+      return;
+    }
+    assert.equal(settled.status, 200);
+    row = await estateRow(estateId);
+    assert.equal(row.status, 'settled');
+    if (SCHEMA !== 'v1') assert.equal(row.total_asset_value, 11205000);
+  });
+});
+
 describe('POST /api/webhook/paystack', () => {
   const sign = (body) => crypto.createHmac('sha512', 'sk_test_mock').update(body).digest('hex');
   const send = (payload, signature) => {

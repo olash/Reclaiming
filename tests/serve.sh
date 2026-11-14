@@ -13,6 +13,7 @@ export QOREID_CLIENT_ID=mock-qore-client
 export QOREID_CLIENT_SECRET=mock-qore-secret
 export QOREID_AUTH_URL=https://api.qoreid.com/token
 export MONO_SEC_KEY=mock-mono-key
+export ADMIN_EMAILS=reviewer@reclaimng.test
 export NEXT_TELEMETRY_DISABLED=1
 unset GCP_SERVICE_ACCOUNT_KEY_BASE64
 

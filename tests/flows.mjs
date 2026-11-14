@@ -22,6 +22,7 @@ if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const admin = (p, body) => fetch(MOCK + '/__admin' + p, { method: 'POST', body: JSON.stringify(body || {}) }).then((r) => r.json());
 const state = () => fetch(MOCK + '/__admin/state').then((r) => r.json());
+const estateRowOf = async (id) => (await state()).tables.estates.find((e) => e.id === id);
 
 let failures = 0;
 const results = [];
@@ -233,8 +234,27 @@ try {
   await page.getByRole('button', { name: /Completed/ }).click();
   check('Home filters actually filter', (await page.getByText('No completed recoveries yet').count()) === 1);
 
-  // Team approves → search for accounts straight away
-  await admin('/patch', { table: 'estates', id: estate.id, patch: { status: 'verified' } });
+  // The review team approves the case in the review console
+  {
+    const reviewerAccount = await admin('/user', { email: 'reviewer@reclaimng.test', user_metadata: { full_name: 'Review Team' } });
+    const rctx = await newContext(browser);
+    const rp = await rctx.newPage();
+    await rp.goto(APP + '/login', { waitUntil: 'networkidle' });
+    await rp.getByLabel('Email address').fill(reviewerAccount.user.email);
+    await rp.getByLabel('Password', { exact: true }).fill('password123');
+    await rp.getByRole('button', { name: 'Log in' }).click();
+    await rp.waitForURL(APP + '/app');
+    await rp.getByRole('link', { name: 'Review queue' }).click();
+    await rp.getByRole('heading', { name: 'Estate of Samuel Adekunle Bello' }).waitFor();
+    check('Reviewer sees the case with NIN and selfie results', (await rp.getByText('NIN matched').count()) === 1 && (await rp.getByText('Selfie passed').count()) === 1);
+    await shot(rp, 'new-15-review-queue');
+    await rp.getByRole('button', { name: 'Approve', exact: true }).click();
+    await rp.getByText('Approved — the family can now search for accounts').waitFor();
+    check('Reviewer approves the case from the console', (await estateRowOf(estate.id)).status === 'verified');
+    await rctx.close();
+  }
+  // Families do not see the review queue
+  check('Families do not see the review queue link', (await page.getByRole('link', { name: 'Review queue' }).count()) === 0);
   await page.goto(APP + `/app/estates/${estate.id}`, { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Find every linked account' }).waitFor();
   check('Once approved, the case goes straight to the account search', (await page.getByText('Your documents are approved').count()) === 1);

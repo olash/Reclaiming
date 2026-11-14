@@ -3,7 +3,8 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, FolderHeart, LogOut, Menu, MessageCircle, PlusCircle, Wallet } from 'lucide-react';
+import { ChevronDown, ClipboardCheck, FolderHeart, LogOut, Menu, MessageCircle, PlusCircle, Wallet } from 'lucide-react';
+import { api } from '@/lib/api';
 import { displayName, useAuth } from '@/lib/auth-context';
 import { isSupabaseConfigured } from '@/lib/supabase-browser';
 import { SUPPORT_WHATSAPP } from '@/lib/fees';
@@ -20,11 +21,29 @@ const NAV = [
   { href: '/app/vault', label: 'Recovered funds', icon: Wallet, match: (p: string) => p.startsWith('/app/vault') },
 ];
 
+const ADMIN_NAV = { href: '/app/admin', label: 'Review queue', icon: ClipboardCheck, match: (p: string) => p.startsWith('/app/admin') };
+
+/** Whether the signed-in person is on the review team (decided on the server). */
+function useIsAdmin() {
+  const { user } = useAuth();
+  const [admin, setAdmin] = React.useState(false);
+  React.useEffect(() => {
+    if (!user) return;
+    let active = true;
+    api<{ admin: boolean }>('/api/admin/me').then((r) => active && setAdmin(r.admin)).catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [user]);
+  return admin;
+}
+
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const admin = useIsAdmin();
   return (
     <ul className="space-y-1">
-      {NAV.map((item) => {
+      {(admin ? [...NAV, ADMIN_NAV] : NAV).map((item) => {
         const active = item.match(pathname);
         return (
           <li key={item.href}>
