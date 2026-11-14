@@ -58,7 +58,6 @@ const SCHEMA_V1 = {
 // Schema after supabase/migrations/0005_redesign.sql has been applied.
 const SCHEMA_V2 = {
   ...SCHEMA_V1,
-  verifications: { ...SCHEMA_V1.verifications, unique: ['user_id+nin'] },
   estates: {
     ...SCHEMA_V1.estates,
     columns: [
@@ -422,7 +421,8 @@ async function handleQoreid(req, res, url) {
   const basic = path === '/v1/ng/identities/nin';
   if (premium || basic) {
     const nin = premium ? premium[1] : body.idNumber;
-    const rec = NIN_REGISTRY[nin];
+    // Any NIN starting 11… is Amaka Okonkwo, 22… is Tunde Bello; anything else is unknown.
+    const rec = NIN_REGISTRY[nin.slice(0, 2).repeat(6).slice(0, 11)];
     if (!rec) return send(res, 404, { statusCode: 404, message: 'NIN not found', error: 'Not Found' });
     const eq = (a, b) => (a || '').trim().toLowerCase() === (b || '').trim().toLowerCase();
     const fn = eq(body.firstname, rec.firstname), ln = eq(body.lastname, rec.lastname);

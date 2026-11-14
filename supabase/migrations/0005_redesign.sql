@@ -8,7 +8,6 @@
 --   • fixes columns the old pages queried that never existed
 --     (total_asset_value, the 'settled' status)
 --   • adds a payments ledger so one payment can never be spent twice
---   • lets two accounts verify against the same NIN without a silent failure
 --   • stops raw BVNs being kept in the request log
 --
 -- HOW TO RUN: Supabase dashboard → SQL Editor → New query → paste → Run.
@@ -57,12 +56,7 @@ GRANT SELECT ON public.payments TO authenticated;
 REVOKE ALL ON public.payments FROM anon;
 -- Writes happen only on the server with the service role.
 
--- 3. Verifications: one record per person per account ------------------------
--- The old UNIQUE(nin) made a second account's verification fail silently.
-ALTER TABLE public.verifications DROP CONSTRAINT IF EXISTS verifications_nin_key;
-CREATE UNIQUE INDEX IF NOT EXISTS verifications_user_nin_key ON public.verifications (user_id, nin);
-
--- 4. BVN request log: stop keeping raw BVNs ----------------------------------
+-- 3. BVN request log: stop keeping raw BVNs ----------------------------------
 -- New rows store a masked value (e.g. 223*****901). Mask what is already there.
 UPDATE public.bvn_request_logs
    SET bvn = substr(bvn, 1, 3) || '*****' || substr(bvn, 9, 3)

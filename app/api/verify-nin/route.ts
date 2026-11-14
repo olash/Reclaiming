@@ -27,6 +27,10 @@ function minimise(payload: any) {
  * is checked with Paystack on the server. A verification made in the last 30
  * days for the same person is reused, so nobody pays twice.
  *
+ * Calling it WITHOUT a payment_reference is a free pre-check: it answers 200
+ * (already verified), 409 (NIN belongs to another account) or 402 (payment
+ * needed), so the app only opens checkout when a payment is really required.
+ *
  * The identity provider's raw record is never returned to the browser.
  */
 export const POST = route('verify-nin', async (request) => {
@@ -55,6 +59,13 @@ export const POST = route('verify-nin', async (request) => {
   const cachedName = hit?.profile_data?.applicant;
   if (hit && same(cachedName?.firstname, firstname) && same(cachedName?.lastname, lastname)) {
     return json({ verified: true, cached: true, verified_at: hit.created_at, name: { firstname, lastname } });
+  }
+
+  // ── One NIN, one account ─────────────────────────────────────────────────
+  // Checked BEFORE payment so nobody is charged for a check that cannot be saved.
+  const { data: elsewhere } = await supabase.from('verifications').select('user_id').eq('nin', nin).neq('user_id', user.id).limit(1);
+  if (elsewhere?.length) {
+    throw new HttpError(409, 'This NIN is already linked to another Reclaimng account. Log in with that account, or message our team and we will sort it out.', 'NIN_IN_USE');
   }
 
   // ── Payment: confirmed with Paystack, and not already spent ──────────────
@@ -100,8 +111,9 @@ export const POST = route('verify-nin', async (request) => {
     ? await supabase.from('verifications').update({ profile_data: record, created_at: now }).eq('id', existing[0].id)
     : await supabase.from('verifications').insert({ user_id: user.id, nin, profile_data: record, created_at: now });
   if (write.error) {
-    // 23505 = this NIN is already verified on another account: worth a compliance look, not a dead end for the user.
-    console.warn('[verify-nin] KYC record not stored:', write.error.code, write.error.message);
+    // Without a stored record the next step would refuse the user, so do not claim success or spend the payment.
+    console.error('[verify-nin] KYC record not stored:', write.error.code, write.error.message);
+    throw new HttpError(500, 'Your identity was confirmed but we could not save the result. You have not lost your payment — please try again.', 'DB_ERROR');
   }
   await recordLedgerEntry({ user_id: user.id, reference: payment.reference, purpose: 'identity', amount_kobo: FEES.identity.kobo });
 

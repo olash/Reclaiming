@@ -161,22 +161,32 @@ export default function NewRecoveryPage() {
     setErrors({});
     setBusy('identity');
     try {
+      const details = {
+        nin: draft.nin.trim(),
+        firstname: draft.firstname.trim(),
+        lastname: draft.lastname.trim(),
+        phone: draft.phone.replace(/[\s-]/g, ''),
+        dob: draft.dob,
+      };
       let reference = draft.identityRef;
       if (!reference) {
+        // Free pre-check: already verified, or a problem we can tell them about before taking any money?
+        const pre = await api('/api/verify-nin', details).catch((err: ApiError) => {
+          if (err.code === 'PAYMENT_REQUIRED') return null;
+          throw err;
+        });
+        if (pre?.verified) {
+          identity.reload();
+          toast.success('Your identity is already confirmed.');
+          return go(3);
+        }
         const result = await pay({ purpose: 'identity', email: user.email, userId: user.id });
         if (result.status === 'cancelled') return toast.info('Payment was not completed. You can try again when you are ready.');
         if (result.status === 'error') return setErrors({ form: result.message });
         reference = result.reference;
         update({ identityRef: reference }); // remember it straight away so a failed check never means paying twice
       }
-      await api('/api/verify-nin', {
-        nin: draft.nin.trim(),
-        firstname: draft.firstname.trim(),
-        lastname: draft.lastname.trim(),
-        phone: draft.phone.replace(/[\s-]/g, ''),
-        dob: draft.dob,
-        payment_reference: reference,
-      });
+      await api('/api/verify-nin', { ...details, payment_reference: reference });
       update({ identityRef: '' });
       identity.reload();
       toast.success('Your identity is confirmed.');

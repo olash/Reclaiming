@@ -5,7 +5,7 @@
  *   npm run test:serve     # terminal 1 — mock + app on :3000
  *   npm run test:api       # terminal 2
  */
-import { test, describe, before } from 'node:test';
+import { test, describe, before, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { PDFDocument } from 'pdf-lib';
@@ -103,7 +103,11 @@ describe('GET /api/config', () => {
 
 // ─────────────────────────────────────────────────────────────────────────
 describe('POST /api/verify-nin', () => {
-  const good = { nin: '11111111111', firstname: 'Amaka', lastname: 'Okonkwo', dob: '1988-04-12', phone: '08012345678' };
+  let seq = 0;
+  // A fresh NIN per test (the mock treats every 11… NIN as Amaka Okonkwo).
+  const fresh = () => ({ nin: '11' + String(100000000 + ++seq), firstname: 'Amaka', lastname: 'Okonkwo', dob: '1988-04-12', phone: '08012345678' });
+  let good;
+  beforeEach(() => { good = fresh(); });
 
   test('rejects a NIN that is not 11 digits without calling the provider', async () => {
     const u = await newUser();
@@ -188,9 +192,21 @@ describe('POST /api/verify-nin', () => {
     const u = await newUser();
     await paid('ID_ONCE', 500000, u, 'identity');
     assert.equal((await call('/api/verify-nin', { token: u.token, json: { ...good, payment_reference: 'ID_ONCE' } })).status, 200);
-    const second = await call('/api/verify-nin', { token: u.token, json: { nin: '22222222222', firstname: 'Tunde', lastname: 'Bello', payment_reference: 'ID_ONCE' } });
+    const second = await call('/api/verify-nin', { token: u.token, json: { nin: '22000000001', firstname: 'Tunde', lastname: 'Bello', payment_reference: 'ID_ONCE' } });
     assert.equal(second.status, 402);
     assert.equal(second.body.code, 'PAYMENT_ALREADY_USED');
+  });
+
+  test('a NIN already linked to another account is refused before any payment or provider call', async () => {
+    const first = await newUser();
+    const second = await newUser();
+    await paid('ID_FIRST', 500000, first, 'identity');
+    assert.equal((await call('/api/verify-nin', { token: first.token, json: { ...good, payment_reference: 'ID_FIRST' } })).status, 200);
+    const calls = (await state()).upstreamCalls.length;
+    const r = await call('/api/verify-nin', { token: second.token, json: good }); // pre-check, no payment yet
+    assert.equal(r.status, 409);
+    assert.equal(r.body.code, 'NIN_IN_USE');
+    assert.equal((await state()).upstreamCalls.length, calls);
   });
 
   test('unknown NIN gives a clear message', async () => {
