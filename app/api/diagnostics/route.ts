@@ -176,15 +176,19 @@ async function qoreidCheck(): Promise<Step[]> {
     }),
   );
   const basic = 'Basic ' + Buffer.from(`${process.env.QOREID_CLIENT_ID}:${process.env.QOREID_CLIENT_SECRET}`).toString('base64');
+  // Only liveness_nin is used by the app; the others are probed for information.
+  const optional = new Set(['face_verification_nin', 'liveness']);
   for (const productCode of ['liveness_nin', 'face_verification_nin', 'liveness']) {
     steps.push(
-      await timed(`SDK session for product "${productCode}"`, async () => {
+      await timed(`SDK session for product "${productCode}"${optional.has(productCode) ? ' (optional, not used by the app)' : ''}`, async () => {
         const r = await call('https://api.qoreid.com/v1/sessions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: basic },
           body: JSON.stringify({ productCode, reference: `diag_${productCode}_${Date.now()}`, ttlSeconds: 60 }),
         });
-        return { ok: r.ok && !!r.body?.sdkSessionToken, status: r.status, note: r.ok ? 'token minted' : (r.body?.message ?? JSON.stringify(r.body)).toString().slice(0, 160) };
+        const minted = r.ok && !!r.body?.sdkSessionToken;
+        const note = minted ? 'token minted' : (r.body?.message ?? JSON.stringify(r.body)).toString().slice(0, 160);
+        return { ok: minted || optional.has(productCode), status: r.status, note: minted || !optional.has(productCode) ? note : `${note} — optional, not needed` };
       }),
     );
   }
@@ -223,7 +227,7 @@ async function qoreidCheck(): Promise<Step[]> {
     }),
   );
   steps.push(
-    await timed('BVN iGree consent link (sandbox BVN) — evaluated as a Mono alternative', async () => {
+    await timed('BVN iGree consent link (optional, evaluated as a Mono alternative)', async () => {
       const r = await call(`https://api.qoreid.com/v1/ng/identities/bvn-with-consent/${QOREID_TEST.bvn}`, { method: 'POST', headers: bearer, body: '{}' });
       const b = r.body ?? {};
       const data = b.data ?? b;
