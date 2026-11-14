@@ -60,6 +60,8 @@ Open `/api/diagnostics` on the preview. It runs live checks of Supabase, Paystac
 
 ## Demo script and test data
 
+The complete list (every provider, what the sandboxes return, and which account to use for each role) is in [`TEST_DATA.md`](TEST_DATA.md). Use **two accounts**: a family account that is *not* in `ADMIN_EMAILS`, and a reviewer account that is. A reviewer can never approve a case they opened themselves.
+
 All of these are provider **sandbox** values. No real money or identities are involved.
 
 | Step | What to enter |

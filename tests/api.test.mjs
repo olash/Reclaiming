@@ -645,6 +645,26 @@ describe('Review console: /api/admin/*', () => {
     assert.ok(only.body.cases.every((x) => x.status === 'pending_review'));
   });
 
+  test('a reviewer can never decide a case they opened themselves', async () => {
+    const id = crypto.randomUUID();
+    await admin('/row', {
+      table: 'estates',
+      row: {
+        id, user_id: reviewer.id, estate_name: 'Estate of Own Case', deceased_name: 'Own Case', status: 'pending_review', payment_status: 'paid',
+        paystack_reference: 'seed_' + id, death_certificate_path: `${reviewer.id}/dc.pdf`, letter_of_administration_path: null, discovered_accounts: [],
+        mandate_acknowledged: true, submitted_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      },
+    });
+    const listed = (await call('/api/admin/cases', { token: reviewer.token, json: {} })).body.cases.find((c) => c.id === id);
+    assert.equal(listed.own, true, 'the queue marks it as their own');
+    for (const action of ['approve', 'start_review', 'settle']) {
+      const r = await call('/api/admin/decision', { token: reviewer.token, json: { estate_id: id, action, amount: 1 } });
+      assert.equal(r.status, 403, action);
+      assert.equal(r.body.code, 'SELF_REVIEW');
+    }
+    assert.equal((await estateRow(id)).status, 'pending_review', 'nothing changed');
+  });
+
   test('documents open through short-lived signed links', async () => {
     const u = await newUser();
     await admin('/row', { table: 'verifications', row: { id: crypto.randomUUID(), user_id: u.id, nin: String(10000000000 + ++n), profile_data: { applicant: { firstname: 'A', lastname: 'B' }, liveness: { status: 'submitted', reference: 'x' } }, created_at: new Date().toISOString() } });
