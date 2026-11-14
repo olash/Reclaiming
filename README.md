@@ -3,8 +3,17 @@
 Helps Nigerian families trace and recover the bank accounts (and, in future, the
 unclaimed dividends) of a relative who has passed away.
 
-A full write-up of what was found, what changed and what to integrate next is in
-[`docs/ANALYSIS.md`](docs/ANALYSIS.md).
+- **Presenting?** Start with [`docs/DEMO_CHECKLIST.md`](docs/DEMO_CHECKLIST.md): the settings to change and the sandbox test data.
+- **Analysis** of what was found, what changed and what to integrate next: [`docs/ANALYSIS.md`](docs/ANALYSIS.md).
+- **Mono alternatives** for account discovery: [`docs/MONO_ALTERNATIVES.md`](docs/MONO_ALTERNATIVES.md).
+
+## The journey
+
+1. **Identity.** The family member's NIN is matched with QoreID NIN Premium (₦5,000). Then a QoreID **selfie liveness** check (`liveness_nin`, Web SDK) confirms it is really them.
+2. **Documents.** The death certificate (and Letters of Administration, if available) is uploaded after the ₦75,000 fee, which is verified with Paystack on the server.
+3. **Review.** Staff (`ADMIN_EMAILS`) approve or send back cases in the **Review queue** at `/app/admin`.
+4. **Account search.** A consented NIBSS iGree BVN search through **Mono Lookup (v3)**. The family chooses where the one-time code goes (email, the BVN's phones, or another phone), and every linked account is listed. A bank letter is offered as a fallback.
+5. **Claim.** A downloadable schedule of assets, then claims with each bank. Cases are marked settled with the amount released.
 
 ## How it is built
 
@@ -16,6 +25,8 @@ A full write-up of what was found, what changed and what to integrate next is in
 | Server helpers | `lib/server/` | Auth, ownership checks, Paystack verification, name matching, Mono, document check. |
 | Fees | `lib/fees.ts` | The single place prices live; UI, checkout and server checks all read it. |
 | Database | `supabase/migrations/` | Run in order in the Supabase SQL editor. `0005` is new; the app degrades gracefully if it has not been run. |
+| Providers | `lib/server/qoreid.ts`, `lib/server/mono.ts`, `lib/server/bvn-discovery.ts`, `lib/server/paystack.ts` | Account discovery sits behind a provider interface (`BVN_PROVIDER`). |
+| Live check | `GET /api/diagnostics` | Runs live checks of Supabase, Paystack, QoreID and Mono on preview deployments (disabled on production). |
 
 Old `*.html` addresses redirect to their replacements (see `next.config.js`),
 so bookmarked links, emailed links and OAuth return addresses keep working.
@@ -44,7 +55,7 @@ npm run test:serve          # terminal 1: builds the app and starts it with the 
 npm test                    # terminal 2: API tests + browser journeys + accessibility scan
 ```
 
-- `npm run test:api` — 77 end-to-end tests of every API route (auth, payments, ownership, edge cases).
-- `npm run test:api:unmigrated` — the same against the database as it is before migration `0005`.
-- `npm run test:flows` — 56 checks driving the real UI in Chromium through every journey.
+- `npm run test:api` — 88 end-to-end tests of every API route (auth, payments, ownership, liveness, account search, review console).
+- `npm run test:api:unmigrated` / `npm run test:api:live-schema` — the same against older database states, including the one the live project is in today.
+- `npm run test:flows` — 64 checks driving the real UI in Chromium through every journey, including a reviewer approving a case.
 - `npm run test:a11y` — axe-core WCAG 2.2 AA scan of every page at desktop and phone widths.
