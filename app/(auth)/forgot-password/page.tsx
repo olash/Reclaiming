@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
     return (
       <div className="text-center" role="status">
         <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary"><MailCheck className="size-7" aria-hidden="true" /></span>
-        <h1 className="mt-6 text-3xl font-semibold">Check your email</h1>
+        <h1 className="mt-6 text-[2.5rem] font-extrabold leading-[1.02]">Check your email</h1>
         <p className="mt-3 text-muted-foreground">
           If there is an account for <strong className="text-ink">{email.trim()}</strong>, we have sent a link to choose a new password. It can take a minute to arrive.
         </p>
@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <Link href="/login" className="inline-flex items-center gap-1.5 py-2 font-semibold text-primary"><ArrowLeft className="size-4" aria-hidden="true" />Back to log in</Link>
-      <h1 className="mt-4 text-3xl font-semibold">Forgot your password?</h1>
+      <h1 className="mt-4 text-[2.5rem] font-extrabold leading-[1.02]">Forgot your password?</h1>
       <p className="mt-2 text-muted-foreground">Enter the email you signed up with and we will send you a link to choose a new one.</p>
       {formError && <Alert tone="danger" className="mt-6">{formError}</Alert>}
       <form onSubmit={onSubmit} noValidate className="mt-6 space-y-5">

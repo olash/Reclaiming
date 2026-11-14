@@ -94,7 +94,7 @@ export function FilePicker({ label, hint, optional, file, onChange, error }: Fil
           )}
         >
           <UploadCloud className="size-8 text-primary" aria-hidden="true" />
-          <span className="font-semibold text-primary underline underline-offset-4">Choose a file or take a photo</span>
+          <span className="font-bold text-primary underline decoration-saffron decoration-2 underline-offset-4 hover:decoration-primary">Choose a file or take a photo</span>
           <span className="text-sm text-muted-foreground">PDF, JPG or PNG, up to 10 MB. You can also drag a file here.</span>
         </label>
       )}

@@ -12,7 +12,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         richColors
         closeButton
         duration={7000}
-        toastOptions={{ classNames: { toast: 'text-base font-sans', title: 'font-semibold' } }}
+        toastOptions={{ classNames: { toast: 'text-base font-sans rounded-md', title: 'font-bold' } }}
       />
     </AuthProvider>
   );

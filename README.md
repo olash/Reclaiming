@@ -7,6 +7,7 @@ unclaimed dividends) of a relative who has passed away.
 - **Presenting?** Start with [`docs/DEMO_CHECKLIST.md`](docs/DEMO_CHECKLIST.md): the settings to change and the sandbox test data.
 - **Analysis** of what was found, what changed and what to integrate next: [`docs/ANALYSIS.md`](docs/ANALYSIS.md).
 - **Mono alternatives** for account discovery: [`docs/MONO_ALTERNATIVES.md`](docs/MONO_ALTERNATIVES.md).
+- **Brand guidelines** (logo, colour, type, pattern, voice): [`docs/BRAND.md`](docs/BRAND.md), and live at `/brand`.
 
 ## The journey
 
@@ -20,8 +21,8 @@ unclaimed dividends) of a relative who has passed away.
 
 | Part | Where | Notes |
 | --- | --- | --- |
-| Pages | `app/` (Next.js 14 App Router) | Public: `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/privacy`, `/terms`. Signed in: `/app`, `/app/new`, `/app/estates/[id]`, `/app/vault`. |
-| UI kit | `components/ui/` | Tailwind + Radix primitives in the shadcn/ui style. Design tokens in `app/globals.css` and `tailwind.config.ts`. |
+| Pages | `app/` (Next.js 14 App Router) | Public: `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/privacy`, `/terms`, `/brand`. Signed in: `/app`, `/app/new`, `/app/estates/[id]`, `/app/vault`. |
+| UI kit | `components/ui/`, `components/brand/` | Tailwind + Radix primitives in the shadcn/ui style, themed with the adire palette. Tokens in `app/globals.css` and `tailwind.config.ts`; logo in `components/logo.tsx`; hand-drawn motifs in `components/brand/motifs.tsx`. |
 | API | `app/api/*/route.ts` | Every route except `config` and the Paystack webhook needs a signed-in user (`Authorization: Bearer <supabase access token>`). |
 | Server helpers | `lib/server/` | Auth, ownership checks, Paystack verification, name matching, Mono, document check. |
 | Fees | `lib/fees.ts` | The single place prices live; UI, checkout and server checks all read it. |

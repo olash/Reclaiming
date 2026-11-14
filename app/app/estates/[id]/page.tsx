@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, BadgeCheck, Building2, CheckCircle2, Clock, Download, FileCheck2, FileQuestion, KeyRound, MessageCircle, RefreshCw, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { Motif } from '@/components/brand/motifs';
+import { STAGE_ART } from '@/components/brand/stage-art';
 import { CaseTimeline } from '@/components/case-timeline';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -318,7 +320,7 @@ function FindAccounts({ estate, onDone, rerun = false }: { estate: Estate; onDon
 
         {!rerun && (
           <div className="border-t pt-5">
-            <button type="button" onClick={() => setShowLetter((v) => !v)} aria-expanded={showLetter} className="min-h-11 font-semibold text-primary underline underline-offset-4">
+            <button type="button" onClick={() => setShowLetter((v) => !v)} aria-expanded={showLetter} className="min-h-11 font-bold text-primary underline decoration-saffron decoration-2 underline-offset-4 hover:decoration-primary">
               None of these contacts reach anyone in the family?
             </button>
             {showLetter && (
@@ -427,7 +429,7 @@ export default function EstatePage() {
     return (
       <Card className="p-8 text-center">
         <FileQuestion className="mx-auto size-10 text-muted-foreground" aria-hidden="true" />
-        <h1 className="mt-4 text-2xl font-semibold">We could not find that case</h1>
+        <h1 className="mt-4 text-3xl font-extrabold">We could not find that case</h1>
         <p className="mt-2 text-muted-foreground">It may belong to a different account, or the link may be incomplete.</p>
         <Button asChild className="mt-6"><Link href="/app">Back to your cases</Link></Button>
       </Card>
@@ -444,13 +446,14 @@ export default function EstatePage() {
 
   return (
     <>
-      <Link href="/app" className="inline-flex items-center gap-1.5 rounded-md py-2 font-semibold text-primary"><ArrowLeft className="size-4" aria-hidden="true" />Your cases</Link>
-      <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-semibold sm:text-4xl">{estate.estate_name}</h1>
-          <p className="mt-1 text-muted-foreground">Case {caseRef(estate.id)} · Opened {formatDate(estate.submitted_at)}</p>
+      <Link href="/app" className="inline-flex min-h-11 items-center gap-1.5 rounded-full py-2 pr-3 font-bold text-ink/75 hover:text-ink"><ArrowLeft className="size-4" aria-hidden="true" />Your cases</Link>
+      <div className={cn('relative mt-3 overflow-hidden rounded-xl p-6 sm:p-9', STAGE_ART[stage].tone)}>
+        <Motif name={STAGE_ART[stage].motif} seed={9} className="pointer-events-none absolute -right-8 -top-8 size-56 opacity-30 sm:size-72" />
+        <div className="relative">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] opacity-80">Case {caseRef(estate.id)} · Opened {formatDate(estate.submitted_at)}</p>
+          <h1 className="mt-3 max-w-2xl text-display-md font-extrabold [color:inherit]">{estate.estate_name}</h1>
+          <Badge tone="neutral" className="mt-5 bg-paper text-ink">{copy.badge}</Badge>
         </div>
-        <Badge tone={copy.tone} className="mt-1">{copy.badge}</Badge>
       </div>
 
       <div className="mt-8 space-y-6">

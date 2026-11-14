@@ -86,7 +86,7 @@ try {
     const page = await ctx.newPage();
     const log = watch(page);
     const res = await page.goto(APP + '/', { waitUntil: 'networkidle' });
-    check('Landing page loads at "/"', res.status() === 200 && (await page.locator('h1').innerText()).includes('Find and recover'));
+    check('Landing page loads at "/"', res.status() === 200 && (await page.locator('h1').innerText()).includes('bring it home'));
     await page.keyboard.press('Tab');
     check('First Tab press reveals "Skip to main content"', (await page.evaluate(() => document.activeElement?.textContent)) === 'Skip to main content');
     await shot(page, 'new-01-landing');

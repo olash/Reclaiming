@@ -28,7 +28,7 @@ for (const [key, patch] of Object.entries({
   await admin('/row', { table: 'estates', row: { id: ids[key], user_id: u.user.id, estate_name: 'Estate of Samuel Bello', deceased_name: 'Samuel Bello', payment_status: 'paid', paystack_reference: 'a11y_' + ids[key], death_certificate_path: 'x', letter_of_administration_path: null, discovered_accounts: [], mandate_acknowledged: false, submitted_at: new Date().toISOString(), updated_at: new Date().toISOString(), ...patch } });
 }
 
-const publicPages = ['/', '/login', '/signup', '/forgot-password', '/privacy', '/terms'];
+const publicPages = ['/', '/login', '/signup', '/forgot-password', '/privacy', '/terms', '/brand', '/this-page-does-not-exist'];
 const appPages = ['/app', '/app/new', '/app/vault', '/app/admin', ...Object.values(ids).map((id) => `/app/estates/${id}`)];
 
 const browser = await playwright.chromium.launch();

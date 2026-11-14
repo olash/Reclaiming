@@ -25,15 +25,15 @@ export function Field({ label, hint, error, optional, className, children }: Fie
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined;
   return (
-    <div className={cn('space-y-1.5', className)}>
-      <label htmlFor={id} className="block text-sm font-semibold text-ink">
+    <div className={cn('space-y-2', className)}>
+      <label htmlFor={id} className="block font-bold text-ink">
         {label}
         {optional && <span className="ml-1.5 font-normal text-muted-foreground">(optional)</span>}
       </label>
-      {hint && <p id={hintId} className="text-sm text-muted-foreground">{hint}</p>}
+      {hint && <p id={hintId} className="text-[0.95rem] text-muted-foreground">{hint}</p>}
       {children({ id, 'aria-describedby': describedBy, 'aria-invalid': !!error })}
       {error && (
-        <p id={errorId} role="alert" className="flex items-start gap-1.5 text-sm font-medium text-danger">
+        <p id={errorId} role="alert" className="flex items-start gap-1.5 text-[0.95rem] font-bold text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           {error}
         </p>
