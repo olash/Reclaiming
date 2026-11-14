@@ -38,6 +38,8 @@ Supabase → Authentication → URL Configuration:
 - **Site URL:** `https://reclaiming.vercel.app`
 - **Redirect URLs:** add `https://reclaiming.vercel.app/**` and `https://reclaiming-*-olashs-projects.vercel.app/**`
 
+If a preview address is missing from this list, Google sign-in and email links from that preview land on the **Site URL** (production) instead. That is why logging in on a preview could drop you on `reclaiming.vercel.app`. If it still happens, also add the exact preview address, e.g. `https://reclaiming-git-claude-happy-galileo-4uh7cb-olashs-projects.vercel.app/**`.
+
 Optional for the demo: Authentication → Sign In / Providers → Email → turn **off** "Confirm email", so new accounts work instantly on stage. It is currently on.
 
 ## 5. Vercel: let judges open the site (2 min)

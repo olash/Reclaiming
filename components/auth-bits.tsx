@@ -39,7 +39,8 @@ export function friendlyAuthError(err: { message?: string } | null | undefined) 
   return err?.message || 'Something went wrong. Please try again.';
 }
 
-export function GoogleButton({ label = 'Continue with Google' }: { label?: string }) {
+/** `next` is an in-app path (e.g. /app/estates/…) to return to after Google; it must start with /app. */
+export function GoogleButton({ label = 'Continue with Google', next = '/app' }: { label?: string; next?: string }) {
   const [loading, setLoading] = React.useState(false);
   return (
     <Button
@@ -50,7 +51,7 @@ export function GoogleButton({ label = 'Continue with Google' }: { label?: strin
       loadingText="Opening Google…"
       onClick={async () => {
         setLoading(true);
-        const { error } = await supabase().auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/app` } });
+        const { error } = await supabase().auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}${next.startsWith('/app') ? next : '/app'}` } });
         if (error) {
           setLoading(false);
           toast.error(friendlyAuthError(error));

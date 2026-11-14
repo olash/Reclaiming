@@ -69,7 +69,7 @@ function LoginForm() {
       </form>
 
       <OrDivider />
-      <GoogleButton />
+      <GoogleButton next={destination} />
 
       <p className="mt-8 text-center text-muted-foreground">
         New to Reclaimng?{' '}
