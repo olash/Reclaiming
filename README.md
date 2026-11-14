@@ -3,6 +3,7 @@
 Helps Nigerian families trace and recover the bank accounts (and, in future, the
 unclaimed dividends) of a relative who has passed away.
 
+- **Where things stand:** [`docs/STATUS_CHECKLIST.md`](docs/STATUS_CHECKLIST.md): everything done and everything still to do.
 - **Presenting?** Start with [`docs/DEMO_CHECKLIST.md`](docs/DEMO_CHECKLIST.md): the settings to change and the sandbox test data.
 - **Analysis** of what was found, what changed and what to integrate next: [`docs/ANALYSIS.md`](docs/ANALYSIS.md).
 - **Mono alternatives** for account discovery: [`docs/MONO_ALTERNATIVES.md`](docs/MONO_ALTERNATIVES.md).
