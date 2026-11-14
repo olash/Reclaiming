@@ -111,8 +111,8 @@ Legend:
 ### B1. Before Monday's demo 🔴
 | # | Task | Who | How |
 |---|---|---|---|
-| 1 | Create a **Mono Lookup app** and copy its **test** secret key | 👤 | Mono dashboard → Apps → Create app → Lookup |
-| 2 | Put that key in Vercel as `MONO_SEC_KEY` (Production + Preview) | 👤 | Vercel → reclaiming → Settings → Environment Variables |
+| 1 | ✅ **Done** — Mono **Lookup** app created (sandbox) | 👤 | — |
+| 2 | ✅ **Done** — Lookup app's test key saved in Vercel as `MONO_SEC_KEY` (encrypted, Production + Preview). Roll it before go-live: it was shared in chat. | 🛠 | — |
 | 3 | ✅ **Done** — `ADMIN_EMAILS` set (Production + Preview) | 🛠 | — |
 | 4 | ✅ **Done** — `LIVENESS_MODE` and `NEXT_PUBLIC_LIVENESS_MODE` = `required` (Production + Preview) | 🛠 | — |
 | 5 | ✅ **Done** — migrations 0004 and 0005 applied and verified (columns, settled status, unique payment reference, payments ledger with RLS, 5 raw BVNs masked) | 🛠 | — |
