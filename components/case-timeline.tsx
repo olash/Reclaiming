@@ -37,28 +37,28 @@ export function CaseTimeline({ estate }: { estate: Estate }) {
   return (
     <ol>
       {steps.map((s, i) => (
-        <li key={s.title} className="relative flex gap-4 pb-6 last:pb-0" aria-current={s.state === 'current' ? 'step' : undefined}>
-          {i < steps.length - 1 && <span aria-hidden="true" className={cn('absolute left-[13px] top-7 h-full w-0.5', s.state === 'done' ? 'bg-primary' : 'bg-border')} />}
+        <li key={s.title} className="relative flex gap-4 pb-7 last:pb-0" aria-current={s.state === 'current' ? 'step' : undefined}>
+          {i < steps.length - 1 && <span aria-hidden="true" className={cn('absolute left-[15px] top-8 h-full', s.state === 'done' ? 'w-[3px] bg-ink' : 'w-0 border-l-[3px] border-dotted border-ink/25')} />}
           <span
             aria-hidden="true"
             className={cn(
-              'relative z-10 mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full',
-              s.state === 'done' && 'bg-primary text-white',
-              s.state === 'current' && 'border-2 border-primary bg-surface',
-              s.state === 'upcoming' && 'border-2 border-border bg-surface',
+              'relative z-10 flex size-[2.0625rem] shrink-0 items-center justify-center rounded-full',
+              s.state === 'done' && 'bg-ink text-cotton',
+              s.state === 'current' && 'bg-saffron text-ink ring-4 ring-saffron/30',
+              s.state === 'upcoming' && 'border-2 border-dashed border-ink/30 bg-surface',
               s.state === 'problem' && 'bg-danger text-white',
             )}
           >
             {s.state === 'done' && <Check className="size-4" strokeWidth={3} />}
             {s.state === 'problem' && <X className="size-4" strokeWidth={3} />}
-            {s.state === 'current' && <span className="size-2.5 rounded-full bg-primary" />}
+            {s.state === 'current' && <span className="size-3 rounded-full bg-ink" />}
           </span>
           <div className="min-w-0">
-            <p className={cn('font-semibold', s.state === 'upcoming' && 'text-muted-foreground')}>
+            <p className={cn('pt-1 text-lg font-bold leading-snug', s.state === 'upcoming' && 'text-ink/55')}>
               {s.title}
               <span className="sr-only"> — {STATE_LABEL[s.state]}</span>
             </p>
-            <p className="text-[0.95rem] text-muted-foreground">{s.detail}</p>
+            <p className="mt-0.5 text-ink/70">{s.detail}</p>
           </div>
         </li>
       ))}

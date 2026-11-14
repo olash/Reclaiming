@@ -57,12 +57,12 @@ function validateLovedOne(d: Draft): Errors {
 
 function StepCard({ title, intro, children, footer, headingRef }: { title: string; intro?: React.ReactNode; children: React.ReactNode; footer: React.ReactNode; headingRef: React.Ref<HTMLHeadingElement> }) {
   return (
-    <Card className="mt-6 animate-fade-up">
-      <CardHeader>
-        <h2 ref={headingRef} tabIndex={-1} className="text-2xl font-semibold outline-none">{title}</h2>
-        {intro && <p className="text-muted-foreground">{intro}</p>}
+    <Card className="mt-8 animate-fade-up">
+      <CardHeader className="space-y-3 pb-6 sm:p-8 sm:pb-7">
+        <h2 ref={headingRef} tabIndex={-1} className="text-[2rem] font-extrabold leading-[1.05] outline-none sm:text-[2.5rem]">{title}</h2>
+        {intro && <p className="max-w-xl text-lg text-ink/75">{intro}</p>}
       </CardHeader>
-      <CardContent className="space-y-5">{children}</CardContent>
+      <CardContent className="space-y-6 sm:px-8 sm:pb-8">{children}</CardContent>
       <CardFooter className="flex-col-reverse sm:flex-row sm:justify-between">{footer}</CardFooter>
     </Card>
   );
@@ -72,11 +72,11 @@ function SummaryRow({ label, value, onEdit }: { label: string; value: React.Reac
   return (
     <div className="flex items-start justify-between gap-4 py-3">
       <div className="min-w-0">
-        <dt className="text-sm text-muted-foreground">{label}</dt>
-        <dd className="mt-0.5 break-words font-medium">{value}</dd>
+        <dt className="text-sm font-bold uppercase tracking-[0.1em] text-muted-foreground">{label}</dt>
+        <dd className="mt-1 break-words text-lg font-bold">{value}</dd>
       </div>
       {onEdit && (
-        <button type="button" onClick={onEdit} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-2 font-semibold text-primary hover:bg-primary-soft">
+        <button type="button" onClick={onEdit} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 font-bold text-primary hover:bg-primary-soft">
           <Pencil className="size-4" aria-hidden="true" />
           Change<span className="sr-only"> {label}</span>
         </button>
@@ -87,12 +87,12 @@ function SummaryRow({ label, value, onEdit }: { label: string; value: React.Reac
 
 function FeeBox({ icon: Icon, title, amount, children }: { icon: React.ComponentType<{ className?: string }>; title: string; amount: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-primary/20 bg-primary-soft/50 p-4 sm:p-5">
+    <div className="relative overflow-hidden rounded-md border-[1.5px] border-ink bg-accent-soft p-5 sm:p-6">
       <div className="flex items-start justify-between gap-4">
-        <p className="flex items-center gap-2 font-semibold"><Icon className="size-5 text-primary" aria-hidden="true" />{title}</p>
-        <p className="font-display text-2xl font-semibold">{amount}</p>
+        <p className="flex items-center gap-2 font-bold"><Icon className="size-5" aria-hidden="true" />{title}</p>
+        <p className="font-display text-3xl font-extrabold tracking-tight">{amount}</p>
       </div>
-      <div className="mt-2 text-[0.95rem] text-muted-foreground">{children}</div>
+      <div className="mt-2 text-ink/80">{children}</div>
     </div>
   );
 }
@@ -278,12 +278,12 @@ export default function NewRecoveryPage() {
   if (done) {
     return (
       <Card className="mx-auto max-w-2xl p-6 text-center sm:p-10" role="status">
-        <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-success-soft text-success"><CheckCircle2 className="size-9" aria-hidden="true" /></span>
-        <h1 className="mt-6 text-3xl font-semibold">We have received your documents</h1>
+        <span className="mx-auto flex size-20 items-center justify-center rounded-full bg-saffron text-ink shadow-stamp"><CheckCircle2 className="size-10" aria-hidden="true" /></span>
+        <h1 className="mt-6 text-[2.5rem] font-extrabold leading-[1.02]">We have received your documents</h1>
         <p className="mx-auto mt-3 max-w-lg text-muted-foreground">
           Thank you. Your case for <strong className="text-ink">{draft.deceasedName || 'your loved one'}</strong> is now open and our team has started the review.
         </p>
-        <div className="mx-auto mt-8 max-w-md rounded-md bg-muted p-5 text-left">
+        <div className="mx-auto mt-8 max-w-md rounded-md border border-dashed border-ink/25 bg-cotton p-6 text-left">
           <h2 className="font-sans text-base font-semibold tracking-normal">What happens next</h2>
           <ol className="mt-3 space-y-3 text-[0.95rem]">
             {[
@@ -292,13 +292,13 @@ export default function NewRecoveryPage() {
               'You then search, with a one-time code, for every bank account linked to their BVN.',
             ].map((t, i) => (
               <li key={t} className="flex gap-3">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface text-sm font-semibold">{i + 1}</span>
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-ink font-display text-sm font-extrabold text-cotton">{i + 1}</span>
                 {t}
               </li>
             ))}
           </ol>
         </div>
-        <Button asChild size="lg" className="mt-8"><Link href={`/app/estates/${done.estateId}`}>View your case <ArrowRight aria-hidden="true" /></Link></Button>
+        <Button asChild size="lg" variant="accent" className="mt-9"><Link href={`/app/estates/${done.estateId}`}>View your case <ArrowRight aria-hidden="true" /></Link></Button>
       </Card>
     );
   }
@@ -307,11 +307,12 @@ export default function NewRecoveryPage() {
   if (!started) {
     return (
       <div className="mx-auto max-w-2xl">
-        <h1 className="text-3xl font-semibold sm:text-4xl">Start a recovery</h1>
-        <p className="mt-3 text-lg text-muted-foreground">We are sorry for your loss. We will take this one step at a time.</p>
-        <Card className="mt-8 p-6 sm:p-8">
-          <h2 className="text-xl font-semibold">Before you begin</h2>
-          <ul className="mt-5 space-y-5">
+        <p className="eyebrow">New recovery</p>
+        <h1 className="mt-3 text-display-lg font-extrabold">Start a recovery</h1>
+        <p className="mt-4 text-xl text-ink/75">We are sorry for your loss. We will take this one step at a time, together.</p>
+        <Card className="mt-10 p-6 sm:p-9">
+          <h2 className="text-3xl font-extrabold">Before you begin</h2>
+          <ul className="mt-7 space-y-6">
             {[
               [Clock, 'It takes about 10 minutes', 'Your answers are saved as you go, so you can stop and continue later on this device.'],
               [Fingerprint, 'Have your NIN ready', 'We use it, with a quick selfie on your phone or laptop camera, to confirm you are who you say you are.'],
@@ -319,15 +320,15 @@ export default function NewRecoveryPage() {
               [Wallet, `There are two fees along the way`, `${ID_FEE} to confirm your identity and ${DOC_FEE} when you send your documents. We always show the amount before you pay. Later, we charge ${FEES.successRate * 100}% only of money actually recovered.`],
             ].map(([Icon, title, body]: any) => (
               <li key={title} className="flex gap-4">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary"><Icon className="size-5" aria-hidden="true" /></span>
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-saffron text-ink"><Icon className="size-5" aria-hidden="true" /></span>
                 <div>
-                  <p className="font-semibold">{title}</p>
-                  <p className="text-muted-foreground">{body}</p>
+                  <p className="text-lg font-bold">{title}</p>
+                  <p className="text-ink/75">{body}</p>
                 </div>
               </li>
             ))}
           </ul>
-          <Button size="lg" className="mt-8 w-full sm:w-auto" onClick={() => { setStarted(true); go(0); }}>
+          <Button size="lg" variant="accent" className="mt-9 w-full sm:w-auto" onClick={() => { setStarted(true); go(0); }}>
             Begin <ArrowRight aria-hidden="true" />
           </Button>
         </Card>
@@ -342,8 +343,8 @@ export default function NewRecoveryPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Start a recovery</h1>
-        <Link href="/app" className="shrink-0 rounded-md py-2 font-semibold text-primary underline underline-offset-4">Save and exit</Link>
+        <h1 className="text-2xl font-extrabold sm:text-3xl">Start a recovery</h1>
+        <Link href="/app" className="shrink-0 rounded-md py-2 font-bold text-primary underline decoration-saffron decoration-2 underline-offset-4 hover:decoration-primary">Save and exit</Link>
       </div>
       <div className="mt-6"><Stepper steps={STEPS} current={step} /></div>
 
@@ -443,7 +444,7 @@ export default function NewRecoveryPage() {
                 (livenessDone ? (
                   <Alert tone="success" icon={Camera} title="Selfie check complete">Your selfie has been matched to the photo on your NIN record.</Alert>
                 ) : (
-                  <div className="rounded-md border p-4 sm:p-5">
+                  <div className="rounded-md border border-dashed border-ink/25 bg-cotton p-5 sm:p-6">
                     <h3 className="flex items-center gap-2 font-sans text-lg font-semibold tracking-normal">
                       <Camera className="size-5 text-primary" aria-hidden="true" />
                       One last thing: a quick selfie
@@ -472,7 +473,7 @@ export default function NewRecoveryPage() {
               {draft.identityRef && !errors.form && (
                 <Alert tone="info" title="Your payment is saved">You have already paid for this check. Press the button below to try again — you will not be charged twice.</Alert>
               )}
-              <dl className="divide-y rounded-md border px-4">
+              <dl className="divide-y divide-dashed divide-ink/20 rounded-md border border-ink/15 bg-cotton px-5">
                 <SummaryRow label="Name" value={`${draft.firstname} ${draft.lastname}`} onEdit={() => go(0)} />
                 <SummaryRow label="NIN" value={<span className="tracking-widest">{draft.nin.replace(/^(\d{3})\d{5}(\d{3})$/, '$1•••••$2')}</span>} />
                 <SummaryRow label="Date of birth" value={formatDate(draft.dob)} />
@@ -544,7 +545,7 @@ export default function NewRecoveryPage() {
               {draft.submissionRef && <p className="mt-1">Payment reference: <span className="font-mono">{draft.submissionRef}</span></p>}
             </Alert>
           )}
-          <dl className="divide-y rounded-md border px-4">
+          <dl className="divide-y divide-dashed divide-ink/20 rounded-md border border-ink/15 bg-cotton px-5">
             <SummaryRow label="You" value={`${draft.firstname} ${draft.lastname} · ${draft.phone}`} onEdit={verified ? undefined : () => go(0)} />
             <SummaryRow label="Your loved one" value={<>{draft.deceasedName}<br /><span className="font-normal text-muted-foreground">Passed away {formatDate(draft.dateOfDeath)} · {draft.relationship}</span></>} onEdit={() => go(1)} />
             <SummaryRow label="Death certificate" value={deathCert ? deathCert.name : <span className="text-danger">Not attached yet</span>} onEdit={() => go(3)} />
@@ -579,7 +580,7 @@ export default function NewRecoveryPage() {
 
       <p className="mt-6 text-center text-muted-foreground">
         Not sure about something?{' '}
-        <a href={SUPPORT_WHATSAPP} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline underline-offset-4">Ask us on WhatsApp</a>
+        <a href={SUPPORT_WHATSAPP} target="_blank" rel="noopener noreferrer" className="font-bold text-primary underline decoration-saffron decoration-2 underline-offset-4 hover:decoration-primary">Ask us on WhatsApp</a>
       </p>
     </div>
   );

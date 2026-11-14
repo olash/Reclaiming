@@ -3,40 +3,62 @@
 @tailwind utilities;
 
 /*
- * Design tokens. Every text/background pair used in the UI is chosen to meet
- * WCAG 2.2 AA (4.5:1 for body text, 3:1 for large text and UI boundaries).
+ * Reclaimng design tokens: the "Adire" palette.
+ *
+ * Inspired by Yoruba adire cloth: indigo dye on cotton, with saffron and clay
+ * from the market. Every text/background pair used in the UI meets WCAG 2.2 AA
+ * (4.5:1 for body text, 3:1 for large text and UI boundaries). The ratios are
+ * listed in docs/BRAND.md and on the /brand page.
  */
 @layer base {
   :root {
-    --background: 42 33% 97%;      /* warm paper */
-    --surface: 0 0% 100%;
-    --ink: 152 24% 13%;            /* near-black green */
-    --muted: 42 20% 93%;
-    --muted-foreground: 150 8% 34%;
-    --border: 42 14% 86%;
-    --input: 150 8% 58%;           /* 3:1 against surface for field outlines */
-    --ring: 150 45% 26%;
-    --primary: 150 45% 22%;        /* deep sage */
-    --primary-hover: 150 48% 17%;
-    --primary-soft: 146 30% 92%;
-    --primary-foreground: 0 0% 100%;
-    --success: 150 60% 22%;
-    --success-soft: 146 45% 93%;
-    --warning: 28 85% 28%;
-    --warning-soft: 44 95% 90%;
-    --danger: 4 72% 38%;
-    --danger-soft: 6 85% 96%;
-    --info: 213 60% 32%;
-    --info-soft: 213 80% 95%;
+    /* Raw brand colours */
+    --cotton: 38 52% 94%;          /* #F7F1E6  page */
+    --paper: 40 100% 98%;          /* #FFFCF6  cards */
+    --indigo: 233 52% 35%;         /* #2A3586  primary */
+    --indigo-night: 234 57% 24%;   /* #1A2160  deep blocks */
+    --ink-raw: 232 48% 16%;        /* #151A3B  text */
+    --saffron: 39 88% 58%;         /* #F2B035  highlight (never text on light) */
+    --clay: 11 62% 43%;            /* #B0432A  accent */
+    --leaf: 154 57% 27%;           /* #1D6A48  success */
+
+    /* Semantic tokens (what components use) */
+    --background: var(--cotton);
+    --surface: var(--paper);
+    --ink: var(--ink-raw);
+    --muted: 38 40% 89%;           /* #EFE6D6 */
+    --muted-foreground: 232 13% 40%; /* #585C74  5.8:1 on cotton */
+    --border: 37 33% 84%;          /* #E3DACA */
+    --input: 48 8% 50%;            /* #8A8676  3.3:1 on cotton */
+    --ring: var(--indigo);
+    --primary: var(--indigo);
+    --primary-hover: var(--indigo-night);
+    --primary-soft: 233 46% 93%;   /* #E4E6F5 */
+    --primary-foreground: 40 100% 98%;
+    --accent: var(--saffron);
+    --accent-soft: 42 88% 85%;     /* #FBE7B8 */
+    --success: var(--leaf);
+    --success-soft: 142 38% 90%;   /* #DCEFE3 */
+    --warning: 36 100% 27%;        /* #8A5200 */
+    --warning-soft: var(--accent-soft);
+    --danger: 11 64% 38%;          /* #A03B24 */
+    --danger-soft: 18 70% 91%;     /* #F7DED2 */
+    --info: var(--indigo);
+    --info-soft: var(--primary-soft);
   }
 
   * { @apply border-border; }
   html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-  body { @apply bg-background text-ink font-sans antialiased; font-size: 1rem; line-height: 1.6; }
-  h1, h2, h3 { @apply font-display tracking-tight text-ink; text-wrap: balance; }
+  body {
+    @apply bg-background text-ink font-sans antialiased;
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  h1, h2, h3 { @apply font-display text-ink; letter-spacing: -0.025em; text-wrap: balance; font-variation-settings: 'opsz' 96; }
+  h1 { letter-spacing: -0.035em; }
   p { text-wrap: pretty; }
-  :focus-visible { @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background; }
-  ::selection { background: hsl(var(--primary) / 0.18); }
+  :focus-visible { @apply outline-none ring-[3px] ring-ring ring-offset-2 ring-offset-background; }
+  ::selection { background: hsl(var(--saffron) / 0.55); color: hsl(var(--ink)); }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
@@ -44,11 +66,22 @@
 }
 
 @layer components {
-  .skip-link { @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-3 focus:text-primary-foreground; }
-  .prose-legal h2 { @apply mt-10 text-xl font-semibold; }
-  .prose-legal p, .prose-legal li { @apply mt-3 text-muted-foreground; }
-  .prose-legal ul { @apply list-disc pl-5; }
-  .prose-legal strong { @apply text-ink font-semibold; }
+  .skip-link { @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-primary-foreground; }
+
+  /* A small uppercase label that sits above headings. */
+  .eyebrow { @apply inline-flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-clay; }
+
+  /* Paper grain: a barely-there texture so large areas never look flat or synthetic. */
+  .grain { position: relative; isolation: isolate; }
+  .grain::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.35; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.38 0 0 0 0 0.25 0 0 0 0.10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .prose-legal h2 { @apply mt-12 text-2xl font-bold; }
+  .prose-legal p, .prose-legal li { @apply mt-3 text-ink/80; }
+  .prose-legal ul { @apply list-disc pl-5 marker:text-clay; }
+  .prose-legal strong { @apply text-ink font-bold; }
 }
 
 @media print {

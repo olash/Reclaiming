@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle2, Wallet } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Motif } from '@/components/brand/motifs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { accountsOf } from '@/lib/estate';
 import { useEstates } from '@/lib/use-estates';
@@ -18,8 +19,9 @@ export default function VaultPage() {
 
   return (
     <>
-      <h1 className="text-3xl font-semibold sm:text-4xl">Recovered funds</h1>
-      <p className="mt-2 text-muted-foreground">Money that has been released to an estate through Reclaimng.</p>
+      <p className="eyebrow">Recovered funds</p>
+      <h1 className="mt-3 text-display-md font-extrabold">Recovered funds</h1>
+      <p className="mt-3 text-lg text-ink/75">Money that has been released to an estate through Reclaimng.</p>
 
       <div className="mt-8 space-y-4">
         {state.status === 'loading' && (
@@ -33,9 +35,10 @@ export default function VaultPage() {
         )}
 
         {state.status === 'ready' && settled.length === 0 && (
-          <Card className="p-6 sm:p-8">
-            <span className="flex size-12 items-center justify-center rounded-md bg-primary-soft text-primary"><Wallet className="size-6" aria-hidden="true" /></span>
-            <h2 className="mt-5 text-2xl font-semibold">Nothing has been released yet</h2>
+          <Card className="relative overflow-hidden p-6 sm:p-10">
+            <Motif name="house" seed={5} className="pointer-events-none absolute -right-10 -top-10 size-56 text-saffron/50" />
+            <span className="relative flex size-14 items-center justify-center rounded-full bg-saffron text-ink"><Wallet className="size-7" aria-hidden="true" /></span>
+            <h2 className="relative mt-6 text-3xl font-extrabold">Nothing has been released yet</h2>
             <p className="mt-2 max-w-xl text-muted-foreground">
               {open.length
                 ? `You have ${open.length} case${open.length === 1 ? '' : 's'} in progress. When a bank releases funds to the estate, the amount and the date will appear here.`
@@ -50,10 +53,11 @@ export default function VaultPage() {
         {settled.length > 0 && (
           <>
             {total > 0 && (
-              <Card className="bg-primary p-6 text-primary-foreground sm:p-8">
-                <p className="text-primary-foreground/85">Total released to your estates</p>
-                <p className="mt-1 font-display text-4xl font-semibold sm:text-5xl">{formatNaira(total)}</p>
-                <p className="mt-2 text-sm text-primary-foreground/85">After Reclaimng&apos;s service fee.</p>
+              <Card className="relative overflow-hidden border-0 bg-indigo-night p-7 text-cotton sm:p-10">
+                <Motif name="sun" seed={2} className="pointer-events-none absolute -right-14 -top-14 size-72 text-saffron/25" />
+                <p className="relative font-bold uppercase tracking-[0.14em] text-saffron">Total released to your estates</p>
+                <p className="relative mt-3 font-display text-display-lg font-extrabold">{formatNaira(total)}</p>
+                <p className="relative mt-3 text-cotton/80">After Reclaimng&apos;s service fee.</p>
               </Card>
             )}
             <ul className="space-y-4">
@@ -61,13 +65,13 @@ export default function VaultPage() {
                 <li key={e.id}>
                   <Card className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
                     <div className="flex min-w-0 items-center gap-4">
-                      <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-success-soft text-success"><CheckCircle2 className="size-6" aria-hidden="true" /></span>
+                      <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-leaf text-cotton"><CheckCircle2 className="size-6" aria-hidden="true" /></span>
                       <div className="min-w-0">
-                        <h2 className="text-lg font-semibold"><Link href={`/app/estates/${e.id}`} className="hover:underline">{e.estate_name}</Link></h2>
+                        <h2 className="text-xl font-bold"><Link href={`/app/estates/${e.id}`} className="decoration-saffron decoration-[3px] underline-offset-4 hover:underline">{e.estate_name}</Link></h2>
                         <p className="text-sm text-muted-foreground">{caseRef(e.id)} · Completed {formatDate(e.updated_at)} · {accountsOf(e).length} account{accountsOf(e).length === 1 ? '' : 's'}</p>
                       </div>
                     </div>
-                    <p className="font-display text-2xl font-semibold">{typeof e.total_asset_value === 'number' ? formatNaira(e.total_asset_value) : 'Amount on your statement'}</p>
+                    <p className="font-display text-3xl font-extrabold tracking-tight">{typeof e.total_asset_value === 'number' ? formatNaira(e.total_asset_value) : 'Amount on your statement'}</p>
                   </Card>
                 </li>
               ))}

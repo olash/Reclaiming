@@ -7,8 +7,8 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
       ref={ref}
       type={type}
       className={cn(
-        'block h-12 w-full rounded-md border border-input bg-surface px-3.5 text-base text-ink placeholder:text-muted-foreground/80',
-        'focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0',
+        'block h-14 w-full rounded-md border-[1.5px] border-input bg-surface px-4 text-[1.0625rem] text-ink placeholder:text-muted-foreground/80 transition-colors hover:border-ink/60',
+        'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/25 focus-visible:ring-offset-0',
         'aria-[invalid=true]:border-danger aria-[invalid=true]:ring-danger disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground',
         className,
       )}
@@ -23,8 +23,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTML
     <textarea
       ref={ref}
       className={cn(
-        'block min-h-24 w-full rounded-md border border-input bg-surface px-3.5 py-3 text-base text-ink placeholder:text-muted-foreground/80',
-        'focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 aria-[invalid=true]:border-danger',
+        'block min-h-28 w-full rounded-md border-[1.5px] border-input bg-surface px-4 py-3 text-[1.0625rem] text-ink placeholder:text-muted-foreground/80 hover:border-ink/60',
+        'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/25 focus-visible:ring-offset-0 aria-[invalid=true]:border-danger',
         className,
       )}
       {...props}

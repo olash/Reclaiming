@@ -117,7 +117,7 @@ export default function AdminPage() {
     return (
       <Card className="p-8 text-center">
         <ShieldAlert className="mx-auto size-10 text-muted-foreground" aria-hidden="true" />
-        <h1 className="mt-4 text-2xl font-semibold">This area is for the review team</h1>
+        <h1 className="mt-4 text-3xl font-extrabold">This area is for the review team</h1>
         <p className="mt-2 text-muted-foreground">If you should have access, ask an administrator to add your email to ADMIN_EMAILS.</p>
         <Button asChild className="mt-6"><Link href="/app">Back to your cases</Link></Button>
       </Card>
@@ -129,10 +129,11 @@ export default function AdminPage() {
 
   return (
     <>
-      <h1 className="text-3xl font-semibold sm:text-4xl">Review queue</h1>
-      <p className="mt-2 text-muted-foreground">Check each family&apos;s identity and documents, then approve the case or send it back with a note.</p>
+      <p className="eyebrow">For the review team</p>
+      <h1 className="mt-3 text-display-md font-extrabold">Review queue</h1>
+      <p className="mt-3 text-lg text-ink/75">Check each family&apos;s identity and documents, then approve the case or send it back with a note.</p>
 
-      <div role="group" aria-label="Filter cases" className="mt-8 flex flex-wrap gap-1 rounded-md border bg-surface p-1">
+      <div role="group" aria-label="Filter cases" className="mt-8 flex flex-wrap gap-1 rounded-[1.6rem] border border-ink/15 bg-surface p-1">
         {TABS.map((t) => {
           const count = (cases ?? []).filter(t.match).length;
           return (
@@ -141,7 +142,7 @@ export default function AdminPage() {
               type="button"
               aria-pressed={tab === t.key}
               onClick={() => setTab(t.key)}
-              className={cn('min-h-11 rounded-sm px-3.5 text-[0.95rem] font-semibold', tab === t.key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-ink')}
+              className={cn('min-h-11 rounded-full px-4 text-[0.95rem] font-bold transition-colors', tab === t.key ? 'bg-ink text-cotton' : 'text-ink/70 hover:text-ink')}
             >
               {t.label} <span className="font-normal">({count})</span>
             </button>

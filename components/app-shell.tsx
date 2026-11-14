@@ -38,11 +38,11 @@ function useIsAdmin() {
   return admin;
 }
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ onNavigate, layout = 'stack' }: { onNavigate?: () => void; layout?: 'stack' | 'bar' }) {
   const pathname = usePathname();
   const admin = useIsAdmin();
   return (
-    <ul className="space-y-1">
+    <ul className={layout === 'bar' ? 'flex items-center gap-1' : 'space-y-1'}>
       {(admin ? [...NAV, ADMIN_NAV] : NAV).map((item) => {
         const active = item.match(pathname);
         return (
@@ -52,22 +52,24 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
               onClick={onNavigate}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex min-h-12 items-center gap-3 rounded-md px-3 font-medium',
-                active ? 'bg-primary-soft text-primary' : 'text-muted-foreground hover:bg-muted hover:text-ink',
+                layout === 'bar'
+                  ? 'flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full px-4 font-bold transition-colors'
+                  : 'flex min-h-14 items-center gap-3 rounded-md px-4 text-lg font-bold',
+                active ? 'bg-ink text-cotton' : 'text-ink/70 hover:bg-ink/[0.06] hover:text-ink',
               )}
             >
-              <item.icon className="size-5 shrink-0" aria-hidden="true" />
+              <item.icon className={cn('size-5 shrink-0', active && 'text-saffron', layout === 'bar' && 'hidden xl:block')} aria-hidden="true" />
               {item.label}
             </Link>
           </li>
         );
       })}
-      <li>
+      <li className={layout === 'bar' ? 'hidden' : 'border-t border-dashed border-ink/20 pt-2'}>
         <a
           href={SUPPORT_WHATSAPP}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex min-h-12 items-center gap-3 rounded-md px-3 font-medium text-muted-foreground hover:bg-muted hover:text-ink"
+          className="flex min-h-14 items-center gap-3 rounded-md px-4 text-lg font-bold text-ink/70 hover:bg-ink/[0.06] hover:text-ink"
         >
           <MessageCircle className="size-5 shrink-0" aria-hidden="true" />
           Get help on WhatsApp
@@ -84,9 +86,9 @@ function UserMenu() {
   const initial = name.trim().charAt(0).toUpperCase();
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex min-h-11 items-center gap-2 rounded-full border bg-surface py-1 pl-1 pr-3 hover:bg-muted">
-        <span className="flex size-9 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground" aria-hidden="true">{initial}</span>
-        <span className="hidden max-w-40 truncate font-medium sm:block">{name}</span>
+      <DropdownMenuTrigger className="flex min-h-11 items-center gap-2 rounded-full border border-ink/15 bg-surface py-1 pl-1 pr-3 transition-colors hover:border-ink/40">
+        <span className="flex size-9 items-center justify-center rounded-full bg-saffron font-display text-lg font-extrabold text-ink" aria-hidden="true">{initial}</span>
+        <span className="hidden max-w-36 truncate font-bold sm:block">{name}</span>
         <span className="sr-only sm:hidden">Account menu</span>
         <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
       </DropdownMenuTrigger>
@@ -144,19 +146,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_minmax(0,1fr)]">
-      {/* Desktop sidebar */}
-      <aside className="no-print sticky top-0 hidden h-dvh flex-col border-r bg-surface p-4 lg:flex">
-        <div className="px-2 py-3"><Logo href="/app" /></div>
-        <nav aria-label="Main" className="mt-6 flex-1"><NavLinks /></nav>
-        <p className="px-3 text-sm text-muted-foreground">Stuck on anything? Message us — a real person will reply.</p>
-      </aside>
-
-      <div className="flex min-w-0 flex-col">
-        <header className="no-print sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b bg-background/90 px-4 backdrop-blur sm:px-6 lg:justify-end lg:px-8">
-          <div className="flex items-center gap-2 lg:hidden">
+    <div className="grain flex min-h-dvh flex-col">
+      <header className="no-print sticky top-0 z-30 border-b border-ink/10 bg-cotton/85 backdrop-blur-md">
+        <div className="mx-auto flex h-[4.25rem] w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-1">
             <Dialog open={menuOpen} onOpenChange={setMenuOpen}>
-              <DialogTrigger className="inline-flex size-11 items-center justify-center rounded-md hover:bg-muted">
+              <DialogTrigger className="-ml-2 inline-flex size-11 items-center justify-center rounded-full hover:bg-ink/[0.06] lg:hidden">
                 <Menu className="size-6" aria-hidden="true" />
                 <span className="sr-only">Open menu</span>
               </DialogTrigger>
@@ -164,17 +159,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <DialogTitle className="sr-only">Menu</DialogTitle>
                 <DialogDescription className="sr-only">Navigate around your account</DialogDescription>
                 <div className="px-2 py-2"><Logo href="/app" /></div>
-                <nav aria-label="Main" className="mt-6"><NavLinks onNavigate={() => setMenuOpen(false)} /></nav>
+                <nav aria-label="Main" className="mt-8"><NavLinks onNavigate={() => setMenuOpen(false)} /></nav>
               </DialogContent>
             </Dialog>
             <Logo href="/app" />
           </div>
+          <nav aria-label="Main" className="hidden lg:block"><NavLinks layout="bar" /></nav>
           <UserMenu />
-        </header>
-        <main id="main" className="flex-1 px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
-          <div className="mx-auto w-full max-w-4xl">{children}</div>
-        </main>
-      </div>
+        </div>
+      </header>
+      <main id="main" className="flex-1 px-4 pb-24 pt-8 sm:px-6 lg:px-8 lg:pt-12">
+        <div className="mx-auto w-full max-w-4xl">{children}</div>
+      </main>
     </div>
   );
 }

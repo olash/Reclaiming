@@ -45,7 +45,7 @@ function LoginForm() {
 
   return (
     <>
-      <h1 className="text-3xl font-semibold">Welcome back</h1>
+      <h1 className="text-[2.5rem] font-extrabold leading-[1.02]">Welcome back</h1>
       <p className="mt-2 text-muted-foreground">Log in to see your cases and continue where you stopped.</p>
 
       {params.get('reason') === 'signin' && (
@@ -63,17 +63,17 @@ function LoginForm() {
           {(f) => <PasswordInput {...f} name="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
         </Field>
         <div className="flex justify-end">
-          <Link href={email.trim() ? `/forgot-password?email=${encodeURIComponent(email.trim())}` : '/forgot-password'} className="py-1 font-semibold text-primary underline underline-offset-4">Forgot your password?</Link>
+          <Link href={email.trim() ? `/forgot-password?email=${encodeURIComponent(email.trim())}` : '/forgot-password'} className="py-1 font-bold text-primary underline decoration-saffron decoration-2 underline-offset-4 hover:decoration-primary">Forgot your password?</Link>
         </div>
         <Button type="submit" className="w-full" loading={busy} loadingText="Logging in…">Log in</Button>
       </form>
 
       <OrDivider />
-      <GoogleButton />
+      <GoogleButton next={destination} />
 
       <p className="mt-8 text-center text-muted-foreground">
         New to Reclaimng?{' '}
-        <Link href="/signup" className="font-semibold text-primary underline underline-offset-4">Create an account</Link>
+        <Link href="/signup" className="font-bold text-primary underline decoration-saffron decoration-2 underline-offset-4 hover:decoration-primary">Create an account</Link>
       </p>
     </>
   );

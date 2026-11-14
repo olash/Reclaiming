@@ -56,7 +56,7 @@ export default function SignupPage() {
     return (
       <div className="text-center" role="status">
         <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary"><MailCheck className="size-7" aria-hidden="true" /></span>
-        <h1 className="mt-6 text-3xl font-semibold">Check your email</h1>
+        <h1 className="mt-6 text-[2.5rem] font-extrabold leading-[1.02]">Check your email</h1>
         <p className="mt-3 text-muted-foreground">
           We sent a confirmation link to <strong className="text-ink">{confirmSentTo}</strong>. Open it to finish creating your account. It can take a minute to arrive — check your spam folder too.
         </p>
@@ -69,7 +69,7 @@ export default function SignupPage() {
 
   return (
     <>
-      <h1 className="text-3xl font-semibold">Create your account</h1>
+      <h1 className="text-[2.5rem] font-extrabold leading-[1.02]">Create your account</h1>
       <p className="mt-2 text-muted-foreground">It is free to create an account. You only pay when you are ready to open a case.</p>
 
       {errors.form && <Alert tone="danger" className="mt-6" title="We could not create your account">{errors.form}</Alert>}
@@ -97,7 +97,7 @@ export default function SignupPage() {
 
       <p className="mt-8 text-center text-muted-foreground">
         Already have an account?{' '}
-        <Link href="/login" className="font-semibold text-primary underline underline-offset-4">Log in</Link>
+        <Link href="/login" className="font-bold text-primary underline decoration-saffron decoration-2 underline-offset-4 hover:decoration-primary">Log in</Link>
       </p>
     </>
   );

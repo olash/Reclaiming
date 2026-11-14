@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
   if (!user) {
     return (
       <>
-        <h1 className="text-3xl font-semibold">This link has expired</h1>
+        <h1 className="text-[2.5rem] font-extrabold leading-[1.02]">This link has expired</h1>
         <p className="mt-3 text-muted-foreground">Password links only work once and for a short time. Ask for a new one and we will email it straight away.</p>
         <Button asChild className="mt-8"><Link href="/forgot-password">Send me a new link</Link></Button>
       </>
@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
 
   return (
     <>
-      <h1 className="text-3xl font-semibold">Choose a new password</h1>
+      <h1 className="text-[2.5rem] font-extrabold leading-[1.02]">Choose a new password</h1>
       <p className="mt-2 text-muted-foreground">For {user.email}</p>
       {formError && <Alert tone="danger" className="mt-6">{formError}</Alert>}
       <form onSubmit={onSubmit} noValidate className="mt-6 space-y-5">
