@@ -15,7 +15,7 @@ const APP = process.env.APP_URL || 'http://127.0.0.1:3000';
 const MOCK = process.env.MOCK_URL || 'http://127.0.0.1:54321';
 const admin = (p, body) => fetch(MOCK + '/__admin' + p, { method: 'POST', body: JSON.stringify(body || {}) }).then((r) => r.json());
 
-const u = await admin('/user', { email: `a11y-${Date.now()}@example.com`, user_metadata: { full_name: 'Amaka Okonkwo' } });
+const u = await admin('/user', { email: 'reviewer@reclaimng.test', user_metadata: { full_name: 'Amaka Okonkwo' } }); // a reviewer, so the review console is scanned too
 const ids = {};
 for (const [key, patch] of Object.entries({
   review: { status: 'pending_review' },
@@ -29,7 +29,7 @@ for (const [key, patch] of Object.entries({
 }
 
 const publicPages = ['/', '/login', '/signup', '/forgot-password', '/privacy', '/terms'];
-const appPages = ['/app', '/app/new', '/app/vault', ...Object.values(ids).map((id) => `/app/estates/${id}`)];
+const appPages = ['/app', '/app/new', '/app/vault', '/app/admin', ...Object.values(ids).map((id) => `/app/estates/${id}`)];
 
 const browser = await playwright.chromium.launch();
 let total = 0;
