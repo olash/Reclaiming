@@ -19,6 +19,7 @@ import { clearDraft, useDraft, type Draft } from '@/lib/draft';
 import { RELATIONSHIPS } from '@/lib/estate';
 import { FEES, SUPPORT_WHATSAPP } from '@/lib/fees';
 import { useIdentity } from '@/lib/use-estates';
+import { digitsOnly, useFocusFirstError } from '@/lib/use-focus-error';
 import { usePaystack } from '@/lib/use-paystack';
 import { cn, formatDate, formatNaira } from '@/lib/utils';
 
@@ -108,6 +109,7 @@ export default function NewRecoveryPage() {
   const [loa, setLoa] = React.useState<File | null>(null);
   const [done, setDone] = React.useState<{ estateId: string } | null>(null);
   const headingRef = React.useRef<HTMLHeadingElement>(null);
+  const focusFirstError = useFocusFirstError();
 
   const step = draft.step;
   const verified = identity.state.status === 'ready' ? identity.state.data : null;
@@ -126,18 +128,23 @@ export default function NewRecoveryPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
 
+  const [stepChanges, setStepChanges] = React.useState(0);
   const go = React.useCallback(
     (next: number) => {
       setErrors({});
       update({ step: next });
-      // Move focus to the new step's heading so keyboard and screen-reader users land in the right place.
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: 0 });
-        headingRef.current?.focus();
-      });
+      setStepChanges((n) => n + 1);
     },
     [update],
   );
+
+  // After a step change has rendered, move focus to the new step's heading so
+  // keyboard and screen-reader users land in the right place.
+  React.useEffect(() => {
+    if (!stepChanges) return;
+    window.scrollTo({ top: 0 });
+    headingRef.current?.focus();
+  }, [stepChanges]);
 
   const set = (key: keyof Draft) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     update({ [key]: e.target.value } as Partial<Draft>);
@@ -148,8 +155,7 @@ export default function NewRecoveryPage() {
     const found = validate(draft);
     setErrors(found);
     if (Object.keys(found).length) {
-      // Send focus to the first problem.
-      requestAnimationFrame(() => document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
+      focusFirstError();
       return;
     }
     go(to);
@@ -343,7 +349,7 @@ export default function NewRecoveryPage() {
               {(f) => <Input {...f} type="date" autoComplete="bday" max={today()} value={draft.dob} onChange={set('dob')} className="sm:max-w-xs" />}
             </Field>
             <Field label="National Identification Number (NIN)" hint="11 digits. It is on your NIN slip, or dial *346# from your registered line." error={errors.nin}>
-              {(f) => <Input {...f} inputMode="numeric" autoComplete="off" maxLength={11} value={draft.nin} onChange={(e) => { e.target.value = e.target.value.replace(/\D/g, ''); set('nin')(e); }} className="tracking-widest sm:max-w-xs" />}
+              {(f) => <Input {...f} inputMode="numeric" autoComplete="off" value={draft.nin} onChange={(e) => { e.target.value = digitsOnly(e.target.value, 11); set('nin')(e); }} className="tracking-widest sm:max-w-xs" />}
             </Field>
             <Alert tone="neutral" icon={Lock}>Your NIN is sent securely to our identity partner for this check only. It is never shown to anyone else.</Alert>
           </StepCard>

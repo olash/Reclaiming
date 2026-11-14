@@ -17,6 +17,12 @@ export default function ForgotPasswordPage() {
   const [busy, setBusy] = React.useState(false);
   const [sent, setSent] = React.useState(false);
 
+  // Carry over the email already typed on the log-in page.
+  React.useEffect(() => {
+    const fromLogin = new URLSearchParams(window.location.search).get('email');
+    if (fromLogin) setEmail(fromLogin);
+  }, []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);

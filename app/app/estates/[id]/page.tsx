@@ -19,6 +19,7 @@ import { STAGE_COPY, accountsOf, stageOf, type Account, type Estate } from '@/li
 import { SUPPORT_WHATSAPP } from '@/lib/fees';
 import { mandateParagraphs, type MandateLetter } from '@/lib/mandate-text';
 import { useEstate, useIdentity } from '@/lib/use-estates';
+import { digitsOnly, useFocusFirstError } from '@/lib/use-focus-error';
 import { caseRef, formatDate, formatNaira } from '@/lib/utils';
 
 const bvnKey = (id: string) => `reclaimng:bvn:${id}`;
@@ -33,6 +34,7 @@ function BankLetter({ estate, onDone }: { estate: Estate; onDone: () => void }) 
   const [letter, setLetter] = React.useState<MandateLetter>({ bankName: '', branchAddress: '', deceasedName: estate.deceased_name, deceasedBvn: '', executorName: '', executorPhone: '' });
   const [errors, setErrors] = React.useState<Partial<Record<keyof MandateLetter, string>>>({});
   const [busy, setBusy] = React.useState(false);
+  const focusFirstError = useFocusFirstError();
 
   React.useEffect(() => {
     setLetter((l) => (l.executorName ? l : { ...l, executorName: verifiedName || displayName(user) }));
@@ -52,7 +54,7 @@ function BankLetter({ estate, onDone }: { estate: Estate; onDone: () => void }) 
     if (letter.executorName.trim().length < 3) found.executorName = 'Enter your full name.';
     if (!/^(?:\+?234|0)[7-9][01]\d{8}$/.test(letter.executorPhone.replace(/[\s-]/g, ''))) found.executorPhone = 'Enter a Nigerian mobile number, like 0801 234 5678.';
     setErrors(found);
-    if (Object.keys(found).length) return requestAnimationFrame(() => document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
+    if (Object.keys(found).length) return focusFirstError();
 
     setBusy(true);
     try {
@@ -91,7 +93,7 @@ function BankLetter({ estate, onDone }: { estate: Estate; onDone: () => void }) 
               {(f) => <Textarea {...f} rows={2} value={letter.branchAddress} onChange={set('branchAddress')} />}
             </Field>
             <Field label="Their BVN" hint="11 digits. Often printed on bank statements or account opening papers." error={errors.deceasedBvn}>
-              {(f) => <Input {...f} inputMode="numeric" maxLength={11} autoComplete="off" value={letter.deceasedBvn} onChange={(e) => { e.target.value = e.target.value.replace(/\D/g, ''); set('deceasedBvn')(e); }} className="tracking-widest" />}
+              {(f) => <Input {...f} inputMode="numeric" autoComplete="off" value={letter.deceasedBvn} onChange={(e) => { e.target.value = digitsOnly(e.target.value, 11); set('deceasedBvn')(e); }} className="tracking-widest" />}
             </Field>
             <Field label="Your full name" error={errors.executorName}>
               {(f) => <Input {...f} autoComplete="name" value={letter.executorName} onChange={set('executorName')} />}
@@ -191,7 +193,7 @@ function FindAccounts({ estate, onDone, rerun = false }: { estate: Estate; onDon
         {!session ? (
           <form onSubmit={sendCode} noValidate className="space-y-5">
             <Field label="Their BVN" hint="11 digits." error={error.field}>
-              {(f) => <Input {...f} inputMode="numeric" maxLength={11} autoComplete="off" value={bvn} onChange={(e) => { setBvn(e.target.value.replace(/\D/g, '')); setError({}); }} className="tracking-widest sm:max-w-xs" />}
+              {(f) => <Input {...f} inputMode="numeric" autoComplete="off" value={bvn} onChange={(e) => { setBvn(digitsOnly(e.target.value, 11)); setError({}); }} className="tracking-widest sm:max-w-xs" />}
             </Field>
             <Button type="submit" loading={busy} loadingText="Sending code…"><KeyRound aria-hidden="true" />Send me the code</Button>
             <p className="text-sm text-muted-foreground">Has the bank not linked your number yet? The code will go to the old number. Wait for the bank&apos;s confirmation first.</p>
@@ -200,7 +202,7 @@ function FindAccounts({ estate, onDone, rerun = false }: { estate: Estate; onDon
           <form onSubmit={verify} noValidate className="space-y-5">
             <Alert tone="success" title="Code sent">{session.sentTo}</Alert>
             <Field label="One-time code" hint="It can take a minute to arrive." error={error.field}>
-              {(f) => <Input {...f} ref={otpRef} inputMode="numeric" autoComplete="one-time-code" maxLength={8} value={otp} onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '')); setError({}); }} className="text-xl tracking-[0.4em] sm:max-w-[14rem]" />}
+              {(f) => <Input {...f} ref={otpRef} inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={(e) => { setOtp(digitsOnly(e.target.value, 8)); setError({}); }} className="text-xl tracking-[0.4em] sm:max-w-[14rem]" />}
             </Field>
             <div className="flex flex-wrap gap-3">
               <Button type="submit" loading={busy} loadingText="Searching…"><Search aria-hidden="true" />Find accounts</Button>

@@ -15,6 +15,7 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
       <div
         className="mt-3 h-2 overflow-hidden rounded-full bg-muted"
         role="progressbar"
+        aria-label="Progress"
         aria-valuemin={1}
         aria-valuemax={steps.length}
         aria-valuenow={current + 1}

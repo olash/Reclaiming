@@ -63,7 +63,7 @@ function LoginForm() {
           {(f) => <PasswordInput {...f} name="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
         </Field>
         <div className="flex justify-end">
-          <Link href="/forgot-password" className="py-1 font-semibold text-primary underline underline-offset-4">Forgot your password?</Link>
+          <Link href={email.trim() ? `/forgot-password?email=${encodeURIComponent(email.trim())}` : '/forgot-password'} className="py-1 font-semibold text-primary underline underline-offset-4">Forgot your password?</Link>
         </div>
         <Button type="submit" className="w-full" loading={busy} loadingText="Logging in…">Log in</Button>
       </form>

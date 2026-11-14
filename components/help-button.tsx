@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
  */
 export function HelpButton({ className }: { className?: string }) {
   return (
+    <aside aria-label="Help" className="no-print">
     <a
       href={SUPPORT_WHATSAPP}
       target="_blank"
@@ -22,5 +23,6 @@ export function HelpButton({ className }: { className?: string }) {
       <span>Chat with us</span>
       <span className="sr-only"> on WhatsApp (opens in a new tab)</span>
     </a>
+    </aside>
   );
 }

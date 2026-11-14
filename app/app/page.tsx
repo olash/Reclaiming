@@ -142,7 +142,7 @@ export default function DashboardPage() {
                   onClick={() => setFilter(key)}
                   className={cn('min-h-11 rounded-sm px-3.5 text-[0.95rem] font-semibold', filter === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-ink')}
                 >
-                  {label} <span className="font-normal opacity-80">({counts[key]})</span>
+                  {label} <span className="font-normal">({counts[key]})</span>
                 </button>
               ))}
             </div>
