@@ -12,7 +12,8 @@
     "test:api:unmigrated": "MOCK_SCHEMA=v1 node --test tests/api.test.mjs",
     "test:flows": "node tests/flows.mjs",
     "test:a11y": "node tests/a11y.mjs",
-    "test": "node --test tests/api.test.mjs && node tests/flows.mjs && node tests/a11y.mjs"
+    "test": "node --test tests/api.test.mjs && node tests/flows.mjs && node tests/a11y.mjs",
+    "test:api:live-schema": "MOCK_SCHEMA=live node --test tests/api.test.mjs"
   },
   "dependencies": {
     "@google-cloud/vision": "^5.3.7",

@@ -219,7 +219,7 @@ try {
   await shot(page, 'new-09-wizard-done');
   let s = await state();
   const estate = s.tables.estates.find((e) => e.deceased_name === 'Samuel Adekunle Bello');
-  check('Submission opens one paid case in review', s.tables.estates.length === 1 && estate?.payment_status === 'paid' && estate?.status === 'pending_review');
+  check('Submission opens one paid case in review', s.tables.estates.length === 1 && (process.env.MOCK_SCHEMA === 'live' || estate?.payment_status === 'paid') && estate?.status === 'pending_review');
   check('Confirmation says what happens next', (await page.getByText('What happens next').count()) === 1);
   check('Saved answers are cleared once the case is open', await page.evaluate(() => !Object.keys(sessionStorage).some((k) => k.startsWith('reclaimng:draft'))));
 

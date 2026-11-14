@@ -371,7 +371,7 @@ describe('POST /api/submit-documents', () => {
     const row = await estateRow(r.body.estateId);
     assert.equal(row.user_id, u.id, 'owner comes from the token, not the form');
     assert.equal(row.status, 'pending_review');
-    assert.equal(row.payment_status, 'paid');
+    if (SCHEMA !== 'live') assert.equal(row.payment_status, 'paid'); // column missing on the un-migrated live database
     assert.equal(row.estate_name, 'Estate of Samuel Adekunle Bello');
     assert.ok(row.letter_of_administration_path.endsWith('.png'));
     const keys = (await state()).objects.map((o) => o.key).filter((k) => k.includes(u.id));
@@ -666,14 +666,14 @@ describe('Review console: /api/admin/*', () => {
     assert.equal((await decide({ action: 'reject', note: 'The certificate photo is too blurry to read.' })).status, 200);
     let row = await estateRow(estateId);
     assert.equal(row.status, 'rejected');
-    if (SCHEMA !== 'v1') assert.equal(row.review_note, 'The certificate photo is too blurry to read.');
+    if (SCHEMA === 'v2') assert.equal(row.review_note, 'The certificate photo is too blurry to read.');
     assert.equal((await decide({ action: 'approve' })).status, 200);
     row = await estateRow(estateId);
     assert.equal(row.status, 'verified');
-    if (SCHEMA !== 'v1') assert.equal(row.review_note, null, 'the old note is cleared on approval');
+    if (SCHEMA === 'v2') assert.equal(row.review_note, null, 'the old note is cleared on approval');
     assert.equal((await decide({ action: 'settle' })).body.code, 'AMOUNT_REQUIRED');
     const settled = await decide({ action: 'settle', amount: 11205000 });
-    if (SCHEMA === 'v1') {
+    if (SCHEMA !== 'v2') {
       // Before migration 0005 the database does not allow "settled": the reviewer is told exactly why.
       assert.equal(settled.status, 500);
       assert.match(settled.body.error, /migration 0005/);
@@ -682,7 +682,7 @@ describe('Review console: /api/admin/*', () => {
     assert.equal(settled.status, 200);
     row = await estateRow(estateId);
     assert.equal(row.status, 'settled');
-    if (SCHEMA !== 'v1') assert.equal(row.total_asset_value, 11205000);
+    if (SCHEMA === 'v2') assert.equal(row.total_asset_value, 11205000);
   });
 });
 
@@ -702,7 +702,8 @@ describe('POST /api/webhook/paystack', () => {
     const a = await userWithEstate({ payment_status: 'unpaid', paystack_reference: 'WH_A' });
     const b = await userWithEstate({ payment_status: 'unpaid', paystack_reference: 'WH_B' });
     const r = await send({ event: 'charge.success', data: { reference: 'WH_A', amount: 7500000, currency: 'NGN', metadata: {} } });
-    assert.equal(r.status, 200);
+    assert.equal(r.status, 200, 'always acknowledged, even before migration 0004');
+    if (SCHEMA === 'live') return;
     assert.equal((await estateRow(a.estateId)).payment_status, 'paid');
     assert.equal((await estateRow(b.estateId)).payment_status, 'unpaid');
   });
@@ -710,7 +711,7 @@ describe('POST /api/webhook/paystack', () => {
     const a = await userWithEstate({ payment_status: 'unpaid', paystack_reference: 'WH_C' });
     await send({ event: 'charge.success', data: { reference: 'WH_C', amount: 100, currency: 'NGN', metadata: { user_id: a.user.id, estate_id: a.estateId } } });
     await send({ event: 'charge.success', data: { reference: 'SOMETHING_ELSE', amount: 7500000, currency: 'NGN', metadata: { user_id: a.user.id, estate_id: a.estateId } } });
-    assert.equal((await estateRow(a.estateId)).payment_status, 'unpaid');
+    if (SCHEMA !== 'live') assert.equal((await estateRow(a.estateId)).payment_status, 'unpaid');
   });
   test('other events are acknowledged and ignored', async () => {
     assert.equal((await send({ event: 'transfer.success', data: {} })).status, 200);

@@ -4,7 +4,7 @@ import { HttpError, json, route } from '@/lib/server/http';
 import { assertPaid, findLedgerEntry, recordLedgerEntry } from '@/lib/server/paystack';
 import { latestVerification, livenessPassed } from '@/lib/server/identity';
 import { livenessMode } from '@/lib/server/qoreid';
-import { adminClient, requireUser } from '@/lib/server/supabase';
+import { adminClient, insertTolerant, requireUser } from '@/lib/server/supabase';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -96,9 +96,7 @@ export const POST = route('submit-documents', async (request) => {
   const loaStored = loa ? await store(loa, 'letter_of_administration') : null;
 
   // ── Create the case ───────────────────────────────────────────────────────
-  const { data: created, error: insertError } = await supabase
-    .from('estates')
-    .insert({
+  const { data: created, error: insertError } = await insertTolerant('estates', {
       user_id: user.id,
       estate_name: `Estate of ${deceasedName}`,
       deceased_name: deceasedName,
@@ -108,9 +106,8 @@ export const POST = route('submit-documents', async (request) => {
       death_certificate_path: dc.path,
       letter_of_administration_path: loaStored?.path ?? null,
       submitted_at: new Date().toISOString(),
-    })
-    .select('id');
-  const estateId = created?.[0]?.id;
+    });
+  const estateId = (created as unknown as Array<{ id: string }> | null)?.[0]?.id;
   if (insertError || !estateId) {
     console.error('[submit-documents] insert failed:', insertError?.message);
     throw new HttpError(500, 'Your payment is safe, but we could not open your case. Please press "Try again" — you will not be charged twice.', 'DB_ERROR', { reference: payment.reference });

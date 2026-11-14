@@ -63,3 +63,26 @@ export function isMissingSchema(error: { code?: string; message?: string } | nul
   if (!error) return false;
   return ['PGRST204', 'PGRST205', '42P01', '42703'].includes(error.code ?? '') || /schema cache|does not exist/i.test(error.message ?? '');
 }
+
+/**
+ * Insert that survives a database which is behind on migrations: if PostgREST
+ * reports an unknown column, that column is dropped and the insert retried.
+ * Lets a demo keep working while migrations are pending; the dropped columns
+ * are logged so the gap is visible.
+ */
+export async function insertTolerant(table: string, row: Record<string, unknown>, select = 'id') {
+  const data = { ...row };
+  const dropped: string[] = [];
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const res = await adminClient().from(table).insert(data).select(select);
+    const missing = res.error?.code === 'PGRST204' ? /'([^']+)' column/.exec(res.error.message)?.[1] : undefined;
+    if (missing && missing in data) {
+      delete data[missing];
+      dropped.push(missing);
+      continue;
+    }
+    if (dropped.length) console.warn(`[supabase] ${table}: column(s) ${dropped.join(', ')} missing — run the pending migrations.`);
+    return res;
+  }
+  return adminClient().from(table).insert(data).select(select);
+}

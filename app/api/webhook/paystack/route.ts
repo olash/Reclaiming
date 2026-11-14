@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { FEES } from '@/lib/fees';
 import { json } from '@/lib/server/http';
-import { adminClient } from '@/lib/server/supabase';
+import { adminClient, isMissingSchema } from '@/lib/server/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +43,9 @@ export async function POST(request: Request) {
           .update({ payment_status: 'paid' })
           .eq('paystack_reference', reference)
           .eq('payment_status', 'unpaid');
-        if (error) {
+        if (error && isMissingSchema(error)) {
+          console.warn('[paystack-webhook] estates.payment_status missing — run migration 0004. Event acknowledged.');
+        } else if (error) {
           console.error('[paystack-webhook] update failed:', error.message);
           return json({ error: 'Database update failed' }, 500); // Paystack will retry
         }

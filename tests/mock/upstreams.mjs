@@ -86,7 +86,19 @@ const SCHEMA_V2 = {
   },
 };
 
-let SCHEMA = process.env.MOCK_SCHEMA === 'v1' ? SCHEMA_V1 : SCHEMA_V2;
+// "live": what the diagnostics found on the real project — migration 0004 never ran (no payment_status).
+const SCHEMA_LIVE = {
+  ...SCHEMA_V1,
+  estates: {
+    ...SCHEMA_V1.estates,
+    columns: [...SCHEMA_V1.estates.columns.filter((c) => c !== 'payment_status'), 'total_asset_value'],
+    defaults: () => { const d = SCHEMA_V1.estates.defaults(); delete d.payment_status; return d; },
+    checks: { status: SCHEMA_V1.estates.checks.status },
+  },
+  payments: SCHEMA_V2.payments,
+};
+const pick = (name) => (name === 'v1' ? SCHEMA_V1 : name === 'live' ? SCHEMA_LIVE : SCHEMA_V2);
+let SCHEMA = pick(process.env.MOCK_SCHEMA);
 
 // ── State ─────────────────────────────────────────────────────────────────
 const fresh = () => ({
@@ -492,7 +504,7 @@ async function handleMono(req, res, url) {
 async function handleAdmin(req, res, url) {
   const path = url.pathname.replace('/__admin', '');
   const body = req.method === 'POST' ? JSON.parse((await readBody(req)).toString() || '{}') : {};
-  if (path === '/reset') { db = fresh(); if (body.schema) SCHEMA = body.schema === 'v1' ? SCHEMA_V1 : SCHEMA_V2; return send(res, 200, { ok: true }); }
+  if (path === '/reset') { db = fresh(); if (body.schema) SCHEMA = pick(body.schema); return send(res, 200, { ok: true }); }
   if (path === '/user') { const u = createUser(body); return send(res, 200, { user: publicUser(u), session: session(u) }); }
   if (path === '/tx') { db.paystackTx.set(body.reference, body); return send(res, 200, { ok: true }); }
   if (path === '/row') { db.tables[body.table].push(body.row); return send(res, 200, { ok: true }); }
