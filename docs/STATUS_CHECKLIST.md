@@ -1,6 +1,6 @@
 # Reclaimng: status checklist
 
-_Last updated 14 November 2026. Branch `claude/happy-galileo-4uh7cb` (pushed; not merged into `main`; no pull request)._
+_Last updated 14 November 2026 (afternoon). Branch `claude/happy-galileo-4uh7cb` (pushed; not merged into `main`; no pull request)._
 
 Legend:
 - `[x]` done. `[ ]` not done. `[~]` done in code but not yet proven live.
@@ -71,7 +71,7 @@ Legend:
 - [~] **Mono, BVN account search (v3, `scope: bank_accounts`):** built to Mono's current docs, including choosing where the code goes (email, the BVN's phones, or an alternate phone). Tested against a stand-in that follows Mono's docs exactly. **Blocked live** because the Vercel key isn't from a Lookup app.
 - [x] **Mono provider layer:** account search sits behind one interface (`lib/server/bvn-discovery.ts`), so another provider can be swapped in.
 - [~] **Paystack:** test key live-tested and the checkout script loads. The real checkout popup has not been run end to end.
-- [~] **Supabase:** live schema checked. Migrations 0004 and 0005 are missing (see Part B). Auth settings read: email and Google sign-in enabled, email confirmation on.
+- [x] **Supabase:** migrations 0004 and 0005 applied and verified on the live project. Auth settings read: email and Google sign-in enabled, email confirmation on.
 - [x] **Review console** (`/app/admin`, for staff in `ADMIN_EMAILS`):
   - a queue showing NIN and selfie results;
   - documents opened through 10-minute signed links;
@@ -113,12 +113,12 @@ Legend:
 |---|---|---|---|
 | 1 | Create a **Mono Lookup app** and copy its **test** secret key | 👤 | Mono dashboard → Apps → Create app → Lookup |
 | 2 | Put that key in Vercel as `MONO_SEC_KEY` (Production + Preview) | 👤 | Vercel → reclaiming → Settings → Environment Variables |
-| 3 | Add `ADMIN_EMAILS` = your login email(s) | 👤 | same place |
-| 4 | Add `LIVENESS_MODE=required` and `NEXT_PUBLIC_LIVENESS_MODE=required` | 👤 | same place |
-| 5 | Run migration `0004_payment_status.sql`, **then** `0005_redesign.sql` | 👤 | Supabase → SQL Editor |
+| 3 | ✅ **Done** — `ADMIN_EMAILS` set (Production + Preview) | 🛠 | — |
+| 4 | ✅ **Done** — `LIVENESS_MODE` and `NEXT_PUBLIC_LIVENESS_MODE` = `required` (Production + Preview) | 🛠 | — |
+| 5 | ✅ **Done** — migrations 0004 and 0005 applied and verified (columns, settled status, unique payment reference, payments ledger with RLS, 5 raw BVNs masked) | 🛠 | — |
 | 6 | Add redirect URLs `https://reclaiming.vercel.app/**` and `https://reclaiming-*-olashs-projects.vercel.app/**`; set the Site URL | 👤 | Supabase → Authentication → URL Configuration |
 | 7 | (Optional) turn **off** "Confirm email" so new sign-ups work instantly on stage | 👤 | Supabase → Authentication → Providers → Email |
-| 8 | Make production public: **Standard Protection** | 👤 | Vercel → Settings → Deployment Protection |
+| 8 | ✅ **Done** — Deployment Protection set to **Standard** (`reclaiming.vercel.app` public; previews still private) | 🛠 | — |
 | 9 | Merge the branch into `main` (or promote the preview) and redeploy | 👤 or 🛠 (say the word and I'll do it) | GitHub / Vercel |
 | 10 | Set the Paystack **test** webhook URL to `https://reclaiming.vercel.app/api/webhook/paystack` | 👤 | Paystack → Settings → API Keys & Webhooks |
 | 11 | Open `/api/diagnostics` on the preview and confirm everything is green | 👤 | browser |
@@ -126,6 +126,12 @@ Legend:
 | 13 | If the selfie rejects your face against the test NIN, set both liveness settings to `optional` and redeploy | 👤 | Vercel |
 | 14 | **Roll** the Paystack test secret key found in git history | 👤 | Paystack → Settings → API Keys |
 | 15 | Prepare the pitch: problem, live demo, the regulatory story (iGree consent, provider choice) | 👤 | — |
+
+### B1b. Supabase advisor notes (non-blocking) 🟢
+- [ ] Turn on **leaked password protection**: Supabase → Authentication → Policies (security advisor).
+- [ ] Set a fixed `search_path` on the `update_updated_at_column` function (security advisor, WARN).
+- [ ] Rewrite RLS policies to use `(select auth.uid())` (performance at scale), and index `payments.estate_id`.
+- [ ] `bvn_request_logs` has RLS with no policies. That is intended: only the server writes to it.
 
 ### B2. Still not proven live (risks to watch in the dry run)
 - [ ] Paystack checkout popup with a test card, then server-side verification of that real payment.
