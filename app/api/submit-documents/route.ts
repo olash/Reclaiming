@@ -2,6 +2,8 @@ import { FEES, UPLOAD_RULES } from '@/lib/fees';
 import { checkDeathCertificateText, readDocumentText, type DocumentCheck } from '@/lib/server/document-check';
 import { HttpError, json, route } from '@/lib/server/http';
 import { assertPaid, findLedgerEntry, recordLedgerEntry } from '@/lib/server/paystack';
+import { latestVerification, livenessPassed } from '@/lib/server/identity';
+import { livenessMode } from '@/lib/server/qoreid';
 import { adminClient, requireUser } from '@/lib/server/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -58,8 +60,11 @@ export const POST = route('submit-documents', async (request) => {
   const relationship = String(form.get('relationship') ?? '').trim().slice(0, 60);
 
   // ── Identity must have been confirmed first ───────────────────────────────
-  const { data: kyc } = await supabase.from('verifications').select('id').eq('user_id', user.id).limit(1);
-  if (!kyc?.length) throw new HttpError(403, 'Please confirm your identity before sending documents.', 'IDENTITY_REQUIRED');
+  const kyc = await latestVerification(user.id);
+  if (!kyc) throw new HttpError(403, 'Please confirm your identity before sending documents.', 'IDENTITY_REQUIRED');
+  if (livenessMode() === 'required' && !livenessPassed(kyc)) {
+    throw new HttpError(403, 'Please complete the selfie check before sending documents.', 'LIVENESS_REQUIRED');
+  }
 
   // ── Payment ───────────────────────────────────────────────────────────────
   const payment = await assertPaid({ reference: form.get('paystack_reference'), purpose: 'submission', userId: user.id, email: user.email });

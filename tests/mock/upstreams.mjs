@@ -414,7 +414,10 @@ async function handleQoreid(req, res, url) {
   if (path === '/v1/sessions') {
     const expected = 'Basic ' + Buffer.from('mock-qore-client:mock-qore-secret').toString('base64');
     if (req.headers.authorization !== expected) return send(res, 401, { message: 'Unauthorized' });
-    return send(res, 201, { sdkSessionToken: 'sdk_' + crypto.randomBytes(16).toString('hex'), reference: body.reference });
+    // Mirrors the live test account: liveness products enabled, face_verification_nin not subscribed.
+    if (!['liveness', 'liveness_nin'].includes(body.productCode)) return send(res, 403, { statusCode: 403, message: 'Not subscribed to this product' });
+    if (!body.reference) return send(res, 400, { message: 'reference is required' });
+    return send(res, 201, { sessionId: 'sess_' + crypto.randomBytes(6).toString('hex'), sdkSessionToken: 'sdk_' + crypto.randomBytes(16).toString('hex'), type: 'collection', productCode: body.productCode, expiresAt: new Date(Date.now() + 600000).toISOString() });
   }
   if (req.headers.authorization !== 'Bearer mock-qore-access-token') return send(res, 401, { message: 'Unauthorized' });
   const premium = /^\/v1\/ng\/identities\/nin-premium\/(\d+)$/.exec(path);

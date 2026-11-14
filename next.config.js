@@ -24,7 +24,8 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+  // QoreID's selfie check runs in an iframe from dashboard.qoreid.com and needs the camera.
+  { key: 'Permissions-Policy', value: 'camera=(self "https://dashboard.qoreid.com"), geolocation=(self "https://dashboard.qoreid.com"), microphone=()' },
 ];
 
 const nextConfig = {

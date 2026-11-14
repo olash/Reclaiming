@@ -71,7 +71,7 @@ export function useEstate(id: string) {
 /** When the signed-in user last passed the identity check (null = never / not yet known). */
 export function useIdentity() {
   const { user } = useAuth();
-  const [state, setState] = React.useState<State<{ verifiedAt: string; name?: string } | null>>({ status: 'loading' });
+  const [state, setState] = React.useState<State<{ verifiedAt: string; name?: string; liveness: 'none' | 'started' | 'submitted' | 'failed' } | null>>({ status: 'loading' });
   const [nonce, setNonce] = React.useState(0);
 
   React.useEffect(() => {
@@ -88,7 +88,10 @@ export function useIdentity() {
         if (error) return setState({ status: 'ready', data: null });
         const row = data?.[0];
         const a = row?.profile_data?.applicant;
-        setState({ status: 'ready', data: row ? { verifiedAt: row.created_at, name: a?.firstname ? `${a.firstname} ${a.lastname ?? ''}`.trim() : undefined } : null });
+        setState({
+          status: 'ready',
+          data: row ? { verifiedAt: row.created_at, name: a?.firstname ? `${a.firstname} ${a.lastname ?? ''}`.trim() : undefined, liveness: row.profile_data?.liveness?.status ?? 'none' } : null,
+        });
       });
     return () => {
       active = false;

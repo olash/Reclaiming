@@ -45,9 +45,26 @@ const PAYSTACK_STUB = `
     };
   };`;
 
+// QoreID Web SDK stand-in: same entry point the real script exposes (window.QoreIdSDK.init)
+// and the same "submitted" callback, so our wrapper code path is exercised end to end.
+const QOREID_STUB = `
+  window.QoreIdSDK = {
+    init: function (cfg) {
+      window.__qoreInit = { token: cfg.token, customerReference: cfg.customerReference, identityData: cfg.identityData, applicantData: cfg.applicantData };
+      var el = document.createElement('div'); el.className = 'sdkPopup'; document.body.appendChild(el);
+      setTimeout(function () {
+        el.remove();
+        if (window.__qoreMode === 'error') cfg.errorEventTrigger(new CustomEvent('qoreid:verificationError', { detail: { message: 'Camera permission denied' } }));
+        else cfg.submittedEventTrigger(new CustomEvent('qoreid:verificationSubmitted', { detail: { verificationId: 8812, status: { state: 'complete', status: 'verified' }, photo: 'BASE64' } }));
+      }, 300);
+    },
+    closeVerification: function () {}
+  };`;
+
 async function newContext(browser, opts = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 }, acceptDownloads: true, ...opts });
   await ctx.route('https://js.paystack.co/**', (r) => r.fulfill({ contentType: 'text/javascript', body: PAYSTACK_STUB }));
+  await ctx.route('https://dashboard.qoreid.com/qoreid-sdk/**', (r) => r.fulfill({ contentType: 'text/javascript', body: QOREID_STUB }));
   return ctx;
 }
 
@@ -164,7 +181,18 @@ try {
   check('Closing the payment window explains what happened and changes nothing', (await page.getByText('Step 3 of 5').count()) === 1);
   await page.evaluate(() => (window.__paystackMode = 'success'));
   await page.getByRole('button', { name: /Pay ₦5,000 and confirm/ }).click();
+  await page.getByText('One last thing: a quick selfie').waitFor({ timeout: 15000 });
+  check('After the NIN matches, the selfie check is explained before the camera opens', (await page.getByRole('main').getByText('Your NIN is confirmed', { exact: true }).count()) === 1);
+  await shot(page, 'new-06b-selfie');
+  await page.evaluate(() => (window.__qoreMode = 'error'));
+  await page.getByRole('button', { name: 'Start selfie check' }).click();
+  await page.getByText('The selfie check did not finish').waitFor();
+  check('A failed selfie check is explained and can be retried', true);
+  await page.evaluate(() => (window.__qoreMode = 'success'));
+  await page.getByRole('button', { name: 'Start selfie check' }).click();
   await page.getByRole('heading', { name: 'Add the documents' }).waitFor({ timeout: 15000 });
+  const qore = await page.evaluate(() => window.__qoreInit);
+  check('QoreID SDK launched with a server-minted token, our reference and the verified NIN', /^sdk_/.test(qore.token) && /^rc_live_/.test(qore.customerReference) && qore.identityData?.idNumber === '11111111111' && qore.identityData?.idType === 'nin', JSON.stringify({ ...qore, token: qore.token?.slice(0, 6) }));
   const paid = await page.evaluate(() => window.__paid);
   check('Identity fee charged once, for exactly ₦5,000, tagged with the user', paid.length === 2 && paid[1].amount === 500000 && paid[1].metadata?.purpose === 'identity', JSON.stringify(paid));
 

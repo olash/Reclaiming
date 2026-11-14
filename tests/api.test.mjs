@@ -224,14 +224,72 @@ describe('POST /api/verify-nin', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-describe('POST /api/generate-qore-session', () => {
-  test('signed-in user gets a session token', async () => {
+describe('QoreID selfie liveness: /api/identity/liveness/{session,result}', () => {
+  async function ninVerified() {
     const u = await newUser();
+    await admin('/row', { table: 'verifications', row: { id: crypto.randomUUID(), user_id: u.id, nin: '11' + String(700000000 + ++n), profile_data: { applicant: { firstname: 'Amaka', lastname: 'Okonkwo' } }, created_at: new Date().toISOString() } });
+    return u;
+  }
+  const liveOf = async (u) => (await state()).tables.verifications.find((v) => v.user_id === u.id).profile_data.liveness;
+
+  test('needs a confirmed NIN first', async () => {
+    const u = await newUser();
+    const r = await call('/api/identity/liveness/session', { token: u.token });
+    assert.equal(r.status, 409);
+    assert.equal(r.body.code, 'IDENTITY_REQUIRED');
+  });
+
+  test('mints a liveness_nin session and hands the SDK exactly what it needs', async () => {
+    const u = await ninVerified();
+    const r = await call('/api/identity/liveness/session', { token: u.token });
+    assert.equal(r.status, 200, JSON.stringify(r.body));
+    assert.match(r.body.token, /^sdk_/);
+    assert.match(r.body.reference, /^rc_live_/);
+    assert.equal(r.body.identity.idType, 'nin');
+    assert.equal(r.body.identity.idNumber.length, 11);
+    assert.deepEqual([r.body.applicant.firstname, r.body.applicant.lastname], ['Amaka', 'Okonkwo']);
+    assert.equal((await liveOf(u)).status, 'started');
+    const calls = (await state()).upstreamCalls.filter((c) => c.service === 'qoreid' && c.path === '/v1/sessions');
+    assert.ok(calls.length > 0);
+  });
+
+  test('records a submitted result — without keeping photos — only for the session we started', async () => {
+    const u = await ninVerified();
+    const s1 = await call('/api/identity/liveness/session', { token: u.token });
+    const wrong = await call('/api/identity/liveness/result', { token: u.token, json: { reference: 'rc_live_forged', outcome: 'submitted' } });
+    assert.equal(wrong.status, 409);
+    const ok = await call('/api/identity/liveness/result', { token: u.token, json: { reference: s1.body.reference, outcome: 'submitted', detail: { verificationId: 88, status: { state: 'complete', status: 'verified' }, photo: 'BASE64IMAGE' } } });
+    assert.equal(ok.status, 200);
+    assert.equal(ok.body.status, 'submitted');
+    const live = await liveOf(u);
+    assert.equal(live.status, 'submitted');
+    assert.equal(live.result.verificationId, 88);
+    assert.ok(!JSON.stringify(live).includes('BASE64IMAGE'), 'photos are not stored');
+  });
+
+  test('an SDK error is recorded as failed and can be retried', async () => {
+    const u = await ninVerified();
+    const s1 = await call('/api/identity/liveness/session', { token: u.token });
+    const r = await call('/api/identity/liveness/result', { token: u.token, json: { reference: s1.body.reference, outcome: 'error', detail: { message: 'camera denied' } } });
+    assert.equal(r.body.status, 'failed');
+    const s2 = await call('/api/identity/liveness/session', { token: u.token });
+    assert.equal(s2.status, 200);
+    assert.notEqual(s2.body.reference, s1.body.reference);
+  });
+
+  test('another user cannot record a result for someone else\'s session', async () => {
+    const victim = await ninVerified();
+    const s1 = await call('/api/identity/liveness/session', { token: victim.token });
+    const attacker = await ninVerified();
+    const r = await call('/api/identity/liveness/result', { token: attacker.token, json: { reference: s1.body.reference, outcome: 'submitted' } });
+    assert.equal(r.status, 409);
+    assert.equal((await liveOf(victim)).status, 'started');
+  });
+
+  test('old /api/generate-qore-session path still works; GET is not allowed', async () => {
+    const u = await ninVerified();
     const r = await call('/api/generate-qore-session', { token: u.token });
     assert.equal(r.status, 200);
-    assert.match(r.body.sdkSessionToken, /^sdk_/);
-  });
-  test('GET is not allowed', async () => {
     assert.equal((await call('/api/generate-qore-session', { method: 'GET' })).status, 405);
   });
 });
@@ -240,7 +298,7 @@ describe('POST /api/generate-qore-session', () => {
 describe('POST /api/submit-documents', () => {
   async function verifiedUser() {
     const u = await newUser();
-    await admin('/row', { table: 'verifications', row: { id: crypto.randomUUID(), user_id: u.id, nin: String(10000000000 + ++n), profile_data: { applicant: { firstname: 'A', lastname: 'B' } }, created_at: new Date().toISOString() } });
+    await admin('/row', { table: 'verifications', row: { id: crypto.randomUUID(), user_id: u.id, nin: String(10000000000 + ++n), profile_data: { applicant: { firstname: 'A', lastname: 'B' }, liveness: { status: 'submitted', reference: 'rc_live_seed' } }, created_at: new Date().toISOString() } });
     return u;
   }
   const fields = (ref) => ({ deceased_name: 'Samuel Adekunle Bello', date_of_death: '2025-01-10', relationship: 'Child', paystack_reference: ref });
@@ -262,6 +320,15 @@ describe('POST /api/submit-documents', () => {
     const big = await call('/api/submit-documents', { token: u.token, form: docForm(fields('x'), { death_certificate: { blob: new Blob([Buffer.alloc(10 * 1024 * 1024 + 1)], { type: 'application/pdf' }), name: 'big.pdf' } }) });
     assert.equal(big.status, 413);
     assert.equal((await state()).objects.length, 0, 'nothing was stored');
+  });
+
+  test('requires the selfie check to have passed', async () => {
+    const u = await newUser();
+    await admin('/row', { table: 'verifications', row: { id: crypto.randomUUID(), user_id: u.id, nin: String(10000000000 + ++n), profile_data: { applicant: { firstname: 'A', lastname: 'B' }, liveness: { status: 'started', reference: 'x' } }, created_at: new Date().toISOString() } });
+    await paid('DOC_NOLIVE', 7500000, u, 'submission');
+    const r = await call('/api/submit-documents', { token: u.token, form: docForm(fields('DOC_NOLIVE')) });
+    assert.equal(r.status, 403);
+    assert.equal(r.body.code, 'LIVENESS_REQUIRED');
   });
 
   test('requires identity to be confirmed first', async () => {

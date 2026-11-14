@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, BadgeCheck, CheckCircle2, Clock, FileText, Fingerprint, Lock, Pencil, ScrollText, Wallet } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BadgeCheck, Camera, CheckCircle2, Clock, FileText, Fingerprint, Lock, Pencil, ScrollText, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { FilePicker } from '@/components/file-picker';
 import { Stepper } from '@/components/stepper';
@@ -19,6 +19,7 @@ import { clearDraft, useDraft, type Draft } from '@/lib/draft';
 import { RELATIONSHIPS } from '@/lib/estate';
 import { FEES, SUPPORT_WHATSAPP } from '@/lib/fees';
 import { useIdentity } from '@/lib/use-estates';
+import { LIVENESS_MODE, useLiveness } from '@/lib/use-liveness';
 import { digitsOnly, useFocusFirstError } from '@/lib/use-focus-error';
 import { usePaystack } from '@/lib/use-paystack';
 import { cn, formatDate, formatNaira } from '@/lib/utils';
@@ -28,7 +29,7 @@ const ID_FEE = formatNaira(FEES.identity.kobo, { kobo: true });
 const DOC_FEE = formatNaira(FEES.submission.kobo, { kobo: true });
 const today = () => new Date().toISOString().slice(0, 10);
 
-type Errors = Partial<Record<keyof Draft | 'deathCert' | 'form', string>>;
+type Errors = Partial<Record<keyof Draft | 'deathCert' | 'form' | 'liveness', string>>;
 
 function validateYou(d: Draft): Errors {
   const e: Errors = {};
@@ -113,6 +114,9 @@ export default function NewRecoveryPage() {
 
   const step = draft.step;
   const verified = identity.state.status === 'ready' ? identity.state.data : null;
+  const liveness = useLiveness();
+  const livenessDone = LIVENESS_MODE === 'off' || verified?.liveness === 'submitted';
+  const [skippedSelfie, setSkippedSelfie] = React.useState(false);
 
   // Prefill the name from the account the first time through.
   React.useEffect(() => {
@@ -183,8 +187,9 @@ export default function NewRecoveryPage() {
         });
         if (pre?.verified) {
           identity.reload();
-          toast.success('Your identity is already confirmed.');
-          return go(3);
+          toast.success('Your NIN is already confirmed.');
+          if (LIVENESS_MODE === 'off') go(3);
+          return;
         }
         const result = await pay({ purpose: 'identity', email: user.email, userId: user.id });
         if (result.status === 'cancelled') return toast.info('Payment was not completed. You can try again when you are ready.');
@@ -195,8 +200,8 @@ export default function NewRecoveryPage() {
       await api('/api/verify-nin', { ...details, payment_reference: reference });
       update({ identityRef: '' });
       identity.reload();
-      toast.success('Your identity is confirmed.');
-      go(3);
+      toast.success('Your NIN is confirmed.');
+      if (LIVENESS_MODE === 'off') go(3);
     } catch (err) {
       const e = err as ApiError;
       if (e.code === 'PAYMENT_ALREADY_USED' || e.code === 'PAYMENT_NOT_FOUND' || e.code === 'PAYMENT_OWNER_MISMATCH') update({ identityRef: '' });
@@ -204,6 +209,19 @@ export default function NewRecoveryPage() {
     } finally {
       setBusy(null);
     }
+  }
+
+  // ── Step 3b: selfie liveness check (QoreID Web SDK) ─────────────────────
+  async function startSelfie() {
+    setErrors({});
+    const outcome = await liveness.run();
+    if (outcome.status === 'submitted') {
+      identity.reload();
+      toast.success('Selfie check complete.');
+      return go(3);
+    }
+    if (outcome.status === 'closed') return toast.info('The selfie check was closed before it finished. You can start it again when you are ready.');
+    setErrors({ liveness: outcome.message });
   }
 
   // ── Step 5: pay the filing fee (once) and send the documents ─────────────
@@ -296,7 +314,7 @@ export default function NewRecoveryPage() {
           <ul className="mt-5 space-y-5">
             {[
               [Clock, 'It takes about 10 minutes', 'Your answers are saved as you go, so you can stop and continue later on this device.'],
-              [Fingerprint, 'Have your NIN ready', 'We use it to confirm you are who you say you are.'],
+              [Fingerprint, 'Have your NIN ready', 'We use it, with a quick selfie on your phone or laptop camera, to confirm you are who you say you are.'],
               [FileText, 'Have the death certificate ready', 'A clear phone photo or scan is fine. Letters of Administration are optional for now.'],
               [Wallet, `There are two fees along the way`, `${ID_FEE} to confirm your identity and ${DOC_FEE} when you send your documents. We always show the amount before you pay. Later, we charge ${FEES.successRate * 100}% only of money actually recovered.`],
             ].map(([Icon, title, body]: any) => (
@@ -397,8 +415,17 @@ export default function NewRecoveryPage() {
           footer={
             <>
               {back(1)}
-              {verified ? (
+              {verified && (livenessDone || skippedSelfie) ? (
                 <Button onClick={() => go(3)} className="w-full sm:w-auto">Continue <ArrowRight aria-hidden="true" /></Button>
+              ) : verified ? (
+                <div className="flex w-full flex-col-reverse gap-3 sm:w-auto sm:flex-row">
+                  {LIVENESS_MODE === 'optional' && (
+                    <Button variant="ghost" onClick={() => { setSkippedSelfie(true); go(3); }} className="w-full sm:w-auto">Skip for now</Button>
+                  )}
+                  <Button onClick={startSelfie} loading={liveness.running} loadingText="Opening camera…" className="w-full sm:w-auto">
+                    <Camera aria-hidden="true" />Start selfie check
+                  </Button>
+                </div>
               ) : (
                 <Button onClick={confirmIdentity} loading={busy === 'identity'} loadingText="Checking your identity…" className="w-full sm:w-auto">
                   {draft.identityRef ? 'Check again (already paid)' : `Pay ${ID_FEE} and confirm`}
@@ -408,9 +435,32 @@ export default function NewRecoveryPage() {
           }
         >
           {verified ? (
-            <Alert tone="success" icon={BadgeCheck} title="Your identity is confirmed">
-              Confirmed on {formatDate(verified.verifiedAt)}{verified.name ? ` as ${verified.name}` : ''}. There is nothing more to pay for this step.
-            </Alert>
+            <>
+              <Alert tone="success" icon={BadgeCheck} title="Your NIN is confirmed">
+                Confirmed on {formatDate(verified.verifiedAt)}{verified.name ? ` as ${verified.name}` : ''}. There is nothing more to pay for this step.
+              </Alert>
+              {LIVENESS_MODE !== 'off' &&
+                (livenessDone ? (
+                  <Alert tone="success" icon={Camera} title="Selfie check complete">Your selfie has been matched to the photo on your NIN record.</Alert>
+                ) : (
+                  <div className="rounded-md border p-4 sm:p-5">
+                    <h3 className="flex items-center gap-2 font-sans text-lg font-semibold tracking-normal">
+                      <Camera className="size-5 text-primary" aria-hidden="true" />
+                      One last thing: a quick selfie
+                    </h3>
+                    <p className="mt-2 text-muted-foreground">
+                      To make sure it is really you, our identity partner QoreID will match a short selfie video to the photo on your NIN record. It takes about 30
+                      seconds.
+                    </p>
+                    <ul className="mt-3 space-y-1.5 text-[0.95rem] text-muted-foreground">
+                      <li>• Find a well-lit spot and remove glasses or a face covering.</li>
+                      <li>• Allow camera access when your browser asks.</li>
+                      <li>• Your selfie is used for this check only.</li>
+                    </ul>
+                    {errors.liveness && <Alert tone="danger" className="mt-4" title="The selfie check did not finish">{errors.liveness}</Alert>}
+                  </div>
+                ))}
+            </>
           ) : (
             <>
               {errors.form && (
