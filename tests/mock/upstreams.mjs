@@ -112,12 +112,12 @@ const BANK_ACCOUNTS = {
   '011:4444444444': 'REAL ESTATE VENTURES LTD',
 };
 const BVN_ACCOUNTS = {
-  '22345678901': [
-    { account_name: 'SAMUEL ADEKUNLE BELLO', account_number: '0123456789', account_type: 'SAVINGS', account_designation: 'INDIVIDUAL', institution: { name: 'GTBank', branch: '00012', bank_code: '058' } },
+  '12345678901': [
+    { account_name: 'SAMUEL ADEKUNLE BELLO', account_number: '0123456789', account_type: 'SAVINGS', account_designation: 'INDIVIDUAL', institution: { name: 'GTBank', branch: '00012', bank_code: '058', nip_code: '000013' } },
     { account_name: 'SAMUEL ADEKUNLE BELLO', account_number: '2087654321', account_type: 'CURRENT', account_designation: 'INDIVIDUAL', institution: { name: 'First Bank', branch: '00301', bank_code: '011' } },
     { account_name: 'SAMUEL A BELLO', account_number: '0045671234', account_type: 'SAVINGS', account_designation: 'INDIVIDUAL', institution: { name: 'Access Bank', branch: '00077', bank_code: '044' } },
   ],
-  '33345678901': [],
+  '22345678901': [],
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -439,25 +439,38 @@ async function handleQoreid(req, res, url) {
 
 // ── Mono (BVN lookup / iGree) ─────────────────────────────────────────────
 async function handleMono(req, res, url) {
+  // Mirrors https://docs.mono.co/docs/lookup/bvn-igree (v3). Sandbox values: BVN 12345678901, OTP 123456, alternate phone 09066662020.
   const path = url.pathname.replace('/__mono', '');
   db.upstreamCalls.push({ service: 'mono', path });
-  if (req.headers['mono-sec-key'] !== 'mock-mono-key') return send(res, 401, { status: 'failed', message: 'Invalid secret key' });
+  if (req.headers['mono-sec-key'] !== 'mock-mono-key') return send(res, 401, { status: 'failed', message: 'Please use a Lookup app, go to your dashboard and create an app with Lookup product.' });
   const body = JSON.parse((await readBody(req)).toString() || '{}');
-  if (path === '/v2/lookup/bvn/initiate') {
-    if (!(body.bvn in BVN_ACCOUNTS)) return send(res, 400, { status: 'failed', message: 'BVN not found' });
-    const id = 'ses_' + crypto.randomBytes(8).toString('hex');
+  if (path.startsWith('/v2/')) return send(res, 404, { status: 'failed', message: 'Cannot POST ' + path });
+  if (path === '/v3/lookup/bvn/initiate') {
+    if (!(body.bvn in BVN_ACCOUNTS)) return send(res, 400, { status: 'failed', message: 'Invalid BVN' });
+    if (body.scope !== 'bank_accounts') return send(res, 400, { status: 'failed', message: 'mock expects scope bank_accounts' });
+    const id = crypto.randomUUID();
     db.monoSessions.set(id, { bvn: body.bvn, otpSent: false });
-    return send(res, 200, { status: 'successful', message: 'BVN Lookup initiated', data: { session_id: id, methods: [{ method: 'phone', hint: 'An OTP will be sent to 080****5678' }] } });
+    return send(res, 200, {
+      status: 'successful', message: 'BVN Lookup successfully initiated.',
+      data: { session_id: id, methods: [
+        { method: 'email', hint: 'An email with a verification code will be sent to sam***lo@gmail.com' },
+        { method: 'phone', hint: 'SMS with a verification code will be sent to phone 0803***5678' },
+        { method: 'alternate_phone', hint: 'SMS with a verification code will be sent to your alternate phone number' },
+      ] },
+    });
   }
   const sess = db.monoSessions.get(req.headers['x-session-id']);
-  if (!sess) return send(res, 400, { status: 'failed', message: 'Invalid or expired session' });
-  if (path === '/v2/lookup/bvn/verify') {
+  if (!sess) return send(res, 400, { status: 'failed', message: 'Invalid or expired session id' });
+  if (path === '/v3/lookup/bvn/verify') {
+    if (!['email', 'phone', 'phone_1', 'alternate_phone'].includes(body.method)) return send(res, 400, { status: 'failed', message: 'Invalid method' });
+    if (body.method === 'alternate_phone' && !body.phone_number) return send(res, 400, { status: 'failed', message: 'phone_number is required' });
     sess.otpSent = true;
-    return send(res, 200, { status: 'successful', message: 'Please enter the OTP that was sent to 080****5678', data: null });
+    const to = body.method === 'alternate_phone' ? body.phone_number : body.method === 'email' ? 'sam***lo@gmail.com' : '0803***5678';
+    return send(res, 200, { status: 'successful', message: `Please enter the OTP that was sent to ${to}`, timestamp: new Date().toISOString(), data: null });
   }
-  if (path === '/v2/lookup/bvn/details') {
+  if (path === '/v3/lookup/bvn/details') {
     if (!sess.otpSent || body.otp !== '123456') return send(res, 400, { status: 'failed', message: 'Invalid OTP' });
-    return send(res, 200, { status: 'successful', message: 'BVN details fetched', data: BVN_ACCOUNTS[sess.bvn] });
+    return send(res, 200, { status: 'successful', message: 'BVN bank accounts successfully fetched.', data: BVN_ACCOUNTS[sess.bvn] });
   }
   return send(res, 404, { message: 'mock mono: unknown route' });
 }

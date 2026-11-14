@@ -48,14 +48,14 @@ export const accountsOf = (estate: Estate): Account[] =>
  * flags (status, mandate_acknowledged, discovered_accounts); this turns them
  * into ONE answer to "what is happening, and what do I do next?".
  */
-export type Stage = 'in_review' | 'needs_attention' | 'bank_letter' | 'find_accounts' | 'accounts_found' | 'settled';
+export type Stage = 'in_review' | 'needs_attention' | 'find_accounts' | 'accounts_found' | 'settled';
 
 export function stageOf(estate: Estate): Stage {
   if (estate.status === 'settled') return 'settled';
   if (estate.status === 'rejected') return 'needs_attention';
   if (estate.status !== 'verified') return 'in_review';
   if (accountsOf(estate).length > 0) return 'accounts_found';
-  return estate.mandate_acknowledged ? 'find_accounts' : 'bank_letter';
+  return 'find_accounts';
 }
 
 interface StageCopy {
@@ -83,17 +83,10 @@ export const STAGE_COPY: Record<Stage, StageCopy> = {
     action: 'See what to do',
     waitingOn: 'you',
   },
-  bank_letter: {
-    badge: 'Your turn',
-    tone: 'info',
-    summary: 'Your documents are approved. Next, prepare the letter to take to the bank.',
-    action: 'Prepare bank letter',
-    waitingOn: 'you',
-  },
   find_accounts: {
     badge: 'Your turn',
     tone: 'info',
-    summary: 'Once the bank has updated the phone number, search for all linked accounts.',
+    summary: 'Your documents are approved. Next, search for every bank account linked to their BVN.',
     action: 'Find accounts',
     waitingOn: 'you',
   },

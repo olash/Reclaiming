@@ -6,7 +6,6 @@ type StepState = 'done' | 'current' | 'upcoming' | 'problem';
 
 function stepsFor(estate: Estate, stage: Stage): Array<{ title: string; detail: string; state: StepState }> {
   const reviewed = estate.status === 'verified' || estate.status === 'settled';
-  const letterDone = reviewed && (estate.mandate_acknowledged || stage === 'accounts_found' || stage === 'settled');
   const found = accountsOf(estate).length;
   const discovered = stage === 'accounts_found' || stage === 'settled';
   return [
@@ -16,11 +15,6 @@ function stepsFor(estate: Estate, stage: Stage): Array<{ title: string; detail: 
       title: 'Review by our team',
       detail: stage === 'needs_attention' ? 'We could not approve the documents as they are.' : reviewed ? 'Your documents were approved.' : 'In progress. This can take up to 30 days — we will email you.',
       state: stage === 'needs_attention' ? 'problem' : reviewed ? 'done' : 'current',
-    },
-    {
-      title: 'Letter for the bank',
-      detail: letterDone ? 'Letter downloaded.' : 'A letter asking the bank to link your phone number, so you can receive the search code.',
-      state: letterDone ? 'done' : stage === 'bank_letter' ? 'current' : 'upcoming',
     },
     {
       title: 'Find linked accounts',

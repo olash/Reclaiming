@@ -271,7 +271,7 @@ export default function NewRecoveryPage() {
             {[
               'Our team checks your documents. This can take up to 30 days.',
               'We email you as soon as the review is finished.',
-              'You then prepare a letter for the bank and search for every linked account.',
+              'You then search, with a one-time code, for every bank account linked to their BVN.',
             ].map((t, i) => (
               <li key={t} className="flex gap-3">
                 <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface text-sm font-semibold">{i + 1}</span>

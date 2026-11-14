@@ -362,25 +362,66 @@ describe('POST /api/update-milestone', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-describe('BVN discovery: /api/igree/request-otp → /api/igree/verify-otp', () => {
-  test('full happy path: code sent, accounts found and saved in one clean shape', async () => {
-    const { user, estateId } = await userWithEstate();
-    const otp = await call('/api/igree/request-otp', { token: user.token, json: { bvn: '22345678901', estate_id: estateId } });
-    assert.equal(otp.status, 200, JSON.stringify(otp.body));
-    assert.ok(otp.body.sessionId, 'session id is read from Mono\'s nested data object');
-    assert.match(otp.body.sentTo, /080\*\*\*\*5678/, 'the user is told where the code went');
+describe('BVN discovery (Mono v3): start → choose where the code goes → code → accounts', () => {
+  const start = (user, estateId, bvn = '12345678901', headers = {}) => call('/api/igree/request-otp', { token: user.token, json: { bvn, estate_id: estateId }, headers });
+  const send = (user, estateId, sessionId, method, phone_number) => call('/api/igree/request-otp', { token: user.token, json: { estate_id: estateId, sessionId, method, ...(phone_number ? { phone_number } : {}) } });
+  const finish = (user, estateId, sessionId, otp) => call('/api/igree/verify-otp', { token: user.token, json: { sessionId, otp, estate_id: estateId } });
 
-    const wrong = await call('/api/igree/verify-otp', { token: user.token, json: { sessionId: otp.body.sessionId, otp: '000000', estate_id: estateId } });
+  test('full happy path with Mono\'s sandbox BVN, sending the code to the BVN phone', async () => {
+    const { user, estateId } = await userWithEstate({ mandate_acknowledged: false });
+    const s1 = await start(user, estateId);
+    assert.equal(s1.status, 200, JSON.stringify(s1.body));
+    assert.ok(s1.body.sessionId, 'session id is read from Mono\'s nested data object');
+    assert.deepEqual(s1.body.channels.map((c) => c.method), ['email', 'phone', 'alternate_phone']);
+    assert.equal(s1.body.channels[1].label, 'Text message to 0803***5678', 'the hint tells the family which phone it is');
+    assert.equal(s1.body.channels[0].label, 'Email to sam***lo@gmail.com');
+    assert.equal(s1.body.channels[2].needsPhone, true);
+    assert.equal((await state()).upstreamCalls.filter((c) => c.path.endsWith('/verify')).length, 0, 'no code is sent until a channel is chosen');
+
+    const s2 = await send(user, estateId, s1.body.sessionId, 'phone');
+    assert.equal(s2.status, 200);
+    assert.match(s2.body.sentTo, /0803\*\*\*5678/);
+
+    const wrong = await finish(user, estateId, s1.body.sessionId, '000000');
     assert.equal(wrong.status, 422);
     assert.equal(wrong.body.code, 'OTP_REJECTED');
 
-    const ok = await call('/api/igree/verify-otp', { token: user.token, json: { sessionId: otp.body.sessionId, otp: '123456', estate_id: estateId } });
+    const ok = await finish(user, estateId, s1.body.sessionId, '123456');
     assert.equal(ok.status, 200);
     assert.equal(ok.body.accounts.length, 3);
-    assert.deepEqual(ok.body.accounts[0], { bank_name: 'GTBank', bank_code: '058', account_number: '0123456789', account_name: 'SAMUEL ADEKUNLE BELLO', account_type: 'SAVINGS' });
+    assert.equal(ok.body.newlyFound, 3);
+    assert.deepEqual(ok.body.accounts[0], { bank_name: 'GTBank', bank_code: '058', nip_code: '000013', account_number: '0123456789', account_name: 'SAMUEL ADEKUNLE BELLO', account_type: 'SAVINGS' });
     const row = await estateRow(estateId);
     assert.equal(row.discovered_accounts.length, 3);
     assert.equal(row.status, 'verified', 'compliance status is untouched');
+  });
+
+  test('the code can go to another phone number (Mono "alternate_phone")', async () => {
+    const { user, estateId } = await userWithEstate();
+    const s1 = await start(user, estateId);
+    assert.equal((await send(user, estateId, s1.body.sessionId, 'alternate_phone')).body.code, 'INVALID_PHONE');
+    assert.equal((await send(user, estateId, s1.body.sessionId, 'alternate_phone', '12345')).body.code, 'INVALID_PHONE');
+    const ok = await send(user, estateId, s1.body.sessionId, 'alternate_phone', '0906 666 2020');
+    assert.equal(ok.status, 200);
+    assert.match(ok.body.sentTo, /09066662020/);
+    assert.equal((await finish(user, estateId, s1.body.sessionId, '123456')).status, 200);
+  });
+
+  test('searching again keeps the accounts already found', async () => {
+    const { user, estateId } = await userWithEstate({ discovered_accounts: [{ bank_name: 'Wema Bank', bank_code: '035', account_number: '9998887776', account_name: 'S BELLO', account_type: 'SAVINGS' }] });
+    const s1 = await start(user, estateId);
+    await send(user, estateId, s1.body.sessionId, 'email');
+    const ok = await finish(user, estateId, s1.body.sessionId, '123456');
+    assert.equal(ok.body.accounts.length, 4);
+    assert.equal(ok.body.newlyFound, 3);
+  });
+
+  test('an expired or unknown session is reported clearly', async () => {
+    const { user, estateId } = await userWithEstate();
+    const r = await send(user, estateId, 'not-a-real-session', 'phone');
+    assert.equal(r.status, 410);
+    assert.equal(r.body.code, 'SESSION_EXPIRED');
+    assert.equal((await finish(user, estateId, 'not-a-real-session', '123456')).body.code, 'SESSION_EXPIRED');
   });
 
   test('the BVN is never written to the log in full', async () => {
@@ -391,44 +432,39 @@ describe('BVN discovery: /api/igree/request-otp → /api/igree/verify-otp', () =
 
   test('cannot be run on a case that is still in review (no skipping compliance)', async () => {
     const { user, estateId } = await userWithEstate({ status: 'pending_review' });
-    const r = await call('/api/igree/request-otp', { token: user.token, json: { bvn: '22345678901', estate_id: estateId } });
-    assert.equal(r.status, 409);
-    const v = await call('/api/igree/verify-otp', { token: user.token, json: { sessionId: 'x', otp: '123456', estate_id: estateId } });
-    assert.equal(v.status, 409);
+    assert.equal((await start(user, estateId)).status, 409);
+    assert.equal((await finish(user, estateId, 'x', '123456')).status, 409);
     assert.equal((await estateRow(estateId)).status, 'pending_review');
   });
 
   test('cannot be run against somebody else\'s case', async () => {
     const { estateId } = await userWithEstate();
     const stranger = await newUser();
-    assert.equal((await call('/api/igree/request-otp', { token: stranger.token, json: { bvn: '22345678901', estate_id: estateId } })).status, 404);
-    assert.equal((await call('/api/igree/verify-otp', { token: stranger.token, json: { sessionId: 'x', otp: '123456', estate_id: estateId } })).status, 404);
+    assert.equal((await start(stranger, estateId)).status, 404);
+    assert.equal((await finish(stranger, estateId, 'x', '123456')).status, 404);
   });
 
-  test('requires the bank letter step first', async () => {
-    const { user, estateId } = await userWithEstate({ mandate_acknowledged: false });
-    assert.equal((await call('/api/igree/request-otp', { token: user.token, json: { bvn: '22345678901', estate_id: estateId } })).body.code, 'LETTER_REQUIRED');
-  });
-
-  test('bad and unknown BVNs', async () => {
+  test('bad and unknown BVNs, and an unknown channel', async () => {
     const { user, estateId } = await userWithEstate();
-    assert.equal((await call('/api/igree/request-otp', { token: user.token, json: { bvn: '123', estate_id: estateId } })).status, 400);
-    const unknown = await call('/api/igree/request-otp', { token: user.token, json: { bvn: '99999999999', estate_id: estateId } });
+    assert.equal((await start(user, estateId, '123')).status, 400);
+    const unknown = await start(user, estateId, '99999999999');
     assert.equal(unknown.status, 422);
     assert.equal(unknown.body.code, 'BVN_LOOKUP_FAILED');
+    const s1 = await start(user, estateId);
+    assert.equal((await send(user, estateId, s1.body.sessionId, 'carrier pigeon')).body.code, 'INVALID_METHOD');
   });
 
-  test('limited to 3 an hour per account — changing X-Forwarded-For does not help', async () => {
+  test('limited to 5 searches an hour per account — changing X-Forwarded-For does not help', async () => {
     const { user, estateId } = await userWithEstate();
-    const go = (ip) => call('/api/igree/request-otp', { token: user.token, json: { bvn: '22345678901', estate_id: estateId }, headers: { 'x-forwarded-for': ip } });
-    for (const ip of ['10.0.0.1', '10.0.0.2', '10.0.0.3']) assert.equal((await go(ip)).status, 200);
-    assert.equal((await go('10.0.0.4')).status, 429);
+    for (const ip of ['10.0.0.1', '10.0.0.2', '10.0.0.3', '10.0.0.4', '10.0.0.5']) assert.equal((await start(user, estateId, '12345678901', { 'x-forwarded-for': ip })).status, 200);
+    assert.equal((await start(user, estateId, '12345678901', { 'x-forwarded-for': '10.0.0.6' })).status, 429);
   });
 
   test('a BVN with no accounts is a successful, empty result', async () => {
     const { user, estateId } = await userWithEstate();
-    const otp = await call('/api/igree/request-otp', { token: user.token, json: { bvn: '33345678901', estate_id: estateId } });
-    const ok = await call('/api/igree/verify-otp', { token: user.token, json: { sessionId: otp.body.sessionId, otp: '123456', estate_id: estateId } });
+    const s1 = await start(user, estateId, '22345678901');
+    await send(user, estateId, s1.body.sessionId, 'phone');
+    const ok = await finish(user, estateId, s1.body.sessionId, '123456');
     assert.equal(ok.status, 200);
     assert.deepEqual(ok.body.accounts, []);
   });

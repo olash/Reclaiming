@@ -205,27 +205,42 @@ try {
   await page.getByRole('button', { name: /Completed/ }).click();
   check('Home filters actually filter', (await page.getByText('No completed recoveries yet').count()) === 1);
 
-  // Team approves → bank letter
+  // Team approves → search for accounts straight away
   await admin('/patch', { table: 'estates', id: estate.id, patch: { status: 'verified' } });
   await page.goto(APP + `/app/estates/${estate.id}`, { waitUntil: 'networkidle' });
-  await page.getByRole('heading', { name: 'Prepare your letter for the bank' }).waitFor();
-  check('Letter is prefilled with the verified name and the deceased', (await page.getByLabel('Your full name').inputValue()) === 'Amaka Okonkwo');
+  await page.getByRole('heading', { name: 'Find every linked account' }).waitFor();
+  check('Once approved, the case goes straight to the account search', (await page.getByText('Your documents are approved').count()) === 1);
+
+  // Fallback: the bank letter is still available, but no longer a gate
+  await page.getByRole('button', { name: /None of these contacts reach anyone/ }).click();
+  await page.getByRole('heading', { name: 'Prepare a letter for the bank' }).waitFor();
+  check('Bank letter is offered as a fallback and prefilled with the verified name', (await page.getByLabel('Your full name').inputValue()) === 'Amaka Okonkwo');
   await page.getByLabel('Bank name').fill('GTBank');
   await page.getByLabel('Branch address').fill('12 Allen Avenue, Ikeja, Lagos');
-  await page.getByLabel('Their BVN').fill('22345678901');
+  await page.getByRole('group', { name: 'Letter preview' }).waitFor();
+  const letterBvn = page.getByLabel('Their BVN').nth(1);
+  await letterBvn.fill('12345678901');
   await page.getByLabel('Your mobile number').fill('08012345678');
-  check('Letter preview updates as you type', (await page.getByRole('group', { name: 'Letter preview' }).innerText()).includes('22345678901'));
+  check('Letter preview updates as you type', (await page.getByRole('group', { name: 'Letter preview' }).innerText()).includes('12345678901'));
   await shot(page, 'new-12-bank-letter');
   const [letter] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Download letter/ }).click()]);
   const letterBytes = fs.readFileSync(await letter.path());
   check('Bank letter downloads as a real PDF', letterBytes.subarray(0, 5).toString() === '%PDF-', letter.suggestedFilename());
+  await page.getByText('When the bank confirms the change').waitFor();
 
-  // Find accounts
-  await page.getByRole('heading', { name: 'Find every linked account' }).waitFor();
-  check('BVN carries over from the letter', (await page.getByLabel('Their BVN').inputValue()) === '22345678901');
-  await page.getByRole('button', { name: 'Send me the code' }).click();
-  await page.getByText('080****5678').waitFor();
-  check('Code screen says which phone the code went to', true);
+  // Search: BVN → choose where the code goes → code
+  await page.getByLabel('Their BVN').first().fill('12345678901');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByText('Send the code to').waitFor();
+  check('The family chooses where the code goes, with masked hints from NIBSS', (await page.getByText('0803***5678').count()) === 1 && (await page.getByRole('radio').count()) === 3);
+  await page.getByRole('button', { name: 'Send the code' }).click();
+  check('Sending without choosing a contact is explained', (await page.getByText('Choose where the code should be sent.').count()) === 1);
+  await page.getByRole('radio', { name: 'Text message to another phone number' }).check();
+  await page.getByLabel('Phone number to receive the code').fill('0906 666 2020');
+  await shot(page, 'new-12b-choose-channel');
+  await page.getByRole('button', { name: 'Send the code' }).click();
+  await page.getByText('09066662020').waitFor();
+  check('Code screen says where the code went', true);
   await page.getByLabel('One-time code').fill('000000');
   await page.getByRole('button', { name: 'Find accounts' }).click();
   await page.getByText('That code was not accepted').waitFor();

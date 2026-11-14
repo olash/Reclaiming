@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, BadgeCheck, Building2, CheckCircle2, Clock, Download, FileCheck2, FileQuestion, KeyRound, Landmark, MessageCircle, RefreshCw, Search } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Building2, CheckCircle2, Clock, Download, FileCheck2, FileQuestion, KeyRound, MessageCircle, RefreshCw, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { CaseTimeline } from '@/components/case-timeline';
 import { Alert } from '@/components/ui/alert';
@@ -20,14 +20,14 @@ import { SUPPORT_WHATSAPP } from '@/lib/fees';
 import { mandateParagraphs, type MandateLetter } from '@/lib/mandate-text';
 import { useEstate, useIdentity } from '@/lib/use-estates';
 import { digitsOnly, useFocusFirstError } from '@/lib/use-focus-error';
-import { caseRef, formatDate, formatNaira } from '@/lib/utils';
+import { caseRef, cn, formatDate, formatNaira } from '@/lib/utils';
 
 const bvnKey = (id: string) => `reclaimng:bvn:${id}`;
 const whatsappAbout = (estate: Estate) => `${SUPPORT_WHATSAPP}?text=${encodeURIComponent(`Hello, I need help with case ${caseRef(estate.id)} (${estate.estate_name}).`)}`;
 
 /* ───────────────────────── Bank letter ───────────────────────── */
 
-function BankLetter({ estate, onDone }: { estate: Estate; onDone: () => void }) {
+function BankLetter({ estate, onDone, embedded = false }: { estate: Estate; onDone: () => void; embedded?: boolean }) {
   const { user } = useAuth();
   const identity = useIdentity();
   const verifiedName = identity.state.status === 'ready' ? identity.state.data?.name : undefined;
@@ -74,16 +74,19 @@ function BankLetter({ estate, onDone }: { estate: Estate; onDone: () => void }) 
   }
 
   const p = mandateParagraphs(letter);
+  const Outer = embedded ? 'div' : Card;
+  const Head = embedded ? 'div' : CardHeader;
+  const Body = embedded ? 'div' : CardContent;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Prepare your letter for the bank</CardTitle>
+    <Outer className={embedded ? 'space-y-4' : undefined}>
+      <Head className={embedded ? 'space-y-1.5' : undefined}>
+        <CardTitle as={embedded ? 'h3' : 'h2'} className={embedded ? 'text-lg' : undefined}>Prepare a letter for the bank</CardTitle>
         <p className="text-muted-foreground">
-          To search for every account, a one-time code has to reach a phone you hold. This letter asks one of your loved one&apos;s banks to link your number to
-          their BVN. Fill it in, download it, and take it to the branch with the documents it lists.
+          This letter asks one of your loved one&apos;s banks to link your phone number to their BVN, so the search code can reach you. Fill it in, download
+          it, and take it to the branch with the documents it lists.
         </p>
-      </CardHeader>
-      <CardContent>
+      </Head>
+      <Body>
         <div className="grid gap-8 lg:grid-cols-2">
           <form onSubmit={download} noValidate className="space-y-5">
             <Field label="Bank name" hint="Any bank where they held an account." error={errors.bankName}>
@@ -119,20 +122,27 @@ function BankLetter({ estate, onDone }: { estate: Estate; onDone: () => void }) 
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </Body>
+    </Outer>
   );
 }
 
 /* ───────────────────────── Account discovery ───────────────────────── */
 
+type Channel = { method: string; label: string; needsPhone: boolean };
+
 function FindAccounts({ estate, onDone, rerun = false }: { estate: Estate; onDone: () => void; rerun?: boolean }) {
   const [bvn, setBvn] = React.useState('');
+  const [session, setSession] = React.useState<{ id: string; channels: Channel[]; startedAt: number } | null>(null);
+  const [method, setMethod] = React.useState('');
+  const [phone, setPhone] = React.useState('');
+  const [sentTo, setSentTo] = React.useState<string | null>(null);
   const [otp, setOtp] = React.useState('');
-  const [session, setSession] = React.useState<{ id: string; sentTo: string } | null>(null);
-  const [error, setError] = React.useState<{ field?: string; form?: string }>({});
+  const [error, setError] = React.useState<{ bvn?: string; method?: string; phone?: string; otp?: string; form?: string }>({});
   const [busy, setBusy] = React.useState(false);
+  const [showLetter, setShowLetter] = React.useState(false);
   const otpRef = React.useRef<HTMLInputElement>(null);
+  const focusFirstError = useFocusFirstError();
 
   React.useEffect(() => {
     try {
@@ -141,18 +151,64 @@ function FindAccounts({ estate, onDone, rerun = false }: { estate: Estate; onDon
     } catch {}
   }, [estate.id]);
 
-  async function sendCode(e?: React.FormEvent) {
-    e?.preventDefault();
-    if (!/^\d{11}$/.test(bvn)) return setError({ field: 'A BVN is exactly 11 digits.' });
+  const restart = (message?: string) => {
+    setSession(null);
+    setSentTo(null);
+    setOtp('');
+    setMethod('');
+    setError(message ? { form: message } : {});
+  };
+
+  const handle = (err: unknown) => {
+    const e = err as ApiError;
+    if (e.code === 'SESSION_EXPIRED') return restart(e.message);
+    setError({ form: e.message });
+  };
+
+  async function start(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^\d{11}$/.test(bvn)) {
+      setError({ bvn: 'A BVN is exactly 11 digits.' });
+      return focusFirstError();
+    }
     setError({});
     setBusy(true);
     try {
-      const res = await api<{ sessionId: string; sentTo: string }>('/api/igree/request-otp', { bvn, estate_id: estate.id });
-      setSession({ id: res.sessionId, sentTo: res.sentTo });
+      const res = await api<{ sessionId: string; channels: Channel[] }>('/api/igree/request-otp', { bvn, estate_id: estate.id });
+      setSession({ id: res.sessionId, channels: res.channels, startedAt: Date.now() });
+      setMethod(res.channels.length === 1 ? res.channels[0].method : '');
+    } catch (err) {
+      handle(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendCode(e: React.FormEvent) {
+    e.preventDefault();
+    const chosen = session?.channels.find((c) => c.method === method);
+    if (!chosen) {
+      setError({ method: 'Choose where the code should be sent.' });
+      return focusFirstError();
+    }
+    if (chosen.needsPhone && !/^(?:\+?234|0)[7-9][01]\d{8}$/.test(phone.replace(/[\s-]/g, ''))) {
+      setError({ phone: 'Enter a Nigerian mobile number, like 0801 234 5678.' });
+      return focusFirstError();
+    }
+    setError({});
+    setBusy(true);
+    try {
+      const res = await api<{ sentTo: string }>('/api/igree/request-otp', {
+        estate_id: estate.id,
+        sessionId: session!.id,
+        method: chosen.method,
+        ...(chosen.needsPhone ? { phone_number: phone.replace(/[\s-]/g, '') } : {}),
+      });
+      setSentTo(res.sentTo);
       setOtp('');
       requestAnimationFrame(() => otpRef.current?.focus());
     } catch (err) {
-      setError({ form: (err as ApiError).message });
+      handle(err);
     } finally {
       setBusy(false);
     }
@@ -160,57 +216,124 @@ function FindAccounts({ estate, onDone, rerun = false }: { estate: Estate; onDon
 
   async function verify(e: React.FormEvent) {
     e.preventDefault();
-    if (!/^\d{4,8}$/.test(otp)) return setError({ field: 'Enter the code from the text message.' });
+    if (!/^\d{4,8}$/.test(otp)) {
+      setError({ otp: 'Enter the code you received.' });
+      return focusFirstError();
+    }
     setError({});
     setBusy(true);
     try {
-      const res = await api<{ accounts: Account[] }>('/api/igree/verify-otp', { sessionId: session!.id, otp, estate_id: estate.id });
+      const res = await api<{ accounts: Account[]; newlyFound: number }>('/api/igree/verify-otp', { sessionId: session!.id, otp, estate_id: estate.id });
       try {
         sessionStorage.removeItem(bvnKey(estate.id));
       } catch {}
-      if (res.accounts.length) toast.success(`We found ${res.accounts.length} account${res.accounts.length === 1 ? '' : 's'}.`);
+      if (res.newlyFound) toast.success(`We found ${res.newlyFound} account${res.newlyFound === 1 ? '' : 's'}.`);
       else toast.info('The search finished, but no accounts were linked to that BVN.');
       onDone();
     } catch (err) {
-      setError({ form: (err as ApiError).message });
+      handle(err);
     } finally {
       setBusy(false);
     }
   }
+
+  const step = !session ? 0 : !sentTo ? 1 : 2;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>{rerun ? 'Search again' : 'Find every linked account'}</CardTitle>
         <p className="text-muted-foreground">
-          {session
-            ? 'Enter the code to finish the search.'
-            : 'When the bank confirms your number is linked, enter the BVN below. A one-time code will be sent to that phone to confirm consent for the search.'}
+          {step === 0 && 'Enter their BVN. NIBSS will send a one-time code to confirm consent, and then every bank account linked to that BVN is listed here.'}
+          {step === 1 && 'Where should the one-time code be sent? Choose a contact you can reach right now.'}
+          {step === 2 && 'Enter the code to finish the search. The search stays open for 10 minutes.'}
         </p>
+        <p className="text-sm font-semibold text-muted-foreground">Step {step + 1} of 3</p>
       </CardHeader>
       <CardContent className="space-y-5">
         {error.form && <Alert tone="danger">{error.form}</Alert>}
-        {!session ? (
-          <form onSubmit={sendCode} noValidate className="space-y-5">
-            <Field label="Their BVN" hint="11 digits." error={error.field}>
+
+        {step === 0 && (
+          <form onSubmit={start} noValidate className="space-y-5">
+            <Field label="Their BVN" hint="11 digits. Often printed on bank statements or account opening papers." error={error.bvn}>
               {(f) => <Input {...f} inputMode="numeric" autoComplete="off" value={bvn} onChange={(e) => { setBvn(digitsOnly(e.target.value, 11)); setError({}); }} className="tracking-widest sm:max-w-xs" />}
             </Field>
-            <Button type="submit" loading={busy} loadingText="Sending code…"><KeyRound aria-hidden="true" />Send me the code</Button>
-            <p className="text-sm text-muted-foreground">Has the bank not linked your number yet? The code will go to the old number. Wait for the bank&apos;s confirmation first.</p>
+            <Button type="submit" loading={busy} loadingText="Starting search…"><Search aria-hidden="true" />Continue</Button>
           </form>
-        ) : (
+        )}
+
+        {step === 1 && session && (
+          <form onSubmit={sendCode} noValidate className="space-y-5">
+            <fieldset aria-describedby={error.method ? 'channel-error' : undefined}>
+              <legend className="text-sm font-semibold">Send the code to</legend>
+              <div className="mt-3 space-y-2">
+                {session.channels.map((c) => (
+                  <label
+                    key={c.method}
+                    className={cn(
+                      'flex min-h-14 cursor-pointer items-center gap-3 rounded-md border bg-surface px-4 py-3 hover:border-primary',
+                      method === c.method && 'border-primary bg-primary-soft/50',
+                      error.method && 'border-danger',
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name="channel"
+                      value={c.method}
+                      checked={method === c.method}
+                      onChange={() => { setMethod(c.method); setError({}); }}
+                      aria-invalid={!!error.method}
+                      className="size-5 accent-[hsl(var(--primary))]"
+                    />
+                    <span>{c.label}</span>
+                  </label>
+                ))}
+              </div>
+              {error.method && <p id="channel-error" role="alert" className="mt-2 text-sm font-medium text-danger">{error.method}</p>}
+            </fieldset>
+            {session.channels.find((c) => c.method === method)?.needsPhone && (
+              <Field label="Phone number to receive the code" error={error.phone}>
+                {(f) => <Input {...f} type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => { setPhone(e.target.value); setError({}); }} className="sm:max-w-xs" />}
+              </Field>
+            )}
+            <div className="flex flex-wrap gap-3">
+              <Button type="submit" loading={busy} loadingText="Sending code…"><KeyRound aria-hidden="true" />Send the code</Button>
+              <Button type="button" variant="ghost" disabled={busy} onClick={() => restart()}>Use a different BVN</Button>
+            </div>
+          </form>
+        )}
+
+        {step === 2 && (
           <form onSubmit={verify} noValidate className="space-y-5">
-            <Alert tone="success" title="Code sent">{session.sentTo}</Alert>
-            <Field label="One-time code" hint="It can take a minute to arrive." error={error.field}>
+            <Alert tone="success" title="Code sent">{sentTo}</Alert>
+            <Field label="One-time code" hint="It can take a minute to arrive." error={error.otp}>
               {(f) => <Input {...f} ref={otpRef} inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={(e) => { setOtp(digitsOnly(e.target.value, 8)); setError({}); }} className="text-xl tracking-[0.4em] sm:max-w-[14rem]" />}
             </Field>
             <div className="flex flex-wrap gap-3">
               <Button type="submit" loading={busy} loadingText="Searching…"><Search aria-hidden="true" />Find accounts</Button>
-              <Button type="button" variant="ghost" disabled={busy} onClick={() => { setSession(null); setError({}); }}>Use a different BVN</Button>
+              <Button type="button" variant="ghost" disabled={busy} onClick={() => { setSentTo(null); setError({}); }}>Send it somewhere else</Button>
             </div>
           </form>
         )}
+
+        {!rerun && (
+          <div className="border-t pt-5">
+            <button type="button" onClick={() => setShowLetter((v) => !v)} aria-expanded={showLetter} className="min-h-11 font-semibold text-primary underline underline-offset-4">
+              None of these contacts reach anyone in the family?
+            </button>
+            {showLetter && (
+              <p className="mt-2 text-[0.95rem] text-muted-foreground">
+                Ask one of their banks to link your phone number to the BVN. We have prepared the letter for you below — take it to the branch with the documents it lists, then come back and search again.
+              </p>
+            )}
+          </div>
+        )}
       </CardContent>
+      {showLetter && !rerun && (
+        <CardContent>
+          <BankLetter estate={estate} onDone={() => { setShowLetter(false); toast.success('When the bank confirms the change, search again here.'); }} embedded />
+        </CardContent>
+      )}
     </Card>
   );
 }
@@ -344,11 +467,9 @@ export default function EstatePage() {
             <Button asChild size="sm" className="mt-3"><a href={whatsappAbout(estate)} target="_blank" rel="noopener noreferrer"><MessageCircle aria-hidden="true" />Message our team</a></Button>
           </Alert>
         )}
-        {stage === 'bank_letter' && <Alert tone="success" icon={BadgeCheck} title="Your documents are approved">The next step is yours: prepare the letter below and take it to the bank.</Alert>}
         {stage === 'find_accounts' && (
-          <Alert tone="info" icon={Landmark} title="Take your letter to the bank">
-            Hand in the letter with certified copies of the death certificate, the Letters of Administration and your ID. When the bank confirms your number is
-            linked, come back here to run the search.
+          <Alert tone="success" icon={BadgeCheck} title="Your documents are approved">
+            The next step is yours: search for every bank account linked to their BVN. It takes a couple of minutes.
           </Alert>
         )}
         {stage === 'settled' && (
@@ -360,7 +481,6 @@ export default function EstatePage() {
         )}
 
         {/* The thing to do */}
-        {stage === 'bank_letter' && <BankLetter estate={estate} onDone={done} />}
         {stage === 'find_accounts' && <FindAccounts estate={estate} onDone={done} />}
         {(stage === 'accounts_found' || (stage === 'settled' && accountsOf(estate).length > 0)) && <AccountsCard estate={estate} />}
         {stage === 'accounts_found' &&

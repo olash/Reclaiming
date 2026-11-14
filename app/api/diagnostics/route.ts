@@ -102,6 +102,16 @@ async function supabaseCheck(): Promise<Step[]> {
     );
   }
   steps.push(
+    await timed('estates: original columns', async () => {
+      const missing: string[] = [];
+      for (const c of tables.estates) {
+        const { error } = await db.from('estates').select(c, { head: true });
+        if (error) missing.push(c);
+      }
+      return { ok: missing.length === 0, note: missing.length ? `missing: ${missing.join(', ')}` : 'all present' };
+    }),
+  );
+  steps.push(
     await timed('estates columns from migration 0005', async () => {
       const missing: string[] = [];
       for (const c of migration5) {
@@ -214,7 +224,7 @@ async function qoreidCheck(): Promise<Step[]> {
   );
   steps.push(
     await timed('BVN iGree consent link (sandbox BVN) — evaluated as a Mono alternative', async () => {
-      const r = await call(`https://api.qoreid.com/v1/ng/identities/bvn-consent/${QOREID_TEST.bvn}`, { method: 'POST', headers: bearer, body: '{}' });
+      const r = await call(`https://api.qoreid.com/v1/ng/identities/bvn-with-consent/${QOREID_TEST.bvn}`, { method: 'POST', headers: bearer, body: '{}' });
       const b = r.body ?? {};
       const data = b.data ?? b;
       let scope: string | null = null;
