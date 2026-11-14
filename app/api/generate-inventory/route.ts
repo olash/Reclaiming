@@ -1,313 +1,121 @@
+import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { HttpError, assertUuid, readJson, route } from '@/lib/server/http';
+import { normaliseAccount } from '@/lib/server/mono';
+import { adminClient, requireOwnEstate, requireUser } from '@/lib/server/supabase';
+
+export const dynamic = 'force-dynamic';
+
+const MARGIN = 50;
+const ROW = 24;
+const COLS = { sn: MARGIN, bank: MARGIN + 34, number: MARGIN + 200, type: MARGIN + 300, value: MARGIN + 380 };
+
+/** The standard PDF fonts cannot draw every character (₦ is one). Replace anything unsafe. */
+function safe(text: string, max = 200) {
+  const cleaned = String(text ?? '')
+    .replace(/₦/g, 'NGN ')
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, '-')
+    .replace(/[^\x20-\x7E -ÿ]/g, '?');
+  return cleaned.length > max ? cleaned.slice(0, max - 3) + '...' : cleaned;
+}
+
+function centred(page: PDFPage, text: string, y: number, size: number, font: PDFFont) {
+  page.drawText(text, { x: (page.getWidth() - font.widthOfTextAtSize(text, size)) / 2, y, size, font });
+}
+
 /**
- * @file app/api/generate-inventory/route.ts
- * @description Serverless-friendly API route for generating a formal legal estate inventory PDF.
+ * POST /api/generate-inventory        (signed-in owner of the case only)
+ * Body: { estate_id }
  *
- * STRATEGY: Uses `pdf-lib` exclusively — a pure-JS, buffer-based library. This deliberately
- * avoids Puppeteer / wkhtmltopdf (which require costly headless Chrome containers) so the
- * route runs on Vercel's free Edge/Serverless tier with near-zero compute cost.
- *
- * COORDINATE SYSTEM: pdf-lib uses an absolute (X, Y) system where (0, 0) is the BOTTOM-LEFT
- * corner of the page. Y values therefore count upward from the bottom. All layout positions
- * below are expressed as offsets from the top (height - offset) for readability.
+ * Builds a "Schedule of Assets" PDF for the caller's own case from the
+ * accounts stored on that case. Everything on the page comes from our
+ * records — the request cannot supply names, assets or amounts — and the
+ * document says plainly that it is a working schedule, not a court order.
  */
+export const POST = route('generate-inventory', async (request) => {
+  const user = await requireUser(request);
+  const body = await readJson<{ estate_id?: string; estateId?: string }>(request);
+  const estate = await requireOwnEstate(user.id, assertUuid(body.estate_id ?? body.estateId, 'case id'));
 
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+  const accounts = (Array.isArray(estate.discovered_accounts) ? estate.discovered_accounts : []).map(normaliseAccount);
+  if (!accounts.length) throw new HttpError(409, 'There are no accounts on this case yet. Run account discovery first.', 'NO_ACCOUNTS');
 
-// ---------------------------------------------------------------------------
-// Type Definitions
-// ---------------------------------------------------------------------------
+  const { data: kyc } = await adminClient().from('verifications').select('profile_data').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1);
+  const applicant = kyc?.[0]?.profile_data?.applicant;
+  const administrator = applicant?.firstname ? `${applicant.firstname} ${applicant.lastname ?? ''}`.trim() : (user.user_metadata?.full_name as string) || user.email || 'Administrator';
 
-interface AssetRow {
-  /** Short label, e.g. "Savings Account", "Ordinary Shares" */
-  description: string;
-  /** Holding institution or registrar, e.g. "GTBank", "Africa Prudential" */
-  institution: string;
-  /** Numeric or string value, e.g. 250000 or "Unknown" */
-  value: string | number;
-}
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(`Schedule of Assets - Estate of ${safe(estate.deceased_name)}`);
+  pdf.setCreator('Reclaimng');
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const ref = 'REQ-' + estate.id.replace(/-/g, '').slice(0, 6).toUpperCase();
 
-interface InventoryPayload {
-  /** Full legal name of the deceased exactly as it should appear on the document */
-  deceasedName: string;
-  /** Name of the court-appointed administrator (verified via NIMC) */
-  administratorName: string;
-  /** Ordered list of estate assets to render in the table */
-  assets: AssetRow[];
-}
+  let page!: PDFPage;
+  let y = 0;
+  let pageNo = 0;
 
-// ---------------------------------------------------------------------------
-// Constants — Layout (all Y-values expressed as offsets FROM THE TOP)
-// ---------------------------------------------------------------------------
+  const tableHeader = () => {
+    page.drawLine({ start: { x: MARGIN, y }, end: { x: page.getWidth() - MARGIN, y }, thickness: 1 });
+    y -= 16;
+    page.drawText('No.', { x: COLS.sn, y, size: 9, font: bold });
+    page.drawText('Bank', { x: COLS.bank, y, size: 9, font: bold });
+    page.drawText('Account number', { x: COLS.number, y, size: 9, font: bold });
+    page.drawText('Type', { x: COLS.type, y, size: 9, font: bold });
+    page.drawText('Balance', { x: COLS.value, y, size: 9, font: bold });
+    y -= 8;
+    page.drawLine({ start: { x: MARGIN, y }, end: { x: page.getWidth() - MARGIN, y }, thickness: 0.5 });
+    y -= ROW - 6;
+  };
 
-const PAGE_MARGIN      = 50;   // pts — left/right margin
-const HEADER_OFFSET    = 60;   // pts from top → first header line
-const DECL_OFFSET      = 165;  // pts from top → declaration block
-const TABLE_TOP_OFFSET = 210;  // pts from top → top rule of the table
-const ROW_HEIGHT       = 22;   // pts per data row
-const FOOTER_HEIGHT    = 110;  // pts from bottom → footer starts
-const FONT_SIZE_HEADER = 11;
-const FONT_SIZE_BODY   = 9;
-const FONT_SIZE_FOOTER = 8;
-
-// Column X baselines
-const COL_SN          = 50;
-const COL_DESC        = 80;
-const COL_INSTITUTION = 300;
-const COL_VALUE       = 460;
-
-// ---------------------------------------------------------------------------
-// Helper: safe text truncation to prevent overflow
-// ---------------------------------------------------------------------------
-
-function truncate(text: string, maxChars: number): string {
-  return text.length > maxChars ? text.slice(0, maxChars - 1) + '…' : text;
-}
-
-// ---------------------------------------------------------------------------
-// Helper: horizontally center a string on the page
-// ---------------------------------------------------------------------------
-
-function centerX(
-  text: string,
-  pageWidth: number,
-  fontSize: number,
-  font: Awaited<ReturnType<PDFDocument['embedFont']>>
-): number {
-  const textWidth = font.widthOfTextAtSize(text, fontSize);
-  return (pageWidth - textWidth) / 2;
-}
-
-// ---------------------------------------------------------------------------
-// Route Handler
-// ---------------------------------------------------------------------------
-
-export async function POST(request: Request): Promise<Response> {
-  try {
-    // -----------------------------------------------------------------------
-    // 1. Parse & Validate Payload
-    // -----------------------------------------------------------------------
-    let body: InventoryPayload;
-
-    try {
-      body = await request.json();
-    } catch {
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON payload.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+  const newPage = () => {
+    page = pdf.addPage(PageSizes.A4);
+    pageNo += 1;
+    y = page.getHeight() - 64;
+    if (pageNo === 1) {
+      centred(page, 'SCHEDULE OF ASSETS', y, 15, bold);
+      y -= 22;
+      centred(page, safe(`ESTATE OF ${estate.deceased_name.toUpperCase()} (DECEASED)`, 70), y, 12, bold);
+      y -= 30;
+      const intro = `Bank accounts identified for the estate through a consented BVN search on Reclaimng. Prepared by ${safe(administrator, 60)} on ${today}. Case reference ${ref}.`;
+      page.drawText(intro, { x: MARGIN, y, size: 10, font, maxWidth: page.getWidth() - MARGIN * 2, lineHeight: 14, color: rgb(0.15, 0.15, 0.15) });
+      y -= 48;
+    } else {
+      page.drawText(safe(`Schedule of Assets - Estate of ${estate.deceased_name} (continued)`, 90), { x: MARGIN, y, size: 10, font: bold });
+      y -= 24;
     }
+    tableHeader();
+  };
 
-    const { deceasedName, administratorName, assets } = body;
+  newPage();
+  accounts.forEach((account, i) => {
+    if (y < 110) newPage();
+    if (i % 2 === 0) page.drawRectangle({ x: MARGIN, y: y - 7, width: page.getWidth() - MARGIN * 2, height: ROW, color: rgb(0.96, 0.97, 0.96) });
+    page.drawText(String(i + 1), { x: COLS.sn, y, size: 9, font });
+    page.drawText(safe(account.bank_name, 30), { x: COLS.bank, y, size: 9, font });
+    page.drawText(safe(account.account_number, 14), { x: COLS.number, y, size: 9, font });
+    page.drawText(safe(account.account_type ?? '-', 14), { x: COLS.type, y, size: 9, font });
+    page.drawText('To be confirmed by bank', { x: COLS.value, y, size: 9, font, color: rgb(0.35, 0.35, 0.35) });
+    y -= ROW;
+  });
 
-    if (!deceasedName?.trim() || !administratorName?.trim()) {
-      return new Response(
-        JSON.stringify({ error: '`deceasedName` and `administratorName` are required fields.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+  const pages = pdf.getPages();
+  pages.forEach((p, i) => {
+    p.drawLine({ start: { x: MARGIN, y: 62 }, end: { x: p.getWidth() - MARGIN, y: 62 }, thickness: 0.5, color: rgb(0.6, 0.6, 0.6) });
+    p.drawText('Working schedule prepared by the administrator. This is not a court order or a grant of probate. Balances are', { x: MARGIN, y: 48, size: 7.5, font, color: rgb(0.35, 0.35, 0.35) });
+    p.drawText('released by each bank only on presentation of Letters of Administration or Probate.', { x: MARGIN, y: 38, size: 7.5, font, color: rgb(0.35, 0.35, 0.35) });
+    p.drawText(`Reclaimng - ${ref} - Page ${i + 1} of ${pages.length}`, { x: MARGIN, y: 24, size: 7.5, font, color: rgb(0.35, 0.35, 0.35) });
+  });
 
-    if (!Array.isArray(assets) || assets.length === 0) {
-      return new Response(
-        JSON.stringify({ error: '`assets` must be a non-empty array.' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // -----------------------------------------------------------------------
-    // 2. Initialise PDF Document — Standard A4 (595.28 × 841.89 pts)
-    // -----------------------------------------------------------------------
-    const pdfDoc    = await PDFDocument.create();
-    const font      = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const boldFont  = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-
-    const page              = pdfDoc.addPage(PageSizes.A4);
-    const { width, height } = page.getSize();
-    const contentWidth      = width - PAGE_MARGIN * 2;
-
-    // Shorthand: convert a "from-top" offset to pdf-lib's bottom-origin Y
-    const fromTop = (offsetFromTop: number) => height - offsetFromTop;
-
-    // -----------------------------------------------------------------------
-    // 3. Legal Header (centered, bold) — Y ≈ 780 from bottom
-    // -----------------------------------------------------------------------
-    const line1 = 'IN THE HIGH COURT OF NIGERIA';
-    const line2 = 'IN THE PROBATE REGISTRY';
-    const line3 = `IN THE ESTATE OF ${deceasedName.toUpperCase()}, DECEASED`;
-
-    const headerLines = [line1, line2, line3];
-    let headerY = fromTop(HEADER_OFFSET);
-
-    for (const line of headerLines) {
-      page.drawText(line, {
-        x:    centerX(line, width, FONT_SIZE_HEADER, boldFont),
-        y:    headerY,
-        size: FONT_SIZE_HEADER,
-        font: boldFont,
-        color: rgb(0, 0, 0),
-      });
-      headerY -= 18; // line spacing
-    }
-
-    // Decorative rule beneath header
-    page.drawLine({
-      start:     { x: PAGE_MARGIN + 40, y: headerY - 6 },
-      end:       { x: width - PAGE_MARGIN - 40, y: headerY - 6 },
-      thickness: 0.5,
-      color:     rgb(0.3, 0.3, 0.3),
-    });
-
-    // -----------------------------------------------------------------------
-    // 4. Declaration Block — Y ≈ 650 from bottom
-    // -----------------------------------------------------------------------
-    const declaration =
-      'A true and complete inventory of all the personal estate and effects of the ' +
-      'said deceased discovered via the Reclaimng Transition Protocol.';
-
-    page.drawText(declaration, {
-      x:        PAGE_MARGIN,
-      y:        fromTop(DECL_OFFSET),
-      size:     FONT_SIZE_BODY,
-      font:     font,
-      maxWidth: contentWidth,
-      lineHeight: 14,
-      color:    rgb(0.15, 0.15, 0.15),
-    });
-
-    // -----------------------------------------------------------------------
-    // 5. Asset Table — top rule at Y ≈ 630 from bottom
-    // -----------------------------------------------------------------------
-    let tableY = fromTop(TABLE_TOP_OFFSET);
-
-    // Top horizontal rule
-    page.drawLine({
-      start:     { x: PAGE_MARGIN, y: tableY },
-      end:       { x: width - PAGE_MARGIN, y: tableY },
-      thickness: 1,
-      color:     rgb(0, 0, 0),
-    });
-
-    // Column headers
-    const headerRowY = tableY - 16;
-    page.drawText('S/N',                        { x: COL_SN,          y: headerRowY, size: FONT_SIZE_BODY, font: boldFont });
-    page.drawText('Asset Type & Description',   { x: COL_DESC,        y: headerRowY, size: FONT_SIZE_BODY, font: boldFont });
-    page.drawText('Holding Institution / Registrar', { x: COL_INSTITUTION, y: headerRowY, size: FONT_SIZE_BODY, font: boldFont });
-    page.drawText('Verified Value (\u20A6)',    { x: COL_VALUE,       y: headerRowY, size: FONT_SIZE_BODY, font: boldFont });
-
-    // Sub-header rule
-    const subRuleY = headerRowY - 8;
-    page.drawLine({
-      start:     { x: PAGE_MARGIN, y: subRuleY },
-      end:       { x: width - PAGE_MARGIN, y: subRuleY },
-      thickness: 0.5,
-      color:     rgb(0, 0, 0),
-    });
-
-    // -----------------------------------------------------------------------
-    // 6. Data Rows — each row shifts Y down by ROW_HEIGHT points
-    // -----------------------------------------------------------------------
-    let currentY = subRuleY - ROW_HEIGHT;
-    const SAFE_BOTTOM = FOOTER_HEIGHT + 20; // stop drawing rows before footer
-
-    for (let i = 0; i < assets.length; i++) {
-      // Guard: if we've run out of page space, stop (avoids footer overlap)
-      if (currentY < SAFE_BOTTOM) break;
-
-      const asset = assets[i];
-
-      // Alternate row shading for readability
-      if (i % 2 === 0) {
-        page.drawRectangle({
-          x:      PAGE_MARGIN,
-          y:      currentY - 6,
-          width:  contentWidth,
-          height: ROW_HEIGHT,
-          color:  rgb(0.96, 0.96, 0.98),
-          opacity: 1,
-        });
-      }
-
-      const valueStr = typeof asset.value === 'number'
-        ? `\u20A6${asset.value.toLocaleString('en-NG')}`
-        : `\u20A6${asset.value}`;
-
-      page.drawText(`${i + 1}`,                            { x: COL_SN,          y: currentY, size: FONT_SIZE_BODY, font });
-      page.drawText(truncate(String(asset.description), 30), { x: COL_DESC,        y: currentY, size: FONT_SIZE_BODY, font });
-      page.drawText(truncate(String(asset.institution), 22), { x: COL_INSTITUTION, y: currentY, size: FONT_SIZE_BODY, font });
-      page.drawText(truncate(valueStr, 18),                  { x: COL_VALUE,       y: currentY, size: FONT_SIZE_BODY, font });
-
-      currentY -= ROW_HEIGHT;
-    }
-
-    // Closing table rule
-    page.drawLine({
-      start:     { x: PAGE_MARGIN, y: currentY + 6 },
-      end:       { x: width - PAGE_MARGIN, y: currentY + 6 },
-      thickness: 0.5,
-      color:     rgb(0, 0, 0),
-    });
-
-    // -----------------------------------------------------------------------
-    // 7. Authorization Footer — anchored to Y = FOOTER_HEIGHT from bottom
-    // -----------------------------------------------------------------------
-    const generationDate = new Date().toLocaleDateString('en-NG', {
-      year: 'numeric', month: 'long', day: 'numeric',
-    });
-
-    const footerRule = FOOTER_HEIGHT;
-    page.drawLine({
-      start:     { x: PAGE_MARGIN, y: footerRule },
-      end:       { x: width - PAGE_MARGIN, y: footerRule },
-      thickness: 0.5,
-      color:     rgb(0.5, 0.5, 0.5),
-    });
-
-    page.drawText(`Generated by: ${administratorName} (Verified via NIMC)`, {
-      x:    PAGE_MARGIN,
-      y:    footerRule - 16,
-      size: FONT_SIZE_FOOTER,
-      font: boldFont,
-      color: rgb(0.1, 0.1, 0.1),
-    });
-
-    page.drawText(`Date of Generation: ${generationDate}`, {
-      x:    PAGE_MARGIN,
-      y:    footerRule - 30,
-      size: FONT_SIZE_FOOTER,
-      font: font,
-      color: rgb(0.2, 0.2, 0.2),
-    });
-
-    // Security attestation line
-    const securityNote = 'Document secured and cryptographically verified by Reclaimng Technologies. | Ref: RT-PROBATE-INVENTORY';
-    page.drawText(securityNote, {
-      x:    centerX(securityNote, width, 7, font),
-      y:    20,
-      size: 7,
-      font: font,
-      color: rgb(0.55, 0.55, 0.55),
-    });
-
-    // -----------------------------------------------------------------------
-    // 8. Serialize & Return as Binary PDF Stream
-    // -----------------------------------------------------------------------
-    const pdfBytes = await pdfDoc.save();
-
-    return new Response(pdfBytes as any, {
-      status: 200,
-      headers: {
-        'Content-Type':        'application/pdf',
-        'Content-Disposition': 'attachment; filename="Verified_Estate_Inventory.pdf"',
-        'Cache-Control':       'no-store',
-      },
-    });
-
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[generate-inventory] PDF generation failed:', message);
-
-    return new Response(
-      JSON.stringify({ error: 'Internal server error during PDF generation.', detail: message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-}
+  const bytes = await pdf.save();
+  return new Response(Buffer.from(bytes), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="Schedule_of_Assets_${ref}.pdf"`,
+      'Cache-Control': 'no-store',
+    },
+  });
+});

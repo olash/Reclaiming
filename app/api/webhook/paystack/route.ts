@@ -1,79 +1,57 @@
-import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+import { FEES } from '@/lib/fees';
+import { json } from '@/lib/server/http';
+import { adminClient } from '@/lib/server/supabase';
 
+export const dynamic = 'force-dynamic';
+
+/**
+ * POST /api/webhook/paystack
+ *
+ * Paystack's server-to-server confirmation. It is the safety net for the case
+ * where a family pays but closes the tab before their browser reports back:
+ * the matching case is found by its payment reference and marked paid.
+ *
+ * It only ever marks the one case the payment was made for, and only when the
+ * amount covers the fee.
+ */
 export async function POST(request: Request) {
-  try {
-    const rawBody = await request.text();
-    const signature = request.headers.get('x-paystack-signature');
-    const secret = process.env.PAYSTACK_SECRET_KEY;
-
-    if (!secret) {
-      console.error('[paystack-webhook] Missing PAYSTACK_SECRET_KEY');
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 503 });
-    }
-
-    if (!signature) {
-      return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
-    }
-
-    // 1. Verify cryptographic signature
-    const hash = crypto.createHmac('sha512', secret).update(rawBody).digest('hex');
-    
-    if (hash !== signature) {
-      console.warn('[paystack-webhook] Invalid signature detected.');
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-    }
-
-    // 2. Parse Payload
-    const payload = JSON.parse(rawBody);
-    const event = payload.event;
-    const data = payload.data;
-
-    // 3. Process Event
-    if (event === 'charge.success') {
-      const userId = data.metadata?.user_id;
-      const estateId = data.metadata?.estate_id;
-
-      if (!userId) {
-        console.warn('[paystack-webhook] No user_id found in metadata. Skipping.');
-        // Still return 200 to acknowledge receipt
-        return NextResponse.json({ received: true });
-      }
-
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-      if (supabaseUrl && supabaseServiceKey) {
-        const supabase = createClient(supabaseUrl, supabaseServiceKey);
-        
-        let query = supabase.from('estates').update({ payment_status: 'paid' });
-        
-        // If estateId was provided, update exactly that estate. 
-        // Otherwise, update the latest unpaid estate for this user.
-        if (estateId) {
-          query = query.eq('id', estateId);
-        } else {
-          // As a fallback, update all unpaid estates for this user (or we could fetch the latest one)
-          query = query.eq('user_id', userId).eq('payment_status', 'unpaid');
-        }
-
-        const { error: updateError } = await query;
-
-        if (updateError) {
-          console.error('[paystack-webhook] Database update failed:', updateError.message);
-          return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
-        }
-
-        console.log(`[paystack-webhook] Successfully marked payment 'paid' for user ${userId}`);
-      }
-    }
-
-    // 4. Acknowledge Receipt immediately
-    return NextResponse.json({ received: true });
-
-  } catch (error) {
-    console.error('[paystack-webhook] Error processing webhook:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  const secret = process.env.PAYSTACK_SECRET_KEY;
+  if (!secret) {
+    console.error('[paystack-webhook] PAYSTACK_SECRET_KEY is not set.');
+    return json({ error: 'Server configuration error' }, 503);
   }
+  const rawBody = await request.text();
+  const signature = request.headers.get('x-paystack-signature') ?? '';
+  const expected = crypto.createHmac('sha512', secret).update(rawBody).digest('hex');
+  const valid = signature.length === expected.length && crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  if (!valid) return json({ error: signature ? 'Invalid signature' : 'Missing signature' }, 401);
+
+  let payload: any;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return json({ error: 'Invalid payload' }, 400);
+  }
+
+  if (payload?.event === 'charge.success') {
+    const { reference, amount, currency } = payload.data ?? {};
+    if (typeof reference === 'string' && currency === 'NGN' && Number(amount) >= FEES.submission.kobo) {
+      try {
+        const { error } = await adminClient()
+          .from('estates')
+          .update({ payment_status: 'paid' })
+          .eq('paystack_reference', reference)
+          .eq('payment_status', 'unpaid');
+        if (error) {
+          console.error('[paystack-webhook] update failed:', error.message);
+          return json({ error: 'Database update failed' }, 500); // Paystack will retry
+        }
+      } catch (err) {
+        console.error('[paystack-webhook] error:', err instanceof Error ? err.message : err);
+        return json({ error: 'Server error' }, 500);
+      }
+    }
+  }
+  return json({ received: true });
 }
