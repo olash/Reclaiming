@@ -243,6 +243,7 @@ async function qoreidCheck(): Promise<Step[]> {
 
 async function monoCheck(): Promise<Step[]> {
   const headers = { 'Content-Type': 'application/json', Accept: 'application/json', 'mono-sec-key': process.env.MONO_SEC_KEY ?? '' };
+  const sandbox = (process.env.MONO_SEC_KEY ?? '').startsWith('test_');
   const steps: Step[] = [];
   let session = '';
   steps.push(
@@ -267,7 +268,52 @@ async function monoCheck(): Promise<Step[]> {
       await timed('v3 details (sandbox OTP) → linked accounts', async () => {
         const r = await call('https://api.withmono.com/v3/lookup/bvn/details', { method: 'POST', headers: { ...headers, 'x-session-id': session }, body: JSON.stringify({ otp: MONO_TEST.otp }) });
         const list = Array.isArray(r.body?.data) ? r.body.data : [];
-        return { ok: r.ok, status: r.status, note: r.body?.message, detail: { accounts: list.length, banks: list.map((a: any) => a?.institution?.name ?? null), account_shape: shape(list[0]) } };
+        return {
+          ok: r.ok,
+          status: r.status,
+          note: r.body?.message,
+          detail: {
+            accounts: list.length,
+            banks: list.map((a: any) => a?.institution?.name ?? null),
+            account_shape: shape(list[0]),
+            // Sandbox only: the fake test accounts, so testers know what to expect on screen.
+            ...(sandbox ? { sandbox_accounts: list.map((a: any) => ({ bank: a?.institution?.name ?? null, account_number: a?.account_number ?? null, account_name: a?.account_name ?? null, type: a?.account_type ?? null })) } : {}),
+          },
+        };
+      }),
+    );
+  }
+  // "Fetch BVN Details" (scope identity): the sandbox person behind the test BVN. Test keys only.
+  if (sandbox) {
+    let idSession = '';
+    steps.push(
+      await timed('v3 identity scope: initiate → verify → details (sandbox BVN details)', async () => {
+        const init = await call('https://api.withmono.com/v3/lookup/bvn/initiate', { method: 'POST', headers, body: JSON.stringify({ bvn: MONO_TEST.bvn, scope: 'identity' }) });
+        idSession = init.body?.data?.session_id ?? '';
+        if (!idSession) return { ok: false, status: init.status, note: init.body?.message };
+        const methods = init.body?.data?.methods ?? [];
+        await call('https://api.withmono.com/v3/lookup/bvn/verify', {
+          method: 'POST',
+          headers: { ...headers, 'x-session-id': idSession },
+          body: JSON.stringify({ method: 'alternate_phone', phone_number: MONO_TEST.alternatePhone }),
+        });
+        const r = await call('https://api.withmono.com/v3/lookup/bvn/details', { method: 'POST', headers: { ...headers, 'x-session-id': idSession }, body: JSON.stringify({ otp: MONO_TEST.otp }) });
+        const d = r.body?.data ?? {};
+        const pick = (k: string) => (typeof d[k] === 'string' || typeof d[k] === 'number' ? d[k] : undefined);
+        return {
+          ok: r.ok,
+          status: r.status,
+          note: r.body?.message,
+          detail: {
+            test_bvn: MONO_TEST.bvn,
+            otp: MONO_TEST.otp,
+            methods: methods.map((m: any) => ({ method: m?.method ?? m, hint: m?.hint ?? null })),
+            identity: Object.fromEntries(
+              ['first_name', 'middle_name', 'last_name', 'dob', 'gender', 'phone_number', 'phone_number_2', 'email', 'state_of_origin', 'lga_of_origin', 'nin', 'bvn'].map((k) => [k, pick(k)]).filter(([, v]) => v !== undefined),
+            ),
+            identity_fields: shape(d),
+          },
+        };
       }),
     );
   }

@@ -4,6 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { BadgeCheck, Camera, ExternalLink, FileText, RotateCcw, ShieldAlert, ThumbsDown, ThumbsUp, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+import { Motif } from '@/components/brand/motifs';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ interface AdminCase {
   accounts: number;
   review_note: string | null;
   total_asset_value: number | null;
+  own: boolean;
 }
 
 const TABS = [
@@ -115,12 +117,14 @@ export default function AdminPage() {
   if (allowed === null) return <Skeleton className="h-64 w-full" />;
   if (!allowed) {
     return (
-      <Card className="p-8 text-center">
-        <ShieldAlert className="mx-auto size-10 text-muted-foreground" aria-hidden="true" />
-        <h1 className="mt-4 text-3xl font-extrabold">This area is for the review team</h1>
-        <p className="mt-2 text-muted-foreground">If you should have access, ask an administrator to add your email to ADMIN_EMAILS.</p>
-        <Button asChild className="mt-6"><Link href="/app">Back to your cases</Link></Button>
-      </Card>
+      // Families see an ordinary "not found": the review area is not advertised to them.
+      <div className="flex flex-col items-center py-16 text-center">
+        <Motif name="spiral" seed={4} className="size-36 text-saffron" strokeWidth={3.2} />
+        <p className="eyebrow mt-8">Page not found</p>
+        <h1 className="mt-3 max-w-xl text-display-md font-extrabold">This path doesn’t lead anywhere, yet.</h1>
+        <p className="mt-4 max-w-md text-lg text-ink/75">The link may be old or mistyped. Everything you started is still safe in your account.</p>
+        <Button asChild size="lg" className="mt-8"><Link href="/app">Go to your cases</Link></Button>
+      </div>
     );
   }
 
@@ -202,6 +206,11 @@ export default function AdminPage() {
               {c.status === 'settled' && c.total_asset_value !== null && <p className="mt-4 font-semibold">Released to estate: {formatNaira(c.total_asset_value)}</p>}
               {c.accounts > 0 && <p className="mt-4 text-sm text-muted-foreground">{c.accounts} account{c.accounts === 1 ? '' : 's'} found by the family&apos;s search.</p>}
 
+              {c.own ? (
+                <Alert tone="neutral" className="mt-5" icon={ShieldAlert} title="You opened this case">
+                  To keep reviews fair, another member of the review team has to decide it.
+                </Alert>
+              ) : (
               <div className="mt-5 flex flex-wrap gap-2 border-t pt-5">
                 {c.status === 'pending_review' && (
                   <Button size="sm" variant="secondary" loading={busy === c.id + 'start_review'} onClick={() => decide(c, 'start_review')}>Mark as in review</Button>
@@ -219,6 +228,7 @@ export default function AdminPage() {
                   <Button size="sm" variant="ghost" loading={busy === c.id + 'reopen'} onClick={() => decide(c, 'reopen')}><RotateCcw aria-hidden="true" />Move back to queue</Button>
                 )}
               </div>
+              )}
             </Card>
           );
         })}

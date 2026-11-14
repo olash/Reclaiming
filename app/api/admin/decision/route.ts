@@ -18,6 +18,7 @@ const ACTIONS = {
  *
  * - reject needs a note: the family sees it on their case page.
  * - settle records the net amount released to the estate (₦).
+ * - a reviewer can never decide a case they opened themselves (SELF_REVIEW).
  */
 export const POST = route('admin-decision', async (request) => {
   const reviewer = await requireAdmin(request);
@@ -32,9 +33,14 @@ export const POST = route('admin-decision', async (request) => {
   if (body.action === 'settle' && (amount === null || !Number.isFinite(amount) || amount < 0)) throw new HttpError(400, 'Enter the amount released to the estate.', 'AMOUNT_REQUIRED');
 
   const db = adminClient();
-  const { data: rows, error: findError } = await db.from('estates').select('id, status').eq('id', id).limit(1);
+  const { data: rows, error: findError } = await db.from('estates').select('id, status, user_id').eq('id', id).limit(1);
   if (findError) throw findError;
   if (!rows?.[0]) throw new HttpError(404, 'Case not found.', 'ESTATE_NOT_FOUND');
+  // Nobody reviews their own case: a reviewer who is also a family member must leave it to another reviewer.
+  if (rows[0].user_id === reviewer.id) {
+    console.warn(`[admin-decision] ${reviewer.email} tried to ${body.action} their own case ${id}`);
+    throw new HttpError(403, 'You opened this case, so another reviewer has to decide it.', 'SELF_REVIEW');
+  }
 
   const { error } = await db.from('estates').update({ status: action.status }).eq('id', id);
   if (error) {
