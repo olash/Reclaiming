@@ -1,6 +1,11 @@
-# Reclaiming brand guidelines (v1.0)
+# Reclaiming brand guidelines (v1.1)
 
 The live, interactive version of this guide is at **`/brand`** on the site. This file is the written reference for designers, developers and anyone writing for Reclaiming.
+
+| Version | Date | Change |
+| --- | --- | --- |
+| 1.1 | 15 November 2026 | The name is **Reclaiming** everywhere. Wordmark redrawn as `reclaiming`; the saffron coin dots the first *i*. Logo files regenerated. |
+| 1.0 | 14 November 2026 | First edition: adire concept, logo, colour, type, pattern, voice, components. |
 
 ---
 

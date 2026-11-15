@@ -88,7 +88,7 @@ export default function BrandPage() {
         <section className="relative overflow-hidden bg-indigo-night text-cotton">
           <div className="container grid items-end gap-12 py-16 md:py-24 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <p className="eyebrow text-saffron">Brand guidelines · v1.0 · 2026</p>
+              <p className="eyebrow text-saffron">Brand guidelines · v1.1 · November 2026</p>
               <h1 className="mt-5 text-display-xl font-extrabold text-cotton">
                 Bring it <span className="text-saffron">home.</span>
               </h1>
