@@ -13,7 +13,7 @@ unclaimed dividends) of a relative who has passed away.
 
 1. **Identity.** The family member's NIN is matched with QoreID NIN Premium (₦5,000). Then a QoreID **selfie liveness** check (`liveness_nin`, Web SDK) confirms it is really them.
 2. **Documents.** The death certificate (and Letters of Administration, if available) is uploaded after the ₦75,000 fee, which is verified with Paystack on the server.
-3. **Review.** Staff (`ADMIN_EMAILS`) approve or send back cases in the **Review queue** at `/app/admin`.
+3. **Review.** The admin (`ADMIN_EMAILS`) logs in at `/admin/login` and approves or sends back cases in the review console at `/admin`. Access is role-based: families never see it, and the admin only sees the console.
 4. **Account search.** A consented NIBSS iGree BVN search through **Mono Lookup (v3)**. The family chooses where the one-time code goes (email, the BVN's phones, or another phone), and every linked account is listed. A bank letter is offered as a fallback.
 5. **Claim.** A downloadable schedule of assets, then claims with each bank. Cases are marked settled with the amount released.
 
@@ -21,7 +21,7 @@ unclaimed dividends) of a relative who has passed away.
 
 | Part | Where | Notes |
 | --- | --- | --- |
-| Pages | `app/` (Next.js 14 App Router) | Public: `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/privacy`, `/terms`, `/brand`. Signed in: `/app`, `/app/new`, `/app/estates/[id]`, `/app/vault`. |
+| Pages | `app/` (Next.js 14 App Router) | Public: `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/privacy`, `/terms`, `/brand`. Families: `/app`, `/app/new`, `/app/estates/[id]`, `/app/vault`. Admin: `/admin/login`, `/admin`. |
 | UI kit | `components/ui/`, `components/brand/` | Tailwind + Radix primitives in the shadcn/ui style, themed with the adire palette. Tokens in `app/globals.css` and `tailwind.config.ts`; logo in `components/logo.tsx`; hand-drawn motifs in `components/brand/motifs.tsx`. |
 | API | `app/api/*/route.ts` | Every route except `config` and the Paystack webhook needs a signed-in user (`Authorization: Bearer <supabase access token>`). |
 | Server helpers | `lib/server/` | Auth, ownership checks, Paystack verification, name matching, Mono, document check. |

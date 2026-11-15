@@ -12,7 +12,7 @@ const STATUSES = ['pending_review', 'under_review', 'verified', 'rejected', 'set
  * Every family's cases, oldest waiting first, with what a reviewer needs at a glance.
  */
 export const POST = route('admin-cases', async (request) => {
-  const reviewer = await requireAdmin(request);
+  await requireAdmin(request);
   const body = await readJson<{ status?: string }>(request).catch(() => ({}) as { status?: string });
   const db = adminClient();
   let query = db.from('estates').select('*').order('submitted_at', { ascending: true }).limit(200);
@@ -45,8 +45,6 @@ export const POST = route('admin-cases', async (request) => {
         accounts: Array.isArray(e.discovered_accounts) ? e.discovered_accounts.length : 0,
         review_note: e.review_note ?? null,
         total_asset_value: e.total_asset_value ?? null,
-        /** The reviewer opened this case themselves, so they cannot decide it. */
-        own: e.user_id === reviewer.id,
       };
     }),
   });

@@ -61,7 +61,7 @@ export function SiteFooter() {
           </Button>
         </div>
         <nav aria-label="Footer" className="grid grid-cols-2 content-start gap-x-8 gap-y-1 sm:grid-cols-3">
-          {[...LINKS, ['Privacy', '/privacy'], ['Terms', '/terms'], ['Brand', '/brand']].map(([label, href]) => (
+          {[...LINKS, ['Privacy', '/privacy'], ['Terms', '/terms'], ['Brand', '/brand'], ['Team login', '/admin/login']].map(([label, href]) => (
             <Link key={href} href={href} className="py-2.5 font-bold text-cotton/80 underline-offset-4 hover:text-cotton hover:underline">
               {label}
             </Link>

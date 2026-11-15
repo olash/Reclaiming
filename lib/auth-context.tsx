@@ -5,15 +5,21 @@ import { useRouter } from 'next/navigation';
 import type { Session, User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase } from './supabase-browser';
 
+/** What the signed-in person may see. Decided on the server (ADMIN_EMAILS); null while unknown or signed out. */
+export type Role = 'admin' | 'family' | null;
+
 interface AuthState {
   /** True until we know whether someone is signed in. */
   loading: boolean;
   session: Session | null;
   user: User | null;
+  role: Role;
+  /** True until the role of a signed-in person is known. */
+  roleLoading: boolean;
   signOut: () => Promise<void>;
 }
 
-const AuthContext = React.createContext<AuthState>({ loading: true, session: null, user: null, signOut: async () => {} });
+const AuthContext = React.createContext<AuthState>({ loading: true, session: null, user: null, role: null, roleLoading: true, signOut: async () => {} });
 
 /**
  * One place that knows who is signed in. It also completes sign-ins that
@@ -46,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && isRecovery)) {
         router.replace('/reset-password');
-      } else if (event === 'SIGNED_IN' && cameFromLink && !window.location.pathname.startsWith('/app')) {
+      } else if (event === 'SIGNED_IN' && cameFromLink && !/^\/(app|admin)(\/|$)/.test(window.location.pathname)) {
         router.replace('/app');
       }
     });
@@ -56,15 +62,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [router]);
 
+  // The role is asked of the server whenever a different person signs in.
+  const userId = session?.user?.id ?? null;
+  const token = session?.access_token ?? null;
+  const [roleFor, setRoleFor] = React.useState<{ userId: string; role: Exclude<Role, null> } | null>(null);
+  React.useEffect(() => {
+    if (!userId || !token) return;
+    if (roleFor?.userId === userId) return;
+    let active = true;
+    fetch('/api/admin/me', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: '{}' })
+      .then((r) => (r.ok ? r.json() : { admin: false }))
+      .catch(() => ({ admin: false }))
+      .then((r: { admin?: boolean }) => active && setRoleFor({ userId, role: r.admin ? 'admin' : 'family' }));
+    return () => {
+      active = false;
+    };
+  }, [userId, token, roleFor?.userId]);
+  const role: Role = userId && roleFor?.userId === userId ? roleFor.role : null;
+  const roleLoading = loading || (!!userId && role === null);
+
   const signOut = React.useCallback(async () => {
+    const wasAdmin = role === 'admin';
     await supabase().auth.signOut();
     try {
       Object.keys(sessionStorage).filter((k) => k.startsWith('reclaimng:')).forEach((k) => sessionStorage.removeItem(k));
     } catch {}
-    router.replace('/login');
-  }, [router]);
+    router.replace(wasAdmin ? '/admin/login' : '/login');
+  }, [router, role]);
 
-  const value = React.useMemo(() => ({ loading, session, user: session?.user ?? null, signOut }), [loading, session, signOut]);
+  const value = React.useMemo(
+    () => ({ loading, session, user: session?.user ?? null, role, roleLoading, signOut }),
+    [loading, session, role, roleLoading, signOut],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
