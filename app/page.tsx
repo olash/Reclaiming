@@ -117,7 +117,7 @@ function Marquee() {
     </ul>
   );
   return (
-    <section aria-label="Why families use Reclaimng" className="overflow-hidden border-y border-ink bg-ink py-5 text-cotton">
+    <section aria-label="Why families use Reclaiming" className="overflow-hidden border-y border-ink bg-ink py-5 text-cotton">
       <div className="flex w-max motion-safe:animate-[marquee_40s_linear_infinite]">
         {row(false)}
         {row(true)}
@@ -181,7 +181,7 @@ export default function LandingPage() {
               </p>
               <p className="mt-8 max-w-2xl text-lg text-ink/75">
                 Across Nigeria, money sits untouched in the accounts of people who have passed on, because families don’t know where it is
-                or how to ask. Reclaimng turns that maze into a single, guided path, with real people beside you.
+                or how to ask. Reclaiming turns that maze into a single, guided path, with real people beside you.
               </p>
             </div>
           </div>

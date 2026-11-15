@@ -221,7 +221,7 @@ try {
   const estate = s.tables.estates.find((e) => e.deceased_name === 'Samuel Adekunle Bello');
   check('Submission opens one paid case in review', s.tables.estates.length === 1 && (process.env.MOCK_SCHEMA === 'live' || estate?.payment_status === 'paid') && estate?.status === 'pending_review');
   check('Confirmation says what happens next', (await page.getByText('What happens next').count()) === 1);
-  check('Saved answers are cleared once the case is open', await page.evaluate(() => !Object.keys(sessionStorage).some((k) => k.startsWith('reclaimng:draft'))));
+  check('Saved answers are cleared once the case is open', await page.evaluate(() => !Object.keys(sessionStorage).some((k) => k.startsWith('reclaiming:draft'))));
 
   // Case in review
   await page.getByRole('link', { name: 'View your case' }).click();
@@ -236,7 +236,7 @@ try {
 
   // The review team approves the case in the review console
   {
-    const reviewerAccount = await admin('/user', { email: 'reviewer@reclaimng.test', user_metadata: { full_name: 'Review Team' } });
+    const reviewerAccount = await admin('/user', { email: 'reviewer@reclaiming.test', user_metadata: { full_name: 'Review Team' } });
     const rctx = await newContext(browser);
     const rp = await rctx.newPage();
     await rp.goto(APP + '/admin/login', { waitUntil: 'networkidle' });

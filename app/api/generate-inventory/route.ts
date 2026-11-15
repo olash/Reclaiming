@@ -47,7 +47,7 @@ export const POST = route('generate-inventory', async (request) => {
 
   const pdf = await PDFDocument.create();
   pdf.setTitle(`Schedule of Assets - Estate of ${safe(estate.deceased_name)}`);
-  pdf.setCreator('Reclaimng');
+  pdf.setCreator('Reclaiming');
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -79,7 +79,7 @@ export const POST = route('generate-inventory', async (request) => {
       y -= 22;
       centred(page, safe(`ESTATE OF ${estate.deceased_name.toUpperCase()} (DECEASED)`, 70), y, 12, bold);
       y -= 30;
-      const intro = `Bank accounts identified for the estate through a consented BVN search on Reclaimng. Prepared by ${safe(administrator, 60)} on ${today}. Case reference ${ref}.`;
+      const intro = `Bank accounts identified for the estate through a consented BVN search on Reclaiming. Prepared by ${safe(administrator, 60)} on ${today}. Case reference ${ref}.`;
       page.drawText(intro, { x: MARGIN, y, size: 10, font, maxWidth: page.getWidth() - MARGIN * 2, lineHeight: 14, color: rgb(0.15, 0.15, 0.15) });
       y -= 48;
     } else {
@@ -106,7 +106,7 @@ export const POST = route('generate-inventory', async (request) => {
     p.drawLine({ start: { x: MARGIN, y: 62 }, end: { x: p.getWidth() - MARGIN, y: 62 }, thickness: 0.5, color: rgb(0.6, 0.6, 0.6) });
     p.drawText('Working schedule prepared by the administrator. This is not a court order or a grant of probate. Balances are', { x: MARGIN, y: 48, size: 7.5, font, color: rgb(0.35, 0.35, 0.35) });
     p.drawText('released by each bank only on presentation of Letters of Administration or Probate.', { x: MARGIN, y: 38, size: 7.5, font, color: rgb(0.35, 0.35, 0.35) });
-    p.drawText(`Reclaimng - ${ref} - Page ${i + 1} of ${pages.length}`, { x: MARGIN, y: 24, size: 7.5, font, color: rgb(0.35, 0.35, 0.35) });
+    p.drawText(`Reclaiming - ${ref} - Page ${i + 1} of ${pages.length}`, { x: MARGIN, y: 24, size: 7.5, font, color: rgb(0.35, 0.35, 0.35) });
   });
 
   const bytes = await pdf.save();

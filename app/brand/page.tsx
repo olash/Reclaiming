@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 
 export const metadata: Metadata = {
   title: 'Brand guidelines',
-  description: 'The Reclaimng identity: logo, colour, type, pattern, voice and components.',
+  description: 'The Reclaiming identity: logo, colour, type, pattern, voice and components.',
 };
 
 const COLOURS = [
@@ -93,7 +93,7 @@ export default function BrandPage() {
                 Bring it <span className="text-saffron">home.</span>
               </h1>
               <p className="mt-6 max-w-xl text-xl text-cotton/80">
-                How Reclaimng looks, sounds and behaves, so every screen, letter and message feels like it came from the same careful hands.
+                How Reclaiming looks, sounds and behaves, so every screen, letter and message feels like it came from the same careful hands.
               </p>
               <nav aria-label="On this page" className="mt-10 flex flex-wrap gap-2">
                 {[['Idea', '#idea'], ['Logo', '#logo'], ['Colour', '#colour'], ['Type', '#type'], ['Pattern', '#pattern'], ['Voice', '#voice'], ['Components', '#components'], ['Files', '#files']].map(([l, h]) => (
@@ -114,7 +114,7 @@ export default function BrandPage() {
             intro={
               <>
                 <p>
-                  Reclaimng exists for one of the hardest weeks of a family’s life. The brand has to hold two things at once: the weight of grief, and
+                  Reclaiming exists for one of the hardest weeks of a family’s life. The brand has to hold two things at once: the weight of grief, and
                   the relief of finally knowing what to do. We call that feeling <strong>liberating calm</strong>.
                 </p>
                 <p>
@@ -147,7 +147,7 @@ export default function BrandPage() {
             intro={
               <p>
                 The mark is a lowercase <strong>r</strong> whose arm reaches out and brings the coin home. Read it as a letter, as a person, or as a path
-                that curves back. The same saffron coin dots the <strong>i</strong> in the wordmark, so the two always belong together.
+                that curves back. The same saffron coin dots the first <strong>i</strong> in the wordmark, so the two always belong together.
               </p>
             }
           >

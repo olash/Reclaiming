@@ -1,5 +1,5 @@
 -- ===========================================================================
--- Reclaimng — Supabase SQL Migration (Phase 4: Live Production)
+-- Reclaiming — Supabase SQL Migration (Phase 4: Live Production)
 -- Purpose: Payment Status tracking and Paywall Enforcement
 -- ===========================================================================
 

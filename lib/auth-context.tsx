@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const wasAdmin = role === 'admin';
     await supabase().auth.signOut();
     try {
-      Object.keys(sessionStorage).filter((k) => k.startsWith('reclaimng:')).forEach((k) => sessionStorage.removeItem(k));
+      Object.keys(sessionStorage).filter((k) => k.startsWith('reclaiming:')).forEach((k) => sessionStorage.removeItem(k));
     } catch {}
     router.replace(wasAdmin ? '/admin/login' : '/login');
   }, [router, role]);

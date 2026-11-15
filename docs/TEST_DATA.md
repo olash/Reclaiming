@@ -1,6 +1,6 @@
 # Test data for every flow
 
-All values below are the providers' **sandbox** data. They only work with test keys and involve no real money or identities. The Mono and QoreID values were confirmed against the live sandboxes from a Reclaimng preview on 14 November 2026.
+All values below are the providers' **sandbox** data. They only work with test keys and involve no real money or identities. The Mono and QoreID values were confirmed against the live sandboxes from a Reclaiming preview on 14 November 2026.
 
 Access is role-based. Run the journey with **two accounts**:
 
@@ -54,7 +54,7 @@ Any clear PDF, JPG or PNG under 10 MB as the death certificate. Letters of Admin
 | Where to send the code | Any option. For "Text message to another phone number", use **09066662020**. |
 | One-time code | **123456** |
 
-**What the sandbox returns: accounts** (`scope: bank_accounts`, the one Reclaimng uses):
+**What the sandbox returns: accounts** (`scope: bank_accounts`, the one Reclaiming uses):
 
 | Bank | Account number | Account name | Type |
 | --- | --- | --- | --- |
@@ -86,7 +86,7 @@ Go to `/admin/login` (or **Team login** in the site footer), log in as **damilol
 
 ### Other providers' test values
 
-Not used by Reclaimng today, but handy when comparing providers:
+Not used by Reclaiming today, but handy when comparing providers:
 
 | Provider | Test BVN | Notes |
 | --- | --- | --- |

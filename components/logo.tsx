@@ -15,10 +15,10 @@ export function LogoMark({ className, coin = 'fill-saffron' }: { className?: str
   );
 }
 
-/** The wordmark: "reclaimng", where the dot of the i is the same saffron coin. */
+/** The wordmark: "reclaiming", where the dot of the first i is the same saffron coin. */
 export function Wordmark({ className, coin = 'fill-saffron' }: { className?: string; coin?: string }) {
   return (
-    <svg viewBox={WORDMARK.viewBox} className={cn('h-6 w-auto text-ink', className)} role="img" aria-label="Reclaimng" focusable="false">
+    <svg viewBox={WORDMARK.viewBox} className={cn('h-6 w-auto text-ink', className)} role="img" aria-label="Reclaiming" focusable="false">
       <path d={WORDMARK.d} fill="currentColor" />
       <circle cx={WORDMARK.dot.cx} cy={WORDMARK.dot.cy} r={WORDMARK.dot.r} className={coin} />
     </svg>
@@ -37,7 +37,7 @@ export function Logo({
 }) {
   const rev = tone === 'reversed';
   return (
-    <Link href={href} className={cn('group inline-flex items-center gap-2 rounded-md', className)} aria-label="Reclaimng home">
+    <Link href={href} className={cn('group inline-flex items-center gap-2 rounded-md', className)} aria-label="Reclaiming home">
       <LogoMark className={cn('size-8 transition-transform duration-300 group-hover:-rotate-6', rev ? 'text-cotton' : 'text-primary')} />
       <Wordmark className={cn('h-[1.45rem]', rev ? 'text-cotton' : 'text-ink')} />
     </Link>

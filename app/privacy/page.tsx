@@ -8,7 +8,7 @@ export default function PrivacyPage() {
     <LegalPage title="Privacy Policy" updated="Effective date: May 19, 2026">
       <h2>1. Introduction &amp; Regulatory Framework</h2>
       <p>
-        Reclaimng (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates a specialized digital estate transition protocol designed to assist verified beneficiaries in
+        Reclaiming (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates a specialized digital estate transition protocol designed to assist verified beneficiaries in
         recovering unclaimed dividends and banking assets of deceased individuals within the Federal Republic of Nigeria. This Privacy Policy outlines our strict
         operational standards regarding the processing, collection, storage, and cross-border transmission of Personal Data and Sensitive Personal Data.
       </p>
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
 
       <h2>3. Integrated Third-Party Processing &amp; The QoreID Validation Node</h2>
       <p>
-        To maintain absolute compliance and prevent fraudulent estate claims, Reclaimng partners with QoreID Limited (an identity and data compliance verification
+        To maintain absolute compliance and prevent fraudulent estate claims, Reclaiming partners with QoreID Limited (an identity and data compliance verification
         network infrastructure).
       </p>
       <ul>

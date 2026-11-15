@@ -21,7 +21,7 @@ export default function VaultPage() {
     <>
       <p className="eyebrow">Recovered funds</p>
       <h1 className="mt-3 text-display-md font-extrabold">Recovered funds</h1>
-      <p className="mt-3 text-lg text-ink/75">Money that has been released to an estate through Reclaimng.</p>
+      <p className="mt-3 text-lg text-ink/75">Money that has been released to an estate through Reclaiming.</p>
 
       <div className="mt-8 space-y-4">
         {state.status === 'loading' && (
@@ -57,7 +57,7 @@ export default function VaultPage() {
                 <Motif name="sun" seed={2} className="pointer-events-none absolute -right-14 -top-14 size-72 text-saffron/25" />
                 <p className="relative font-bold uppercase tracking-[0.14em] text-saffron">Total released to your estates</p>
                 <p className="relative mt-3 font-display text-display-lg font-extrabold">{formatNaira(total)}</p>
-                <p className="relative mt-3 text-cotton/80">After Reclaimng&apos;s service fee.</p>
+                <p className="relative mt-3 text-cotton/80">After Reclaiming&apos;s service fee.</p>
               </Card>
             )}
             <ul className="space-y-4">

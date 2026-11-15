@@ -29,7 +29,7 @@ export const EMPTY_DRAFT: Draft = {
   identityRef: '', submissionRef: '', consent: false,
 };
 
-const key = (userId: string) => `reclaimng:draft:${userId}`;
+const key = (userId: string) => `reclaiming:draft:${userId}`;
 
 export function readDraft(userId: string): Draft | null {
   try {

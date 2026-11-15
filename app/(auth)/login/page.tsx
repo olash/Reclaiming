@@ -72,7 +72,7 @@ function LoginForm() {
       <GoogleButton next={destination} />
 
       <p className="mt-8 text-center text-muted-foreground">
-        New to Reclaimng?{' '}
+        New to Reclaiming?{' '}
         <Link href="/signup" className="font-bold text-primary underline decoration-saffron decoration-2 underline-offset-4 hover:decoration-primary">Create an account</Link>
       </p>
     </>

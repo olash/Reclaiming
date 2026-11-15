@@ -10,6 +10,6 @@ export function isAdmin(user: Pick<User, 'email'> | null | undefined) {
 
 export async function requireAdmin(request: Request): Promise<User> {
   const user = await requireUser(request);
-  if (!isAdmin(user)) throw new HttpError(403, 'This area is for the Reclaimng review team.', 'FORBIDDEN');
+  if (!isAdmin(user)) throw new HttpError(403, 'This area is for the Reclaiming review team.', 'FORBIDDEN');
   return user;
 }

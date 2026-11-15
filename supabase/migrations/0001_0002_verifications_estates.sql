@@ -1,5 +1,5 @@
 -- ===========================================================================
--- Reclaimng — Supabase SQL Migration (Phase 1)
+-- Reclaiming — Supabase SQL Migration (Phase 1)
 -- Purpose: "Never Pay Twice" — Verification Caching Layer
 -- ===========================================================================
 --
@@ -50,7 +50,7 @@ REVOKE ALL ON public.verifications FROM anon;
 
 
 -- ===========================================================================
--- Reclaimng — Supabase SQL Migration (Phase 2)
+-- Reclaiming — Supabase SQL Migration (Phase 2)
 -- Purpose: Estate Submissions Tracking + Probate Document Storage
 -- ===========================================================================
 --

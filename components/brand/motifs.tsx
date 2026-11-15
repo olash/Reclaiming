@@ -1,5 +1,5 @@
 /**
- * Adire motifs: the Reclaimng pattern language.
+ * Adire motifs: the Reclaiming pattern language.
  *
  * Adire cloth is made of hand-drawn squares, each with its own motif, dyed in
  * indigo. These are drawn the same way: by "hand", with a seeded wobble so no

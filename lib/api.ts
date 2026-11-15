@@ -9,7 +9,7 @@ export class ApiError extends Error {
   }
 }
 
-const OFFLINE = 'We could not reach Reclaimng. Check your internet connection and try again.';
+const OFFLINE = 'We could not reach Reclaiming. Check your internet connection and try again.';
 
 async function authHeader(): Promise<Record<string, string>> {
   const { data } = await supabase().auth.getSession();

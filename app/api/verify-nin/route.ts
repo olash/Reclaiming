@@ -65,7 +65,7 @@ export const POST = route('verify-nin', async (request) => {
   // Checked BEFORE payment so nobody is charged for a check that cannot be saved.
   const { data: elsewhere } = await supabase.from('verifications').select('user_id').eq('nin', nin).neq('user_id', user.id).limit(1);
   if (elsewhere?.length) {
-    throw new HttpError(409, 'This NIN is already linked to another Reclaimng account. Log in with that account, or message our team and we will sort it out.', 'NIN_IN_USE');
+    throw new HttpError(409, 'This NIN is already linked to another Reclaiming account. Log in with that account, or message our team and we will sort it out.', 'NIN_IN_USE');
   }
 
   // ── Payment: confirmed with Paystack, and not already spent ──────────────

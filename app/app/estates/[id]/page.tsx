@@ -24,7 +24,7 @@ import { useEstate, useIdentity } from '@/lib/use-estates';
 import { digitsOnly, useFocusFirstError } from '@/lib/use-focus-error';
 import { caseRef, cn, formatDate, formatNaira } from '@/lib/utils';
 
-const bvnKey = (id: string) => `reclaimng:bvn:${id}`;
+const bvnKey = (id: string) => `reclaiming:bvn:${id}`;
 const whatsappAbout = (estate: Estate) => `${SUPPORT_WHATSAPP}?text=${encodeURIComponent(`Hello, I need help with case ${caseRef(estate.id)} (${estate.estate_name}).`)}`;
 
 /* ───────────────────────── Bank letter ───────────────────────── */

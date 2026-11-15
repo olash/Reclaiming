@@ -617,7 +617,7 @@ describe('POST /api/generate-inventory', () => {
 describe('Review console: /api/admin/*', () => {
   let reviewer;
   before(async () => {
-    const r = await admin('/user', { email: 'reviewer@reclaimng.test' });
+    const r = await admin('/user', { email: 'reviewer@reclaiming.test' });
     reviewer = { id: r.user.id, token: r.session.access_token };
   });
 
