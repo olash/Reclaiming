@@ -566,7 +566,7 @@ export default function NewRecoveryPage() {
                 aria-describedby={errors.consent ? 'consent-error' : undefined}
               />
               <label htmlFor="consent" className="text-[0.95rem] leading-relaxed">
-                I confirm that I am entitled to act for this estate and that the information I have given is true. I authorise Reclaimng to act on the estate&apos;s
+                I confirm that I am entitled to act for this estate and that the information I have given is true. I authorise Reclaiming to act on the estate&apos;s
                 behalf in tracing these assets, and I agree to the{' '}
                 <Link href="/terms" target="_blank" className="font-semibold text-primary underline underline-offset-2">Terms</Link> and{' '}
                 <Link href="/privacy" target="_blank" className="font-semibold text-primary underline underline-offset-2">Privacy Policy</Link>, including a service fee of{' '}

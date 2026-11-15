@@ -52,7 +52,7 @@ export function SiteFooter() {
             What they built for you should reach you.
           </p>
           <p className="mt-4 max-w-sm text-cotton/75">
-            Reclaimng helps Nigerian families trace and recover the bank accounts and dividends a loved one left behind.
+            Reclaiming helps Nigerian families trace and recover the bank accounts and dividends a loved one left behind.
           </p>
           <Button asChild variant="accent" className="mt-8">
             <a href={SUPPORT_WHATSAPP} target="_blank" rel="noopener noreferrer">
@@ -71,7 +71,7 @@ export function SiteFooter() {
       <div className="container pb-8">
         <Wordmark className="h-auto w-full text-cotton/[0.12]" coin="fill-saffron" />
         <div className="mt-6 flex flex-col justify-between gap-2 border-t border-cotton/15 pt-6 text-sm text-cotton/70 sm:flex-row">
-          <p>© {year} Reclaimng. Made with care in Lagos.</p>
+          <p>© {year} Reclaiming. Made with care in Lagos.</p>
           <p>Protected under the Nigeria Data Protection Act 2023.</p>
         </div>
       </div>

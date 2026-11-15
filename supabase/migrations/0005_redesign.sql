@@ -1,5 +1,5 @@
 -- ===========================================================================
--- Reclaimng — Migration 0005: schema the redesigned app can make use of
+-- Reclaiming — Migration 0005: schema the redesigned app can make use of
 -- ===========================================================================
 -- Safe to run more than once. Nothing here removes or rewrites existing data.
 --

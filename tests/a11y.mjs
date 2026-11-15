@@ -16,7 +16,7 @@ const MOCK = process.env.MOCK_URL || 'http://127.0.0.1:54321';
 const admin = (p, body) => fetch(MOCK + '/__admin' + p, { method: 'POST', body: JSON.stringify(body || {}) }).then((r) => r.json());
 
 const u = await admin('/user', { email: 'family.a11y@example.com', user_metadata: { full_name: 'Amaka Okonkwo' } });
-const reviewer = await admin('/user', { email: 'reviewer@reclaimng.test', user_metadata: { full_name: 'Review Team' } });
+const reviewer = await admin('/user', { email: 'reviewer@reclaiming.test', user_metadata: { full_name: 'Review Team' } });
 const ids = {};
 for (const [key, patch] of Object.entries({
   review: { status: 'pending_review' },

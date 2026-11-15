@@ -1,12 +1,17 @@
-# Reclaimng brand guidelines (v1.0)
+# Reclaiming brand guidelines (v1.1)
 
-The live, interactive version of this guide is at **`/brand`** on the site. This file is the written reference for designers, developers and anyone writing for Reclaimng.
+The live, interactive version of this guide is at **`/brand`** on the site. This file is the written reference for designers, developers and anyone writing for Reclaiming.
+
+| Version | Date | Change |
+| --- | --- | --- |
+| 1.1 | 15 November 2026 | The name is **Reclaiming** everywhere. Wordmark redrawn as `reclaiming`; the saffron coin dots the first *i*. Logo files regenerated. |
+| 1.0 | 14 November 2026 | First edition: adire concept, logo, colour, type, pattern, voice, components. |
 
 ---
 
 ## 1. The idea
 
-Reclaimng exists for one of the hardest weeks of a family's life. The brand has to hold two things at once: the weight of grief, and the relief of finally knowing what to do. We call that feeling **liberating calm**.
+Reclaiming exists for one of the hardest weeks of a family's life. The brand has to hold two things at once: the weight of grief, and the relief of finally knowing what to do. We call that feeling **liberating calm**.
 
 The visual language comes from **adire**, the indigo resist-dyed cloth of Abeokuta and Ibadan. Adire is made by hand, square by square, and each square has its own motif and meaning. It is:
 
@@ -28,7 +33,7 @@ The visual language comes from **adire**, the indigo resist-dyed cloth of Abeoku
 
 ## 2. Logo
 
-The **mark** is a lowercase *r* whose arm reaches out and brings the **coin** home. It reads as a letter, as a person (the stem is family), or as a path that curves back. The same saffron coin dots the *i* in the **wordmark** (`reclaımng`), so the two always belong together.
+The **mark** is a lowercase *r* whose arm reaches out and brings the **coin** home. It reads as a letter, as a person (the stem is family), or as a path that curves back. The same saffron coin dots the first *i* in the **wordmark** (`reclaiming`), so the two always belong together.
 
 | File | Use |
 | --- | --- |

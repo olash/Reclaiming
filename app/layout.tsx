@@ -9,9 +9,9 @@ const sans = Atkinson_Hyperlegible({ subsets: ['latin'], weight: ['400', '700'],
 const display = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-display', display: 'swap', axes: ['opsz', 'wdth'] });
 
 export const metadata: Metadata = {
-  title: { default: 'Reclaimng — Recover what your loved one left behind', template: '%s · Reclaimng' },
+  title: { default: 'Reclaiming — Recover what your loved one left behind', template: '%s · Reclaiming' },
   description:
-    'Reclaimng helps Nigerian families find and recover the bank accounts and unclaimed dividends of a relative who has passed away — step by step, with real people to help.',
+    'Reclaiming helps Nigerian families find and recover the bank accounts and unclaimed dividends of a relative who has passed away — step by step, with real people to help.',
 };
 
 export const viewport: Viewport = { themeColor: '#1A2160', width: 'device-width', initialScale: 1 };

@@ -1,5 +1,5 @@
 -- ===========================================================================
--- Reclaimng — Supabase SQL Migration (Phase 3: Mono iGree BVN)
+-- Reclaiming — Supabase SQL Migration (Phase 3: Mono iGree BVN)
 -- Purpose: Rate Limiting & Discovered Accounts Schema Update
 -- ===========================================================================
 

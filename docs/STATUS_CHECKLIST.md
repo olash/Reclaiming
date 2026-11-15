@@ -1,4 +1,4 @@
-# Reclaimng: status checklist
+# Reclaiming: status checklist
 
 _Last updated 14 November 2026 (afternoon). Branch `claude/happy-galileo-4uh7cb` (pushed; not merged into `main`; no pull request)._
 
@@ -181,7 +181,7 @@ Legend:
 - [ ] 🟢 Remove unused packages: `zod`, `@radix-ui/react-tabs`, `@radix-ui/react-select`, `@radix-ui/react-label`.
 - [ ] 🟢 Retire the old `/api/generate-qore-session` alias once nothing calls it.
 - [ ] 🟢 Optional: OCR on death certificates (set `GCP_SERVICE_ACCOUNT_KEY_BASE64`). It's advisory, and the app works without it.
-- [ ] 🟢 Custom domain (e.g. `reclaimng.ng`) for trust and simpler deployment protection.
+- [ ] 🟢 Custom domain (e.g. `reclaiming.ng`) for trust and simpler deployment protection.
 
 ---
 

@@ -1,14 +1,14 @@
 Product Requirement Document (PRD) — Revised
-Project Name: Reclaimng
+Project Name: Reclaiming
 Author: Abdurrahman Sheriff, Founder
 Date: May 19, 2026
 Document Version: 1.2
 Target Platform: Web (Desktop-first optimization with responsive mobile presentation)
 Core Architecture: Multi-page semantic HTML5 / CSS3 (Tailwind CDN) / Vanilla JavaScript Engine
 1. Executive Summary & Product Vision
-Reclaimng is an empathetic, enterprise-grade digital estate transition protocol built for the Nigerian financial ecosystem. The platform addresses systemic friction points within the e-Dividend Mandate Management System (e-DMMS) and commercial banking networks. It provides a secure digital bridge that validates legal beneficiaries via QoreID and automates the recovery and sweeping of unclaimed dividends and frozen bank assets of deceased individuals into a single, unified Estate Account.
+Reclaiming is an empathetic, enterprise-grade digital estate transition protocol built for the Nigerian financial ecosystem. The platform addresses systemic friction points within the e-Dividend Mandate Management System (e-DMMS) and commercial banking networks. It provides a secure digital bridge that validates legal beneficiaries via QoreID and automates the recovery and sweeping of unclaimed dividends and frozen bank assets of deceased individuals into a single, unified Estate Account.
 1.1 Business Model & Revenue Capture
-To drastically reduce the historical financial overhead associated with traditional estate management in Nigeria (where solicitors typically charge between 5% and 10% on top of an additional 10% state estate duty), Reclaimng standardizes flat premium pricing:
+To drastically reduce the historical financial overhead associated with traditional estate management in Nigeria (where solicitors typically charge between 5% and 10% on top of an additional 10% state estate duty), Reclaiming standardizes flat premium pricing:
 Platform Service Premium: Exactly 10% of the gross worth of all recovered assets processed through the transition pipeline.
 Consent & Enforcement Mechanism: This fee structure is transparently disclosed and explicitly bound via a mandatory, un-bypassable legal confirmation check-box component prior to initiating any discovery phase.
 2. Physical Multi-Page Architecture Blueprint
@@ -47,7 +47,7 @@ Verification Resolution: Once confirmed via mock interaction scripts, the modal 
 Step 3: Discovered Assets Matrix: Renders an itemized asset ledger summarizing balances discovered across NIBSS network nodes. Clicking "Verify Assets" unlocks Step 4.
 Step 4: Settlement Authorization & Revenue Mandate: Displays a total consolidation valuation tracking at ₦12,450,000.00. Features an explicit billing confirmation line item detailing the flat 10% recovery processing commission fee.
 The Legal Mandate Interaction Trigger: A mandatory check-box element tied to this functional text string:
-▢ I hereby explicitly authorize Reclaimng to act as our digital transition proxy. I confirm that I have reviewed the platform Privacy Policy and Terms of Service, and agree to the standardized 10% platform service fee (₦1,245,000.00) to be deducted exclusively from the gross worth of recovered assets upon successful clearing and settlement.
+▢ I hereby explicitly authorize Reclaiming to act as our digital transition proxy. I confirm that I have reviewed the platform Privacy Policy and Terms of Service, and agree to the standardized 10% platform service fee (₦1,245,000.00) to be deducted exclusively from the gross worth of recovered assets upon successful clearing and settlement.
 Submission Feedback: Submitting this finalized layer triggers a clean system success box stating: "Asset Recovery Request Successfully Submitted. Your request has been queued and is currently appearing on the compliance dashboard for official administrative review and clearing validation." Includes a primary CTA button pointing back to dashboard.html.
 4. Universal Navigation Requirements
 4.1 Omni-Present Floating WhatsApp Node
@@ -58,7 +58,7 @@ Legal Documentation Framework
 Privacy Policy
 Effective Date: May 19, 2026
 1. Introduction & Regulatory Framework
-Reclaimng ("we," "us," or "our") operates a specialized digital estate transition protocol designed to assist verified beneficiaries in recovering unclaimed dividends and banking assets of deceased individuals within the Federal Republic of Nigeria. This Privacy Policy outlines our strict operational standards regarding the processing, collection, storage, and cross-border transmission of Personal Data and Sensitive Personal Data.
+Reclaiming ("we," "us," or "our") operates a specialized digital estate transition protocol designed to assist verified beneficiaries in recovering unclaimed dividends and banking assets of deceased individuals within the Federal Republic of Nigeria. This Privacy Policy outlines our strict operational standards regarding the processing, collection, storage, and cross-border transmission of Personal Data and Sensitive Personal Data.
 This document is compiled in strict alignment with the Constitution of the Federal Republic of Nigeria 1999, the Nigeria Data Protection Act 2023 (NDPA), and the Nigeria Data Protection Regulation (NDPR).
 2. Data Categories We Process
 To execute the automated asset discovery and migration routines, we process the following distinct data profiles:
@@ -66,7 +66,7 @@ User/Beneficiary Identity Data: Full legal name, verified email address, telepho
 Deceased Person Data: Full legal name, date of death records, and the 11-digit Bank Verification Number (BVN).
 Physical Verification Ingestion Records: Uploaded digital assets comprising High Court Probate Registries documents, Letters of Administration, and official Death Certificates.
 3. Integrated Third-Party Processing & The QoreID Validation Node
-To maintain absolute compliance and prevent fraudulent estate claims, Reclaimng partners with QoreID Limited (an identity and data compliance verification network infrastructure).
+To maintain absolute compliance and prevent fraudulent estate claims, Reclaiming partners with QoreID Limited (an identity and data compliance verification network infrastructure).
 Scope of Transfer: Your uploaded Probate documents, Letters of Administration, and BVN parameters are securely transmitted via encrypted API communication protocols to the QoreID validation engine.
 Verification Authority: QoreID verifies these data points against official public records, the National Identity Management Commission (NIMC) database, and relevant state judicial archives.
 Data Integrity: All such transfers are guarded by end-to-end Transport Layer Security (TLS 1.3) encryption layers.
@@ -77,14 +77,14 @@ Pursuant to the provisions of the NDPA 2023, you retain absolute rights to reque
 Terms of Service
 Last Updated: May 19, 2026
 1. Contractual Relations & Acceptance of Terms
-These Terms of Service govern the access and use of the digital web interfaces, applications, and routing engines provided by Reclaimng. By creating an account or initializing a claim workflow on auth.html, you explicitly declare that you possess the full legal capacity and authorization required under Nigerian probate laws to manage the estate assets of the deceased person whose parameters you enter.
+These Terms of Service govern the access and use of the digital web interfaces, applications, and routing engines provided by Reclaiming. By creating an account or initializing a claim workflow on auth.html, you explicitly declare that you possess the full legal capacity and authorization required under Nigerian probate laws to manage the estate assets of the deceased person whose parameters you enter.
 2. Description of Service & Verification Prerequisites
-Reclaimng provides a technical routing utility linking consumer requests to identity verification APIs (QoreID) and automated interbank ledger querying switches (NIBSS e-DMMS).
+Reclaiming provides a technical routing utility linking consumer requests to identity verification APIs (QoreID) and automated interbank ledger querying switches (NIBSS e-DMMS).
 The Verification Gate: You acknowledge and agree that access to asset discovery ledgers (Step 3) is strictly contingent upon QoreID successfully verifying your legal documentation.
 Administrative Access Overrides: The company retains absolute administrative oversight. All discovery claims successfully compiled through the system are queued for final validation review by institutional compliance officers on admin-queue.html.
 3. Standard Pricing, Fee Structure, & Financial Mandate
-By interacting with the final settlement validation layout on wizard.html, you enter into a binding financial mandate agreement with Reclaimng:
-Service Assessment Rate: Reclaimng levies a fixed platform service fee equivalent to exactly 10% of the gross cumulative worth of all monetary assets, bank balances, and unclaimed dividend payouts discovered and recovered through the platform pipeline.
+By interacting with the final settlement validation layout on wizard.html, you enter into a binding financial mandate agreement with Reclaiming:
+Service Assessment Rate: Reclaiming levies a fixed platform service fee equivalent to exactly 10% of the gross cumulative worth of all monetary assets, bank balances, and unclaimed dividend payouts discovered and recovered through the platform pipeline.
 Processing Execution Method: This 10% platform fee is systematically and automatically deducted directly from the gross asset pool at the point of clearing and settlement, prior to routing the net remaining balances to your finalized container within vault.html.
 4. Prohibited System Exploitation & Indemnity
-Any attempt to input counterfeit Letters of Administration, fake Death Certificates, or unauthorized third-party BVN strings constitutes criminal fraud under the Cybercrimes Act of Nigeria. You agree to fully indemnify and hold harmless Reclaimng, its technical partners, and directors against any legal claims, liabilities, or regulatory penalties arising from fraudulent documents or false declarations uploaded to your profile.
+Any attempt to input counterfeit Letters of Administration, fake Death Certificates, or unauthorized third-party BVN strings constitutes criminal fraud under the Cybercrimes Act of Nigeria. You agree to fully indemnify and hold harmless Reclaiming, its technical partners, and directors against any legal claims, liabilities, or regulatory penalties arising from fraudulent documents or false declarations uploaded to your profile.

@@ -1,10 +1,10 @@
 # Replacing (or keeping) Mono for account discovery
 
-_November 2026. Research for Reclaimng's "find every bank account linked to the deceased's BVN" step._
+_November 2026. Research for Reclaiming's "find every bank account linked to the deceased's BVN" step._
 
 ## What this step needs
 
-Reclaimng needs one specific thing from a provider: **given a BVN, and with consent captured through NIBSS's iGree consent platform, return every bank account linked to that BVN.** Mono calls this "BVN Lookup, scope `bank_accounts`".
+Reclaiming needs one specific thing from a provider: **given a BVN, and with consent captured through NIBSS's iGree consent platform, return every bank account linked to that BVN.** Mono calls this "BVN Lookup, scope `bank_accounts`".
 
 Since March 2023, the CBN has required consent through iGree before any provider can release BVN data. Every legitimate provider therefore runs the same basic flow: start a session, send an OTP to a contact registered on the BVN, then return the data.
 
@@ -12,8 +12,8 @@ Since March 2023, the CBN has required consent through iGree before any provider
 
 You will meet the same request, in some form, from **every** provider that can return BVN-linked bank accounts. The reason is that NIBSS holds these providers accountable for who they pass BVN data to. That makes the onboarding check (KYB) a NIBSS requirement passed down, not something peculiar to Mono.
 
-- **"NDPR certificate".** This usually means proof that you comply with Nigeria's data protection law: registration with the Nigeria Data Protection Commission (NDPC), plus a compliance audit filed through a licensed Data Protection Compliance Organisation (DPCO). Reclaimng processes NINs, BVNs, selfies and death certificates, so the law very likely requires this of it anyway. It is not a licence. It is a registration plus an audit, and it can be obtained in weeks. **Recommendation: start this now. It unlocks every provider below.**
-- **"Operating licence".** Mono asks regulated businesses (banks, lenders, payment companies) for their CBN or SEC licence. Reclaimng isn't one of those, so there is no licence to show. What usually works is:
+- **"NDPR certificate".** This usually means proof that you comply with Nigeria's data protection law: registration with the Nigeria Data Protection Commission (NDPC), plus a compliance audit filed through a licensed Data Protection Compliance Organisation (DPCO). Reclaiming processes NINs, BVNs, selfies and death certificates, so the law very likely requires this of it anyway. It is not a licence. It is a registration plus an audit, and it can be obtained in weeks. **Recommendation: start this now. It unlocks every provider below.**
+- **"Operating licence".** Mono asks regulated businesses (banks, lenders, payment companies) for their CBN or SEC licence. Reclaiming isn't one of those, so there is no licence to show. What usually works is:
   - a written description of the use case: estate administrators tracing a deceased relative's accounts, with consent captured by OTP through iGree;
   - your CAC documents;
   - your NDPC registration;
@@ -21,7 +21,7 @@ You will meet the same request, in some form, from **every** provider that can r
 
   Ask Mono's compliance team directly which of these they will accept in place of a licence, and get the answer in writing.
 
-**One question to settle with any provider (and a lawyer).** iGree consent is designed to come from the BVN holder. In Reclaimng's case the holder has died, and the person who receives the OTP acts for the estate under Letters of Administration. Explain this up front; it is the question compliance teams are most likely to ask.
+**One question to settle with any provider (and a lawyer).** iGree consent is designed to come from the BVN holder. In Reclaiming's case the holder has died, and the person who receives the OTP acts for the estate under Letters of Administration. Explain this up front; it is the question compliance teams are most likely to ask.
 
 ## The options
 
@@ -39,7 +39,7 @@ You will meet the same request, in some form, from **every** provider that can r
 1. **For Monday:** keep Mono in **sandbox**. Create a Lookup app in the Mono dashboard (steps below), and the whole account search works end to end with Mono's test data (BVN `12345678901`, OTP `123456`).
 2. **This week:** ask QoreID whether their iGree integration can return linked bank accounts (`banking_data`). If yes, that is the lowest-friction production route.
 3. **In parallel:** open an Adjutor (Lendsqr) account, test their consent-based account lookup in sandbox, and ask what onboarding they need from a non-lender.
-4. **Regardless of provider:** register with the NDPC and file a DPCO compliance audit. Every provider will ask for it, and the law likely requires it of Reclaimng anyway.
+4. **Regardless of provider:** register with the NDPC and file a DPCO compliance audit. Every provider will ask for it, and the law likely requires it of Reclaiming anyway.
 
 ## How a new provider plugs in
 

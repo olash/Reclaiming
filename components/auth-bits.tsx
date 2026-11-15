@@ -34,7 +34,7 @@ export function friendlyAuthError(err: { message?: string } | null | undefined) 
   if (msg.includes('already registered') || msg.includes('already exists')) return 'There is already an account with this email. Try logging in instead.';
   if (msg.includes('password should be')) return 'Please choose a password with at least 8 characters.';
   if (msg.includes('rate limit') || msg.includes('too many')) return 'Too many attempts. Please wait a minute and try again.';
-  if (msg.includes('fetch') || msg.includes('network')) return 'We could not reach Reclaimng. Check your internet connection and try again.';
+  if (msg.includes('fetch') || msg.includes('network')) return 'We could not reach Reclaiming. Check your internet connection and try again.';
   if (msg.includes('same password') || msg.includes('different from the old')) return 'Please choose a password you have not used before.';
   return err?.message || 'Something went wrong. Please try again.';
 }

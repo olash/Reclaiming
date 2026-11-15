@@ -156,7 +156,7 @@ async function paystackCheck(): Promise<Step[]> {
       return { ok: r.ok && r.body?.status === true, status: r.status, note: r.body?.message };
     }),
     await timed('transaction/verify on an unknown reference → clean error', async () => {
-      const r = await call('https://api.paystack.co/transaction/verify/reclaimng_diagnostics_nonexistent', { headers: auth });
+      const r = await call('https://api.paystack.co/transaction/verify/reclaiming_diagnostics_nonexistent', { headers: auth });
       return { ok: r.status === 400 || r.status === 404, status: r.status, note: r.body?.message };
     }),
     await timed('bank/resolve reachable', async () => {

@@ -1,5 +1,5 @@
 /**
- * Single source of truth for what Reclaimng charges. The UI, the Paystack
+ * Single source of truth for what Reclaiming charges. The UI, the Paystack
  * checkout and the server-side payment checks all read from here, so a price
  * can never be shown as one amount and charged as another.
  */

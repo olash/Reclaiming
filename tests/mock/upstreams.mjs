@@ -1,5 +1,5 @@
 /**
- * Local stand-in for every third-party service Reclaimng talks to, so the API
+ * Local stand-in for every third-party service Reclaiming talks to, so the API
  * routes and the UI can be exercised end to end without real credentials,
  * real money or real identity data.
  *

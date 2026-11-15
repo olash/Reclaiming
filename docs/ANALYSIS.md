@@ -1,10 +1,10 @@
-# Reclaimng: analysis, redesign and next steps
+# Reclaiming: analysis, redesign and next steps
 
 _November 2026. Covers the code on `main` at commit `d88002c` ("Update dashboard.html") and the redesign on branch `claude/happy-galileo-4uh7cb`._
 
 ## 1. Summary
 
-**What the product is for.** A bereaved Nigerian family finds every bank account (and, per the PRD, every unclaimed dividend) a relative left behind, proves they are entitled to it, and gets the money paid into the estate. Reclaimng earns two set-up fees plus 10% of what is recovered.
+**What the product is for.** A bereaved Nigerian family finds every bank account (and, per the PRD, every unclaimed dividend) a relative left behind, proves they are entitled to it, and gets the money paid into the estate. Reclaiming earns two set-up fees plus 10% of what is recovered.
 
 **Where it stood.** The marketing page and the screens looked good, and the building blocks were well chosen: Supabase, Paystack, QoreID, Mono, Google Vision and pdf-lib. But when I ran every flow end to end, **the core journey could not be completed**, and several API routes could be used by anyone, without signing in, to change other people's data:
 
@@ -179,7 +179,7 @@ Grouped by the gap they close. Before signing, confirm current availability, pri
 
 ### Probate (closes gap 1)
 
-- **A panel of probate lawyers per state**, starting with Lagos, Abuja and Rivers. Families get a fixed-price "get my Letters of Administration" service, and Reclaimng takes a referral fee. Some state judiciaries have started online filing (check the Lagos State Judiciary's current e-filing). Wire in direct filing where it exists; elsewhere, send a lawyer a structured case pack built from what the family already uploaded.
+- **A panel of probate lawyers per state**, starting with Lagos, Abuja and Rivers. Families get a fixed-price "get my Letters of Administration" service, and Reclaiming takes a referral fee. Some state judiciaries have started online filing (check the Lagos State Judiciary's current e-filing). Wire in direct filing where it exists; elsewhere, send a lawyer a structured case pack built from what the family already uploaded.
 
 ### Identity and fraud (closes gap 6)
 
@@ -189,7 +189,7 @@ Grouped by the gap they close. Before signing, confirm current availability, pri
 ### Account discovery (closes gap 7)
 
 - Keep **Mono Lookup** (BVN to linked accounts, with OTP consent). **Dojah**, **Prembly** and **Seamfix** offer similar iGree-based BVN lookups, which is useful as a fallback provider.
-- Pursue a direct agreement with banks' **estate or probate desks**. A few Tier-1 banks handle deceased-customer claims centrally. A formal partnership, where the bank accepts Reclaimng's verified case pack, avoids the "change the phone number on the BVN" workaround entirely.
+- Pursue a direct agreement with banks' **estate or probate desks**. A few Tier-1 banks handle deceased-customer claims centrally. A formal partnership, where the bank accepts Reclaiming's verified case pack, avoids the "change the phone number on the BVN" workaround entirely.
 
 ### Getting paid (closes gap 5)
 

@@ -1,4 +1,4 @@
-# Reclaimng
+# Reclaiming
 
 Helps Nigerian families trace and recover the bank accounts (and, in future, the
 unclaimed dividends) of a relative who has passed away.
