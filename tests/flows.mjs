@@ -239,22 +239,33 @@ try {
     const reviewerAccount = await admin('/user', { email: 'reviewer@reclaimng.test', user_metadata: { full_name: 'Review Team' } });
     const rctx = await newContext(browser);
     const rp = await rctx.newPage();
-    await rp.goto(APP + '/login', { waitUntil: 'networkidle' });
+    await rp.goto(APP + '/admin/login', { waitUntil: 'networkidle' });
     await rp.getByLabel('Email address').fill(reviewerAccount.user.email);
     await rp.getByLabel('Password', { exact: true }).fill('password123');
-    await rp.getByRole('button', { name: 'Log in' }).click();
-    await rp.waitForURL(APP + '/app');
-    await rp.getByRole('link', { name: 'Review queue' }).click();
+    await rp.getByRole('button', { name: 'Log in to the console' }).click();
+    await rp.waitForURL(APP + '/admin');
     await rp.getByRole('heading', { name: 'Estate of Samuel Adekunle Bello' }).waitFor();
+    check('Reviewer login opens the review console, with no family navigation', (await rp.getByRole('heading', { name: 'Review queue' }).count()) === 1 && (await rp.getByRole('link', { name: 'Start a recovery' }).count()) === 0);
     check('Reviewer sees the case with NIN and selfie results', (await rp.getByText('NIN matched').count()) === 1 && (await rp.getByText('Selfie passed').count()) === 1);
     await shot(rp, 'new-15-review-queue');
     await rp.getByRole('button', { name: 'Approve', exact: true }).click();
     await rp.getByText('Approved — the family can now search for accounts').waitFor();
     check('Reviewer approves the case from the console', (await estateRowOf(estate.id)).status === 'verified');
+    await rp.goto(APP + '/app', { waitUntil: 'networkidle' });
+    await rp.waitForURL(APP + '/admin');
+    check('A reviewer who opens the family app is taken back to the console', rp.url() === APP + '/admin');
+    await rp.goto(APP + '/app/admin', { waitUntil: 'networkidle' });
+    check('The old review address forwards to the console', new URL(rp.url()).pathname === '/admin');
+    await rp.getByRole('button', { name: 'Log out' }).click();
+    await rp.waitForURL(/\/admin\/login/);
+    check('Reviewer log out returns to the reviewer login', new URL(rp.url()).pathname === '/admin/login');
     await rctx.close();
   }
   // Families do not see the review queue
   check('Families do not see the review queue link', (await page.getByRole('link', { name: 'Review queue' }).count()) === 0);
+  await page.goto(APP + '/admin', { waitUntil: 'networkidle' });
+  await page.getByText('Page not found').waitFor();
+  check('A family account at /admin sees only "page not found"', (await page.getByRole('heading', { name: 'Review queue' }).count()) === 0 && (await page.getByRole('button', { name: 'Approve' }).count()) === 0);
   await page.goto(APP + `/app/estates/${estate.id}`, { waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Find every linked account' }).waitFor();
   check('Once approved, the case goes straight to the account search', (await page.getByText('Your documents are approved').count()) === 1);

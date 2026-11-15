@@ -15,7 +15,8 @@ const APP = process.env.APP_URL || 'http://127.0.0.1:3000';
 const MOCK = process.env.MOCK_URL || 'http://127.0.0.1:54321';
 const admin = (p, body) => fetch(MOCK + '/__admin' + p, { method: 'POST', body: JSON.stringify(body || {}) }).then((r) => r.json());
 
-const u = await admin('/user', { email: 'reviewer@reclaimng.test', user_metadata: { full_name: 'Amaka Okonkwo' } }); // a reviewer, so the review console is scanned too
+const u = await admin('/user', { email: 'family.a11y@example.com', user_metadata: { full_name: 'Amaka Okonkwo' } });
+const reviewer = await admin('/user', { email: 'reviewer@reclaimng.test', user_metadata: { full_name: 'Review Team' } });
 const ids = {};
 for (const [key, patch] of Object.entries({
   review: { status: 'pending_review' },
@@ -28,21 +29,31 @@ for (const [key, patch] of Object.entries({
   await admin('/row', { table: 'estates', row: { id: ids[key], user_id: u.user.id, estate_name: 'Estate of Samuel Bello', deceased_name: 'Samuel Bello', payment_status: 'paid', paystack_reference: 'a11y_' + ids[key], death_certificate_path: 'x', letter_of_administration_path: null, discovered_accounts: [], mandate_acknowledged: false, submitted_at: new Date().toISOString(), updated_at: new Date().toISOString(), ...patch } });
 }
 
-const publicPages = ['/', '/login', '/signup', '/forgot-password', '/privacy', '/terms', '/brand', '/this-page-does-not-exist'];
-const appPages = ['/app', '/app/new', '/app/vault', '/app/admin', ...Object.values(ids).map((id) => `/app/estates/${id}`)];
+const publicPages = ['/', '/login', '/signup', '/forgot-password', '/privacy', '/terms', '/brand', '/admin/login', '/this-page-does-not-exist'];
+const appPages = ['/app', '/app/new', '/app/vault', '/admin', ...Object.values(ids).map((id) => `/app/estates/${id}`)];
+const adminPages = ['/admin'];
 
 const browser = await playwright.chromium.launch();
 let total = 0;
 for (const [label, viewport] of [['desktop', { width: 1280, height: 860 }], ['phone', { width: 390, height: 844 }]]) {
   const ctx = await browser.newContext({ viewport });
   const page = await ctx.newPage();
-  for (const p of [...publicPages, '__login__', ...appPages]) {
+  for (const p of [...publicPages, '__login__', ...appPages, '__admin__', ...adminPages]) {
     if (p === '__login__') {
       await page.goto(APP + '/login', { waitUntil: 'networkidle' });
       await page.getByLabel('Email address').fill(u.user.email);
       await page.getByLabel('Password', { exact: true }).fill('password123');
       await page.getByRole('button', { name: 'Log in' }).click();
       await page.waitForURL(APP + '/app');
+      continue;
+    }
+    if (p === '__admin__') {
+      await page.evaluate(() => localStorage.clear()); // sign the family account out
+      await page.goto(APP + '/admin/login', { waitUntil: 'networkidle' });
+      await page.getByLabel('Email address').fill(reviewer.user.email);
+      await page.getByLabel('Password', { exact: true }).fill('password123');
+      await page.getByRole('button', { name: 'Log in to the console' }).click();
+      await page.waitForURL(APP + '/admin');
       continue;
     }
     await page.goto(APP + p, { waitUntil: 'networkidle' });

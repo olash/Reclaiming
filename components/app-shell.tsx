@@ -3,8 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, ClipboardCheck, FolderHeart, LogOut, Menu, MessageCircle, PlusCircle, Wallet } from 'lucide-react';
-import { api } from '@/lib/api';
+import { ChevronDown, FolderHeart, LogOut, Menu, MessageCircle, PlusCircle, Wallet } from 'lucide-react';
 import { displayName, useAuth } from '@/lib/auth-context';
 import { isSupabaseConfigured } from '@/lib/supabase-browser';
 import { SUPPORT_WHATSAPP } from '@/lib/fees';
@@ -21,29 +20,11 @@ const NAV = [
   { href: '/app/vault', label: 'Recovered funds', icon: Wallet, match: (p: string) => p.startsWith('/app/vault') },
 ];
 
-const ADMIN_NAV = { href: '/app/admin', label: 'Review queue', icon: ClipboardCheck, match: (p: string) => p.startsWith('/app/admin') };
-
-/** Whether the signed-in person is on the review team (decided on the server). */
-function useIsAdmin() {
-  const { user } = useAuth();
-  const [admin, setAdmin] = React.useState(false);
-  React.useEffect(() => {
-    if (!user) return;
-    let active = true;
-    api<{ admin: boolean }>('/api/admin/me').then((r) => active && setAdmin(r.admin)).catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [user]);
-  return admin;
-}
-
 function NavLinks({ onNavigate, layout = 'stack' }: { onNavigate?: () => void; layout?: 'stack' | 'bar' }) {
   const pathname = usePathname();
-  const admin = useIsAdmin();
   return (
     <ul className={layout === 'bar' ? 'flex items-center gap-1' : 'space-y-1'}>
-      {(admin ? [...NAV, ADMIN_NAV] : NAV).map((item) => {
+      {NAV.map((item) => {
         const active = item.match(pathname);
         return (
           <li key={item.href}>
@@ -107,12 +88,13 @@ function UserMenu() {
 }
 
 /**
- * Frame for every signed-in page. It also guards them: nothing inside is
- * rendered until we know someone is signed in, and a signed-out visitor is
- * sent to log in and then brought back to the page they asked for.
+ * Frame for every family page. It also guards them: nothing inside is
+ * rendered until we know someone is signed in and that they are a family
+ * member. A signed-out visitor is sent to log in and brought back; a
+ * reviewer is sent to the review console, which is their whole world.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { loading, user } = useAuth();
+  const { loading, user, role, roleLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -124,6 +106,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [loading, user, router, pathname]);
 
+  React.useEffect(() => {
+    if (role === 'admin') router.replace('/admin');
+  }, [role, router]);
+
   if (!isSupabaseConfigured()) {
     return (
       <main id="main" className="container max-w-xl py-20">
@@ -134,7 +120,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (loading || !user) {
+  if (loading || !user || roleLoading || role !== 'family') {
     return (
       <div className="container max-w-3xl space-y-4 py-16" role="status" aria-live="polite">
         <span className="sr-only">Loading your account…</span>

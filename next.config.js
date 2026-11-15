@@ -18,6 +18,8 @@ const legacy = [
   ['/bank-form-generator.html', '/app'],
   ['/success.html', '/app'],
   ['/latest.html', '/'],
+  // The review console moved out of the family app.
+  ['/app/admin', '/admin'],
 ];
 
 const securityHeaders = [

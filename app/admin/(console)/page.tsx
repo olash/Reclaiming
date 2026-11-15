@@ -1,10 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
-import { BadgeCheck, Camera, ExternalLink, FileText, RotateCcw, ShieldAlert, ThumbsDown, ThumbsUp, Wallet } from 'lucide-react';
+import { BadgeCheck, Camera, ExternalLink, FileText, RotateCcw, ThumbsDown, ThumbsUp, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
-import { Motif } from '@/components/brand/motifs';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,7 +29,6 @@ interface AdminCase {
   accounts: number;
   review_note: string | null;
   total_asset_value: number | null;
-  own: boolean;
 }
 
 const TABS = [
@@ -53,7 +50,6 @@ const STATUS_BADGE: Record<AdminCase['status'], { label: string; tone: 'warning'
 type Pending = { c: AdminCase; action: 'reject' | 'settle' } | null;
 
 export default function AdminPage() {
-  const [allowed, setAllowed] = React.useState<boolean | null>(null);
   const [cases, setCases] = React.useState<AdminCase[] | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [tab, setTab] = React.useState<(typeof TABS)[number]['key']>('waiting');
@@ -74,12 +70,7 @@ export default function AdminPage() {
   }, []);
 
   React.useEffect(() => {
-    api<{ admin: boolean }>('/api/admin/me')
-      .then((r) => {
-        setAllowed(r.admin);
-        if (r.admin) load();
-      })
-      .catch(() => setAllowed(false));
+    load();
   }, [load]);
 
   async function openDocument(c: AdminCase, which: 'death_certificate' | 'letter_of_administration') {
@@ -114,26 +105,12 @@ export default function AdminPage() {
     }
   }
 
-  if (allowed === null) return <Skeleton className="h-64 w-full" />;
-  if (!allowed) {
-    return (
-      // Families see an ordinary "not found": the review area is not advertised to them.
-      <div className="flex flex-col items-center py-16 text-center">
-        <Motif name="spiral" seed={4} className="size-36 text-saffron" strokeWidth={3.2} />
-        <p className="eyebrow mt-8">Page not found</p>
-        <h1 className="mt-3 max-w-xl text-display-md font-extrabold">This path doesn’t lead anywhere, yet.</h1>
-        <p className="mt-4 max-w-md text-lg text-ink/75">The link may be old or mistyped. Everything you started is still safe in your account.</p>
-        <Button asChild size="lg" className="mt-8"><Link href="/app">Go to your cases</Link></Button>
-      </div>
-    );
-  }
-
   const current = TABS.find((t) => t.key === tab)!;
   const shown = (cases ?? []).filter(current.match);
 
   return (
     <>
-      <p className="eyebrow">For the review team</p>
+      <p className="eyebrow">Review console</p>
       <h1 className="mt-3 text-display-md font-extrabold">Review queue</h1>
       <p className="mt-3 text-lg text-ink/75">Check each family&apos;s identity and documents, then approve the case or send it back with a note.</p>
 
@@ -206,11 +183,6 @@ export default function AdminPage() {
               {c.status === 'settled' && c.total_asset_value !== null && <p className="mt-4 font-semibold">Released to estate: {formatNaira(c.total_asset_value)}</p>}
               {c.accounts > 0 && <p className="mt-4 text-sm text-muted-foreground">{c.accounts} account{c.accounts === 1 ? '' : 's'} found by the family&apos;s search.</p>}
 
-              {c.own ? (
-                <Alert tone="neutral" className="mt-5" icon={ShieldAlert} title="You opened this case">
-                  To keep reviews fair, another member of the review team has to decide it.
-                </Alert>
-              ) : (
               <div className="mt-5 flex flex-wrap gap-2 border-t pt-5">
                 {c.status === 'pending_review' && (
                   <Button size="sm" variant="secondary" loading={busy === c.id + 'start_review'} onClick={() => decide(c, 'start_review')}>Mark as in review</Button>
@@ -228,7 +200,6 @@ export default function AdminPage() {
                   <Button size="sm" variant="ghost" loading={busy === c.id + 'reopen'} onClick={() => decide(c, 'reopen')}><RotateCcw aria-hidden="true" />Move back to queue</Button>
                 )}
               </div>
-              )}
             </Card>
           );
         })}

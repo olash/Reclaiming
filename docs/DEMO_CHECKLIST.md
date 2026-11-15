@@ -60,7 +60,7 @@ Open `/api/diagnostics` on the preview. It runs live checks of Supabase, Paystac
 
 ## Demo script and test data
 
-The complete list (every provider, what the sandboxes return, and which account to use for each role) is in [`TEST_DATA.md`](TEST_DATA.md). Use **two accounts**: a family account that is *not* in `ADMIN_EMAILS`, and a reviewer account that is. A reviewer can never approve a case they opened themselves.
+The complete list (every provider, what the sandboxes return, and which account to use for each role) is in [`TEST_DATA.md`](TEST_DATA.md). Use **two accounts**: a family account (logs in at `/login`) and the admin, damilolash@gmail.com (logs in at `/admin/login`).
 
 All of these are provider **sandbox** values. No real money or identities are involved.
 
@@ -71,7 +71,7 @@ All of these are provider **sandbox** values. No real money or identities are in
 | ₦5,000 and ₦75,000 payments | Paystack's successful test card **4084 0840 8408 4081**, any future expiry, CVV **408**. If the checkout asks for a PIN or OTP, use the values on Paystack's "Test cards" docs page. |
 | Selfie check | follow QoreID's camera prompts (see the note below) |
 | Documents | any clear PDF or photo as the death certificate |
-| Review queue | log in with an `ADMIN_EMAILS` address → **Review queue** → **Approve** |
+| Review queue | `/admin/login` as damilolash@gmail.com → **Approve** |
 | Find accounts | BVN **12345678901** → send the code to "another phone number" **09066662020** (or any option) → code **123456** |
 
 **Selfie check on the day.** `liveness_nin` compares the live selfie with the photo on the NIN record. With a test NIN, the result depends on how QoreID's sandbox treats that comparison, which we could not exercise without a camera. Do one dry run on Sunday.

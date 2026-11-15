@@ -2,12 +2,12 @@
 
 All values below are the providers' **sandbox** data. They only work with test keys and involve no real money or identities. The Mono and QoreID values were confirmed against the live sandboxes from a Reclaimng preview on 14 November 2026.
 
-Run the journey with **two accounts**:
+Access is role-based. Run the journey with **two accounts**:
 
-| Role | Account | Why |
+| Role | Where they log in | What they see |
 | --- | --- | --- |
-| Family member | Any email or Google account that is **not** in `ADMIN_EMAILS` | Opens and pays for the case, then searches for accounts. |
-| Reviewer | An email listed in `ADMIN_EMAILS` (Vercel → Settings → Environment Variables) | Sees the **Review queue** and approves the case. A reviewer can never approve a case they opened themselves. |
+| Family member | `/login` (any email or Google account that is **not** the admin) | Their cases, the wizard, recovered funds. Never the review console. |
+| Admin (reviewer) | `/admin/login` with **damilolash@gmail.com**, the only address in `ADMIN_EMAILS` | Only the review console at `/admin`. If they open the family app, they are taken back to the console. |
 
 ---
 
@@ -80,7 +80,7 @@ To see this data live at any time, open `/api/diagnostics?only=mono` on a **prev
 
 ## 6. Review queue (reviewer account)
 
-Log in with an `ADMIN_EMAILS` address → **Review queue** → **Approve**. Cases opened by the reviewer's own account are labelled "You opened this case" and have no decision buttons.
+Go to `/admin/login` (or **Team login** in the site footer), log in as **damilolash@gmail.com**, then **Approve**. A family account that tries this login is refused and signed out; at `/admin` it sees only "page not found".
 
 ---
 
