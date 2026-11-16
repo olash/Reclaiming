@@ -13,7 +13,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ApiError, api, apiUpload } from '@/lib/api';
+import { ApiError, api } from '@/lib/api';
+import { supabase } from '@/lib/supabase-browser';
 import { displayName, useAuth } from '@/lib/auth-context';
 import { clearDraft, useDraft, type Draft } from '@/lib/draft';
 import { RELATIONSHIPS } from '@/lib/estate';
@@ -225,6 +226,20 @@ export default function NewRecoveryPage() {
   }
 
   // ── Step 5: pay the filing fee (once) and send the documents ─────────────
+  const uploaded = React.useRef(new Map<File, string>());
+  async function uploadOnce(file: File, slug: string) {
+    const known = uploaded.current.get(file);
+    if (known) return known;
+    const ext = (file.name.split('.').pop() ?? 'pdf').toLowerCase();
+    const path = `${user!.id}/${Date.now()}_${slug}.${ext}`;
+    const { error } = await supabase().storage.from('probate_documents').upload(path, file, { contentType: file.type || undefined, upsert: false });
+    if (error) {
+      throw new ApiError('Your payment is safe, but we could not upload your documents. Check your connection and press the button again; you will not be charged twice.', 0, 'UPLOAD_FAILED');
+    }
+    uploaded.current.set(file, path);
+    return path;
+  }
+
   async function submit() {
     if (!user?.email) return;
     const found: Errors = {};
@@ -244,14 +259,19 @@ export default function NewRecoveryPage() {
         reference = result.reference;
         update({ submissionRef: reference });
       }
-      const form = new FormData();
-      form.append('death_certificate', deathCert!);
-      if (loa) form.append('letter_of_administration', loa);
-      form.append('deceased_name', draft.deceasedName.trim());
-      form.append('date_of_death', draft.dateOfDeath);
-      form.append('relationship', draft.relationship);
-      form.append('paystack_reference', reference);
-      const res = await apiUpload<{ estateId: string }>('/api/submit-documents', form);
+      // The files go straight from this device to private storage (only this
+      // person's own folder is allowed), so large phone photos never hit the
+      // server's 4.5 MB request limit. A retry reuses what already uploaded.
+      const deathCertificatePath = await uploadOnce(deathCert!, 'death_certificate');
+      const loaPath = loa ? await uploadOnce(loa, 'letter_of_administration') : null;
+      const res = await api<{ estateId: string }>('/api/submit-documents', {
+        death_certificate_path: deathCertificatePath,
+        letter_of_administration_path: loaPath,
+        deceased_name: draft.deceasedName.trim(),
+        date_of_death: draft.dateOfDeath,
+        relationship: draft.relationship,
+        paystack_reference: reference,
+      });
       clearDraft(user.id);
       setDone({ estateId: res.estateId });
       window.scrollTo({ top: 0 });

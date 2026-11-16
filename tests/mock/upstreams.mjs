@@ -393,8 +393,17 @@ async function handleStorage(req, res, url) {
   if (who.role === 'user' && owner !== who.id) return send(res, 400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
   if (req.method === 'POST' || req.method === 'PUT') {
     if (db.objects.has(key) && req.headers['x-upsert'] !== 'true') return send(res, 400, { statusCode: '409', error: 'Duplicate', message: 'The resource already exists' });
-    const raw = await readBody(req);
-    db.objects.set(key, { body: raw, contentType: req.headers['content-type'] || 'application/octet-stream', size: raw.length });
+    let raw = await readBody(req);
+    let contentType = req.headers['content-type'] || 'application/octet-stream';
+    // supabase-js sends a File/Blob as multipart form data (the file under an empty field name), as real Storage accepts it.
+    if (contentType.startsWith('multipart/form-data')) {
+      const form = await new Request('http://mock/upload', { method: 'POST', headers: { 'content-type': contentType }, body: raw }).formData();
+      const file = [...form.values()].find((v) => typeof v !== 'string');
+      if (!file) return send(res, 400, { statusCode: '400', error: 'Bad Request', message: 'no file in the upload' });
+      raw = Buffer.from(await file.arrayBuffer());
+      contentType = file.type || 'application/octet-stream';
+    }
+    db.objects.set(key, { body: raw, contentType, size: raw.length });
     return send(res, 200, { Key: key, Id: crypto.randomUUID() });
   }
   if (req.method === 'GET') {
