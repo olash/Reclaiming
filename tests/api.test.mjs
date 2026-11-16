@@ -322,6 +322,32 @@ describe('POST /api/submit-documents', () => {
     assert.equal((await state()).objects.length, 0, 'nothing was stored');
   });
 
+  test('accepts files the browser uploaded straight to storage (large phone photos)', async () => {
+    const u = await verifiedUser();
+    const put = (path, bytes, type) =>
+      fetch(MOCK + '/storage/v1/object/probate_documents/' + path, { method: 'POST', headers: { authorization: `Bearer ${u.token}`, 'content-type': type }, body: bytes });
+    // A 6 MB phone photo: over Vercel's 4.5 MB request limit if it went through the API, fine straight to storage.
+    const photo = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(6 * 1024 * 1024)]);
+    const path = `${u.id}/${Date.now()}_death_certificate.jpg`;
+    assert.equal((await put(path, photo, 'image/jpeg')).status, 200);
+    const send = (extra) => call('/api/submit-documents', { token: u.token, json: { ...fields('DOC_DIRECT'), ...extra } });
+
+    for (const bad of ['someone-else/x.pdf', `${u.id}/../x.pdf`, `${u.id}/x.exe`, `${u.id}/a/b.pdf`]) {
+      assert.equal((await send({ death_certificate_path: bad })).body.code, 'INVALID_PATH', bad);
+    }
+    await paid('DOC_DIRECT', 7500000, u, 'submission');
+    assert.equal((await send({ death_certificate_path: `${u.id}/nothing_here.pdf` })).body.code, 'FILE_MISSING');
+    const fake = `${u.id}/${Date.now()}_fake.pdf`;
+    await put(fake, Buffer.from('MZ not really a pdf'), 'application/pdf');
+    assert.equal((await send({ death_certificate_path: fake })).status, 415, 'contents are checked, not the name');
+
+    const ok = await send({ death_certificate_path: path });
+    assert.equal(ok.status, 200);
+    assert.equal((await estateRow(ok.body.estateId)).death_certificate_path, path);
+    const again = await send({ death_certificate_path: path });
+    assert.equal(again.body.estateId, ok.body.estateId, 'a retry with the same payment returns the same case');
+  });
+
   test('requires the selfie check to have passed', async () => {
     const u = await newUser();
     await admin('/row', { table: 'verifications', row: { id: crypto.randomUUID(), user_id: u.id, nin: String(10000000000 + ++n), profile_data: { applicant: { firstname: 'A', lastname: 'B' }, liveness: { status: 'started', reference: 'x' } }, created_at: new Date().toISOString() } });

@@ -20,7 +20,11 @@ async function parse(res: Response) {
   const type = res.headers.get('content-type') ?? '';
   const body = type.includes('json') ? await res.json().catch(() => ({})) : {};
   if (!res.ok) {
-    throw new ApiError(body.error || 'Something went wrong. Please try again.', res.status, body.code, body);
+    // A response without our JSON came from the platform, not our code (e.g. a request too large to accept).
+    const fallback = res.status === 413
+      ? 'That file is too large to send. Please use a smaller file (under 10 MB) and try again.'
+      : 'Something went wrong. Please try again.';
+    throw new ApiError(body.error || fallback, res.status, body.code, body);
   }
   return body;
 }
